@@ -17,25 +17,25 @@ This is the project TODO list for implementing the **iCloud Photo Sync Tool** as
 
 ## 2️⃣ ⚙️ Core Sync Logic
 
-- [ ] Implement **iCloud authentication** using `pyicloud`
-- [ ] Implement **configurable local sync directory**
-- [ ] Develop logic to:
-  - [ ] List all photos in iCloud
-  - [ ] Identify which photos already exist locally
-  - [ ] Check local deletion database for deleted photos
-  - [ ] Download only new photos
-- [ ] Ensure **idempotent runs** (no duplicates)
-- [ ] Add **dry-run mode** to show sync actions without modifying files
+- [x] Implement **iCloud authentication** using `pyicloud`
+- [x] Implement **configurable local sync directory**
+- [x] Develop logic to:
+  - [x] List all photos in iCloud
+  - [x] Identify which photos already exist locally
+  - [x] Check local deletion database for deleted photos
+  - [x] Download only new photos
+- [x] Ensure **idempotent runs** (no duplicates)
+- [x] Add **dry-run mode** to show sync actions without modifying files
 
 ---
 
 ## 3️⃣ 🗂️ Local Deletion Tracking
 
-- [ ] Design lightweight **SQLite** or **JSON-based** local deletion tracker
-- [ ] Create functions to:
-  - [ ] Record deleted files when missing locally
-  - [ ] Persistently update tracker on each sync
-- [ ] Integrate deletion tracker with sync logic
+- [x] Design lightweight **SQLite** or **JSON-based** local deletion tracker
+- [x] Create functions to:
+  - [x] Record deleted files when missing locally
+  - [x] Persistently update tracker on each sync
+- [x] Integrate deletion tracker with sync logic
 
 ---
 
@@ -79,7 +79,7 @@ This is the project TODO list for implementing the **iCloud Photo Sync Tool** as
 ## 7️⃣ 🧩 Configuration & Security
 
 - [x] Add example `.env` template for credentials
-- [ ] Support configurable local sync directory
+- [x] Support configurable local sync directory
 - [ ] Ensure credentials are not bundled in builds
 - [x] Implement robust **logging** to console & file
 
