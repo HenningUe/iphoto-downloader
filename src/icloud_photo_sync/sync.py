@@ -1,17 +1,11 @@
 """Core sync logic for iCloud Photo Sync Tool."""
 
-import logging
-import hashlib
-from pathlib import Path
-from typing import Set, Dict, Any, List, Optional
-from datetime import datetime
+import typing as t
 
 from .config import Config
 from .icloud_client import iCloudClient
 from .deletion_tracker import DeletionTracker
-
-
-logger = logging.getLogger(__name__)
+from .logger import get_logger
 
 
 class PhotoSyncer:
@@ -40,47 +34,48 @@ class PhotoSyncer:
             'errors': 0,
             'bytes_downloaded': 0
         }
+
+    @property
+    def logger(self):
+        """Get the global logger instance."""
+        return get_logger()
     
-    def sync(self) -> bool:
+    def sync(self):
         """Perform photo synchronization.
         
         Returns:
             True if sync completed successfully, False otherwise
         """
-        try:
-            logger.info("🚀 Starting iCloud photo sync")
-            
-            # Ensure sync directory exists
-            self.config.ensure_sync_directory()
-            
-            # Authenticate with iCloud
-            if not self.icloud_client.authenticate():
-                return False
-            
-            # Handle 2FA if required
-            if self.icloud_client.requires_2fa():
-                if not self._handle_2fa():
-                    return False
-            
-            # Get local files
-            local_files = self._get_local_files()
-            logger.info(f"📁 Found {len(local_files)} existing local files")
-            
-            # Track files that were deleted locally
-            self._track_local_deletions(local_files)
-            
-            # Sync photos
-            self._sync_photos(local_files)
-            
-            # Print summary
-            self._print_summary()
-            
-            logger.info("✅ Photo sync completed successfully")
-            return True
-            
-        except Exception as e:
-            logger.error(f"❌ Photo sync failed: {e}")
+        self.logger.info("🚀 Starting iCloud photo sync")
+        
+        # Ensure sync directory exists
+        self.config.ensure_sync_directory()
+        
+        # Authenticate with iCloud
+        if not self.icloud_client.authenticate():
             return False
+        
+        # Handle 2FA if required
+        if self.icloud_client.requires_2fa():
+            if not self._handle_2fa():
+                return False
+        
+        # Get local files
+        local_files = self._get_local_files()
+        self.logger.info(f"📁 Found {len(local_files)} existing local files")
+        
+        # Track files that were deleted locally
+        self._track_local_deletions(local_files)
+        
+        # Sync photos
+        self._sync_photos(local_files)
+        
+        # Print summary
+        self._print_summary()
+        
+        self.logger.info("✅ Photo sync completed successfully")
+            
+
     
     def _handle_2fa(self) -> bool:
         """Handle two-factor authentication.
@@ -88,7 +83,7 @@ class PhotoSyncer:
         Returns:
             True if 2FA handled successfully, False otherwise
         """
-        logger.info("🔐 Two-factor authentication required")
+        self.logger.info("🔐 Two-factor authentication required")
         
         # In a real implementation, you might want to:
         # 1. Show a GUI prompt
@@ -96,11 +91,11 @@ class PhotoSyncer:
         # 3. Read from environment variable
         # For now, we'll log an error
         
-        logger.error("❌ 2FA required but not implemented in this version")
-        logger.error("Please disable 2FA temporarily or use app-specific password")
+        self.logger.error("❌ 2FA required but not implemented in this version")
+        self.logger.error("Please disable 2FA temporarily or use app-specific password")
         return False
     
-    def _get_local_files(self) -> Set[str]:
+    def _get_local_files(self) -> set[str]:
         """Get set of existing local filenames.
         
         Returns:
@@ -119,10 +114,10 @@ class PhotoSyncer:
             return local_files
             
         except Exception as e:
-            logger.error(f"❌ Error scanning local files: {e}")
+            self.logger.error(f"❌ Error scanning local files: {e}")
             return set()
     
-    def _track_local_deletions(self, local_files: Set[str]) -> None:
+    def _track_local_deletions(self, local_files: set[str]) -> None:
         """Track files that were deleted locally.
         
         Args:
@@ -133,17 +128,17 @@ class PhotoSyncer:
             # In a real scenario, you'd need to track which files
             # were previously downloaded but are now missing
             
-            logger.debug("🔍 Checking for locally deleted files")
+            self.logger.debug("🔍 Checking for locally deleted files")
             
             # Get deletion tracker stats
             stats = self.deletion_tracker.get_stats()
             if stats['total_deleted'] > 0:
-                logger.info(f"📝 Deletion tracker has {stats['total_deleted']} deleted photos")
+                self.logger.info(f"📝 Deletion tracker has {stats['total_deleted']} deleted photos")
             
         except Exception as e:
-            logger.error(f"❌ Error tracking local deletions: {e}")
-    
-    def _sync_photos(self, local_files: Set[str]) -> None:
+            self.logger.error(f"❌ Error tracking local deletions: {e}")
+
+    def _sync_photos(self, local_files: set[str]) -> None:
         """Sync photos from iCloud.
         
         Args:
@@ -160,18 +155,18 @@ class PhotoSyncer:
                 # Check if we've reached download limit
                 if (self.config.max_downloads > 0 and 
                     download_count >= self.config.max_downloads):
-                    logger.info(f"📊 Reached download limit ({self.config.max_downloads})")
+                    self.logger.info(f"📊 Reached download limit ({self.config.max_downloads})")
                     break
                 
                 # Check if photo was deleted locally
                 if self.deletion_tracker.is_deleted(photo_id):
-                    logger.debug(f"⏭️ Skipping deleted photo: {filename}")
+                    self.logger.debug(f"⏭️ Skipping deleted photo: {filename}")
                     self.stats['deleted_skipped'] += 1
                     continue
                 
                 # Check if file already exists locally
                 if filename in local_files:
-                    logger.debug(f"⏭️ Photo already exists: {filename}")
+                    self.logger.debug(f"⏭️ Photo already exists: {filename}")
                     self.stats['already_exists'] += 1
                     continue
                 
@@ -189,10 +184,10 @@ class PhotoSyncer:
                     if not self.config.dry_run and local_path.exists():
                         self.stats['bytes_downloaded'] += local_path.stat().st_size
                     
-                    logger.info(f"✅ Downloaded: {filename}")
+                    self.logger.info(f"✅ Downloaded: {filename}")
                 else:
                     self.stats['errors'] += 1
-                    logger.warning(f"⚠️ Failed to download: {filename}")
+                    self.logger.warning(f"⚠️ Failed to download: {filename}")
                 
                 # Log progress every 50 photos
                 if self.stats['total_photos'] % 50 == 0:
@@ -200,12 +195,12 @@ class PhotoSyncer:
                     
             except Exception as e:
                 self.stats['errors'] += 1
-                logger.error(f"❌ Error processing photo {photo_info.get('filename', 'unknown')}: {e}")
+                self.logger.error(f"❌ Error processing photo {photo_info.get('filename', 'unknown')}: {e}")
                 continue
     
     def _log_progress(self) -> None:
         """Log current sync progress."""
-        logger.info(
+        self.logger.info(
             f"📊 Progress: {self.stats['total_photos']} processed, "
             f"{self.stats['new_downloads']} downloaded, "
             f"{self.stats['already_exists']} existed, "
@@ -215,25 +210,25 @@ class PhotoSyncer:
     
     def _print_summary(self) -> None:
         """Print sync summary."""
-        logger.info("=" * 50)
-        logger.info("📊 SYNC SUMMARY")
-        logger.info("=" * 50)
-        logger.info(f"Total photos processed: {self.stats['total_photos']}")
-        logger.info(f"New downloads: {self.stats['new_downloads']}")
-        logger.info(f"Already existed: {self.stats['already_exists']}")
-        logger.info(f"Deleted (skipped): {self.stats['deleted_skipped']}")
-        logger.info(f"Errors: {self.stats['errors']}")
+        self.logger.info("=" * 50)
+        self.logger.info("📊 SYNC SUMMARY")
+        self.logger.info("=" * 50)
+        self.logger.info(f"Total photos processed: {self.stats['total_photos']}")
+        self.logger.info(f"New downloads: {self.stats['new_downloads']}")
+        self.logger.info(f"Already existed: {self.stats['already_exists']}")
+        self.logger.info(f"Deleted (skipped): {self.stats['deleted_skipped']}")
+        self.logger.info(f"Errors: {self.stats['errors']}")
         
         if self.stats['bytes_downloaded'] > 0:
             mb_downloaded = self.stats['bytes_downloaded'] / (1024 * 1024)
-            logger.info(f"Data downloaded: {mb_downloaded:.1f} MB")
+            self.logger.info(f"Data downloaded: {mb_downloaded:.1f} MB")
         
         if self.config.dry_run:
-            logger.info("🔍 DRY RUN MODE - No files were actually downloaded")
+            self.logger.info("🔍 DRY RUN MODE - No files were actually downloaded")
         
-        logger.info("=" * 50)
+        self.logger.info("=" * 50)
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, t.Any]:
         """Get sync statistics.
         
         Returns:

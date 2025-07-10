@@ -1,30 +1,10 @@
 """Main entry point for iCloud Photo Sync Tool."""
 
 import sys
-import logging
-from pathlib import Path
 
-from .config import Config
-from .sync import PhotoSyncer
-
-
-def setup_logging(config: Config) -> None:
-    """Set up logging configuration.
-    
-    Args:
-        config: Application configuration
-    """
-    # Create logs directory if it doesn't exist
-    Path("logs").mkdir(exist_ok=True)
-    
-    logging.basicConfig(
-        level=config.get_log_level(),
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.StreamHandler(sys.stdout),
-            logging.FileHandler('logs/icloud-sync.log', mode='a', encoding='utf-8'),
-        ]
-    )
+from icloud_photo_sync.config import Config
+from icloud_photo_sync.sync import PhotoSyncer
+from icloud_photo_sync.logger import setup_logging, get_logger
 
 
 def main() -> None:
@@ -36,29 +16,22 @@ def main() -> None:
     
     try:
         # Load configuration
-        config = Config()
-        
+        config = Config()        
+    except ValueError as e:
+        print(f"❌ Configuration error: {e}")
+        print("💡 Please check your .env file and ensure all required settings are configured.")
+        sys.exit(1)
+    try:
         # Set up logging with config
         setup_logging(config)
-        logger = logging.getLogger(__name__)
+        logger = get_logger()
         
         logger.info("Starting iCloud Photo Sync Tool")
         logger.info(f"Configuration: {config}")
         
         # Initialize and run syncer
         syncer = PhotoSyncer(config)
-        
-        if syncer.sync():
-            logger.info("Application completed successfully")
-            sys.exit(0)
-        else:
-            logger.error("Application failed")
-            sys.exit(1)
-        
-    except ValueError as e:
-        print(f"❌ Configuration error: {e}")
-        print("💡 Please check your .env file and ensure all required settings are configured.")
-        sys.exit(1)
+        syncer.sync()
     except KeyboardInterrupt:
         print("\n🛑 Sync interrupted by user")
         sys.exit(130)

@@ -1,14 +1,11 @@
 """iCloud authentication and API interaction."""
 
-import logging
-from typing import Optional, Iterator, Dict, Any
+import typing as t
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import PyiCloudFailedLoginException, PyiCloudAPIResponseException
 
 from .config import Config
-
-
-logger = logging.getLogger(__name__)
+from .logger import get_logger
 
 
 class iCloudClient:
@@ -21,7 +18,12 @@ class iCloudClient:
             config: Application configuration
         """
         self.config = config
-        self._api: Optional[PyiCloudService] = None
+        self._api: PyiCloudService | None = None
+
+    @property
+    def logger(self):
+        """Get the global logger instance."""
+        return get_logger()
     
     def authenticate(self) -> bool:
         """Authenticate with iCloud.
@@ -31,10 +33,10 @@ class iCloudClient:
         """
         try:
             if not self.config.icloud_username or not self.config.icloud_password:
-                logger.error("❌ iCloud username or password not configured")
+                self.logger.error("❌ iCloud username or password not configured")
                 return False
             
-            logger.info(f"Authenticating with iCloud as {self.config.icloud_username}")
+            self.logger.info(f"Authenticating with iCloud as {self.config.icloud_username}")
             
             self._api = PyiCloudService(
                 self.config.icloud_username,
@@ -43,20 +45,20 @@ class iCloudClient:
             
             # Test the connection by accessing photos
             if self._api.photos:
-                logger.info("✅ Successfully authenticated with iCloud")
+                self.logger.info("✅ Successfully authenticated with iCloud")
                 return True
             else:
-                logger.error("❌ Failed to access iCloud Photos")
+                self.logger.error("❌ Failed to access iCloud Photos")
                 return False
                 
         except PyiCloudFailedLoginException as e:
-            logger.error(f"❌ iCloud login failed: {e}")
+            self.logger.error(f"❌ iCloud login failed: {e}")
             return False
         except PyiCloudAPIResponseException as e:
-            logger.error(f"❌ iCloud API error: {e}")
+            self.logger.error(f"❌ iCloud API error: {e}")
             return False
         except Exception as e:
-            logger.error(f"❌ Unexpected error during authentication: {e}")
+            self.logger.error(f"❌ Unexpected error during authentication: {e}")
             return False
     
     def requires_2fa(self) -> bool:
@@ -84,36 +86,36 @@ class iCloudClient:
         try:
             result = self._api.validate_2fa_code(code)
             if result:
-                logger.info("✅ 2FA verification successful")
+                self.logger.info("✅ 2FA verification successful")
             else:
-                logger.error("❌ 2FA verification failed")
+                self.logger.error("❌ 2FA verification failed")
             return result
         except Exception as e:
-            logger.error(f"❌ Error during 2FA verification: {e}")
+            self.logger.error(f"❌ Error during 2FA verification: {e}")
             return False
     
-    def list_photos(self) -> Iterator[Dict[str, Any]]:
+    def list_photos(self) -> t.Iterator[dict[str, t.Any]]:
         """List all photos from iCloud.
         
         Yields:
             Photo metadata dictionaries
         """
         if not self._api or not self._api.photos:
-            logger.error("❌ Not authenticated or photos service unavailable")
+            self.logger.error("❌ Not authenticated or photos service unavailable")
             return
         
         try:
-            logger.info("📥 Fetching photo list from iCloud...")
+            self.logger.info("📥 Fetching photo list from iCloud...")
             
             # Get all photos from iCloud
             photos = self._api.photos.all
             total_count = len(photos)
             
-            logger.info(f"📊 Found {total_count} photos in iCloud")
+            self.logger.info(f"📊 Found {total_count} photos in iCloud")
             
             for i, photo in enumerate(photos, 1):
                 if i % 100 == 0:  # Log progress every 100 photos
-                    logger.info(f"📥 Processing photo {i}/{total_count}")
+                    self.logger.info(f"📥 Processing photo {i}/{total_count}")
                 
                 try:
                     # Extract photo metadata
@@ -129,13 +131,13 @@ class iCloudClient:
                     yield photo_info
                     
                 except Exception as e:
-                    logger.warning(f"⚠️ Error processing photo {i}: {e}")
+                    self.logger.warning(f"⚠️ Error processing photo {i}: {e}")
                     continue
                     
         except Exception as e:
-            logger.error(f"❌ Error fetching photos from iCloud: {e}")
+            self.logger.error(f"❌ Error fetching photos from iCloud: {e}")
     
-    def download_photo(self, photo_info: Dict[str, Any], local_path: str) -> bool:
+    def download_photo(self, photo_info: dict[str, t.Any], local_path: str) -> bool:
         """Download a photo to local storage.
         
         Args:
@@ -149,17 +151,17 @@ class iCloudClient:
             photo = photo_info['photo_obj']
             filename = photo_info['filename']
             
-            logger.debug(f"📥 Downloading {filename} to {local_path}")
+            self.logger.debug(f"📥 Downloading {filename} to {local_path}")
             
             # Check file size limit if configured
             if self.config.max_file_size_mb > 0:
                 size_mb = photo_info.get('size', 0) / (1024 * 1024)
                 if size_mb > self.config.max_file_size_mb:
-                    logger.info(f"⏭️ Skipping {filename} (size: {size_mb:.1f}MB > limit: {self.config.max_file_size_mb}MB)")
+                    self.logger.info(f"⏭️ Skipping {filename} (size: {size_mb:.1f}MB > limit: {self.config.max_file_size_mb}MB)")
                     return False
             
             if self.config.dry_run:
-                logger.info(f"🔍 DRY RUN: Would download {filename} to {local_path}")
+                self.logger.info(f"🔍 DRY RUN: Would download {filename} to {local_path}")
                 return True
             
             # Download the photo
@@ -169,11 +171,11 @@ class iCloudClient:
             with open(local_path, 'wb') as f:
                 f.write(download.raw.read())
             
-            logger.debug(f"✅ Downloaded {filename}")
+            self.logger.debug(f"✅ Downloaded {filename}")
             return True
             
         except Exception as e:
-            logger.error(f"❌ Error downloading photo {photo_info.get('filename', 'unknown')}: {e}")
+            self.logger.error(f"❌ Error downloading photo {photo_info.get('filename', 'unknown')}: {e}")
             return False
     
     @property

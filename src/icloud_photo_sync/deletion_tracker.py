@@ -1,13 +1,10 @@
 """Local deletion tracking using SQLite database."""
 
 import sqlite3
-import logging
 from pathlib import Path
-from typing import Set, Optional
 from datetime import datetime
 
-
-logger = logging.getLogger(__name__)
+from .logger import get_logger
 
 
 class DeletionTracker:
@@ -22,6 +19,11 @@ class DeletionTracker:
         self.db_path = Path(db_path)
         self._init_database()
     
+    @property
+    def logger(self):
+        """Get the global logger instance."""
+        return get_logger()
+
     def _init_database(self) -> None:
         """Initialize the SQLite database."""
         try:
@@ -40,17 +42,17 @@ class DeletionTracker:
                     ON deleted_photos(filename)
                 """)
                 conn.commit()
-            logger.debug(f"Successfully initialized deletion tracker database: {self.db_path}")
+            self.logger.debug(f"Successfully initialized deletion tracker database: {self.db_path}")
         except Exception as e:
-            logger.error(f"Failed to initialize deletion tracker database: {e}")
+            self.logger.error(f"Failed to initialize deletion tracker database: {e}")
             raise
     
     def add_deleted_photo(
         self, 
         photo_id: str, 
         filename: str, 
-        file_size: Optional[int] = None,
-        original_path: Optional[str] = None
+        file_size: int | None = None,
+        original_path: str | None = None
     ) -> None:
         """Record a photo as deleted.
         
@@ -60,17 +62,14 @@ class DeletionTracker:
             file_size: File size in bytes
             original_path: Original local file path
         """
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                conn.execute("""
-                    INSERT OR REPLACE INTO deleted_photos 
-                    (photo_id, filename, deleted_at, file_size, original_path)
-                    VALUES (?, ?, ?, ?, ?)
-                """, (photo_id, filename, datetime.now(), file_size, original_path))
-                conn.commit()
-            logger.debug(f"📝 Recorded deleted photo: {filename}")
-        except Exception as e:
-            logger.error(f"❌ Failed to record deleted photo {filename}: {e}")
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("""
+                INSERT OR REPLACE INTO deleted_photos 
+                (photo_id, filename, deleted_at, file_size, original_path)
+                VALUES (?, ?, ?, ?, ?)
+            """, (photo_id, filename, datetime.now(), file_size, original_path))
+            conn.commit()
+        self.logger.debug(f"📝 Recorded deleted photo: {filename}")
     
     def is_deleted(self, photo_id: str) -> bool:
         """Check if a photo is marked as deleted.
@@ -81,16 +80,13 @@ class DeletionTracker:
         Returns:
             True if photo is marked as deleted, False otherwise
         """
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.execute(
-                    "SELECT 1 FROM deleted_photos WHERE photo_id = ? LIMIT 1",
-                    (photo_id,)
-                )
-                return cursor.fetchone() is not None
-        except Exception as e:
-            logger.error(f"❌ Failed to check deletion status for photo {photo_id}: {e}")
-            return False
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute(
+                "SELECT 1 FROM deleted_photos WHERE photo_id = ? LIMIT 1",
+                (photo_id,)
+            )
+            return cursor.fetchone() is not None
+
     
     def is_filename_deleted(self, filename: str) -> bool:
         """Check if a filename is marked as deleted.
@@ -109,22 +105,19 @@ class DeletionTracker:
                 )
                 return cursor.fetchone() is not None
         except Exception as e:
-            logger.error(f"❌ Failed to check deletion status for filename {filename}: {e}")
+            self.logger.error(f"❌ Failed to check deletion status for filename {filename}: {e}")
             return False
     
-    def get_deleted_photos(self) -> Set[str]:
+    def get_deleted_photos(self) -> set[str]:
         """Get all deleted photo IDs.
         
         Returns:
             Set of deleted photo IDs
         """
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.execute("SELECT photo_id FROM deleted_photos")
-                return {row[0] for row in cursor.fetchall()}
-        except Exception as e:
-            logger.error(f"❌ Failed to get deleted photos: {e}")
-            return set()
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute("SELECT photo_id FROM deleted_photos")
+            return {row[0] for row in cursor.fetchall()}
+
     
     def remove_deleted_photo(self, photo_id: str) -> None:
         """Remove a photo from the deletion tracker.
@@ -132,16 +125,13 @@ class DeletionTracker:
         Args:
             photo_id: Unique photo identifier
         """
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                conn.execute(
-                    "DELETE FROM deleted_photos WHERE photo_id = ?",
-                    (photo_id,)
-                )
-                conn.commit()
-            logger.debug(f"🗑️ Removed photo from deletion tracker: {photo_id}")
-        except Exception as e:
-            logger.error(f"❌ Failed to remove photo from deletion tracker {photo_id}: {e}")
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute(
+                "DELETE FROM deleted_photos WHERE photo_id = ?",
+                (photo_id,)
+            )
+            conn.commit()
+        self.logger.debug(f"🗑️ Removed photo from deletion tracker: {photo_id}")
     
     def get_stats(self) -> dict:
         """Get deletion tracker statistics.
@@ -149,51 +139,21 @@ class DeletionTracker:
         Returns:
             Dictionary with tracker statistics
         """
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.execute("SELECT COUNT(*) FROM deleted_photos")
-                total_deleted = cursor.fetchone()[0]
-                
-                cursor = conn.execute("""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute("SELECT COUNT(*) FROM deleted_photos")
+            total_deleted = cursor.fetchone()[0]
+
+            cursor = conn.execute("""
                     SELECT 
                         MIN(deleted_at) as first_deletion,
                         MAX(deleted_at) as last_deletion
                     FROM deleted_photos
                 """)
-                times = cursor.fetchone()
-                
-                return {
-                    'total_deleted': total_deleted,
-                    'first_deletion': times[0],
-                    'last_deletion': times[1],
-                    'db_path': str(self.db_path)
-                }
-        except Exception as e:
-            logger.error(f"❌ Failed to get deletion tracker stats: {e}")
-            return {'total_deleted': 0, 'db_path': str(self.db_path)}
-    
-    def cleanup_old_entries(self, days: int = 365) -> int:
-        """Remove old deletion entries.
-        
-        Args:
-            days: Remove entries older than this many days
+            times = cursor.fetchone()
             
-        Returns:
-            Number of entries removed
-        """
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.execute("""
-                    DELETE FROM deleted_photos 
-                    WHERE deleted_at < datetime('now', '-{} days')
-                """.format(days))
-                removed = cursor.rowcount
-                conn.commit()
-            
-            if removed > 0:
-                logger.info(f"🧹 Cleaned up {removed} old deletion entries")
-            
-            return removed
-        except Exception as e:
-            logger.error(f"❌ Failed to cleanup old deletion entries: {e}")
-            return 0
+            return {
+                'total_deleted': total_deleted,
+                'first_deletion': times[0],
+                'last_deletion': times[1],
+                'db_path': str(self.db_path)
+            }
