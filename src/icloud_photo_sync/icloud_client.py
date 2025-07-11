@@ -4,14 +4,14 @@ import typing as t
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import PyiCloudFailedLoginException, PyiCloudAPIResponseException
 
-from .config import Config
+from .config import BaseConfig
 from .logger import get_logger
 
 
 class iCloudClient:
     """Handles iCloud authentication and photo operations."""
 
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: BaseConfig) -> None:
         """Initialize iCloud client.
         
         Args:

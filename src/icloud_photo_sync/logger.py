@@ -5,13 +5,13 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from .config import Config
+from .config import BaseConfig
 
 # Global logger instance
 _logger: Optional[logging.Logger] = None
 
 
-def setup_logging(config: Config) -> None:
+def setup_logging(config: BaseConfig) -> None:
     """Set up logging configuration.
 
     Args:

@@ -39,7 +39,23 @@ This is the project TODO list for implementing the **iCloud Photo Sync Tool** as
 
 ---
 
-## 4️⃣ 🐧🪟 Cross-Platform Build
+## 4️⃣ 🧪 Tests
+
+- [x] Write **unit tests** for:
+  - [x] Photo listing & new photo detection
+  - [x] Local deletion tracking logic
+  - [x] Database read/write functions
+  - [x] File system utilities
+- [x] Write **integration tests** with mocked `pyicloud`:
+  - [x] Simulate new photos, already downloaded photos, deleted photos
+  - [x] Simulate API errors & retry logic
+- [ ] (Optional) Add **end-to-end test** using dummy or sandbox iCloud
+- [ ] Add all tests to CI/CD
+- [x] Achieve ≥ **80% test coverage** for core sync logic (✅ **85.21%** achieved)
+
+---
+
+## 5️⃣ 🐧🪟 Cross-Platform Build
 
 - [ ] Write **PyInstaller spec** for Windows `.exe`
 - [ ] Write PyInstaller config for Linux executable (consider static linking if possible)
@@ -47,7 +63,7 @@ This is the project TODO list for implementing the **iCloud Photo Sync Tool** as
 
 ---
 
-## 5️⃣ 🔁 CI/CD Pipeline (GitHub Actions)
+## 6️⃣ 🔁 CI/CD Pipeline (GitHub Actions)
 
 - [ ] Create **CI workflow**:
   - [ ] Install dependencies using `uv`
@@ -57,22 +73,6 @@ This is the project TODO list for implementing the **iCloud Photo Sync Tool** as
   - [ ] Package Linux build for **APT repo** ([APT guide](https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository))
   - [ ] Package Windows build for **WinGet** ([WinGetCreate](https://techwatching.dev/posts/wingetcreate))
   - [ ] Publish releases automatically
-
----
-
-## 6️⃣ 🧪 Tests
-
-- [ ] Write **unit tests** for:
-  - [ ] Photo listing & new photo detection
-  - [ ] Local deletion tracking logic
-  - [ ] Database read/write functions
-  - [ ] File system utilities
-- [ ] Write **integration tests** with mocked `pyicloud`:
-  - [ ] Simulate new photos, already downloaded photos, deleted photos
-  - [ ] Simulate API errors & retry logic
-- [ ] (Optional) Add **end-to-end test** using dummy or sandbox iCloud
-- [ ] Add all tests to CI/CD
-- [ ] Achieve ≥ **80% test coverage** for core sync logic
 
 ---
 

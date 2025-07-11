@@ -2,7 +2,7 @@
 
 import sys
 
-from icloud_photo_sync.config import Config
+from icloud_photo_sync.config import get_config
 from icloud_photo_sync.sync import PhotoSyncer
 from icloud_photo_sync.logger import setup_logging, get_logger
 
@@ -16,7 +16,7 @@ def main() -> None:
     
     try:
         # Load configuration
-        config = Config()        
+        config = get_config()        
     except ValueError as e:
         print(f"❌ Configuration error: {e}")
         print("💡 Please check your .env file and ensure all required settings are configured.")

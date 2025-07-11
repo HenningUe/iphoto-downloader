@@ -18,6 +18,7 @@ The project will be managed as a **mono-repo** using **uv** for dependency manag
    - If a photo is deleted locally, it must **not** be re-downloaded on the next sync.  
    - Locally deleted photos must **not** be removed from iCloud.
    - shall run on windows and linux
+   - credentials shall be storable via keyrind or as environment variable
 
 2. **Local Deletion Tracking**  
    - Persistently track which files have been deleted locally to avoid re-downloading.  

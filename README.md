@@ -65,6 +65,8 @@ icloud-photo-sync/
 
 ## ⚙️ Configuration
 
+### Option 1: Environment Variables (Traditional)
+
 Create a `.env` file in the project root:
 
 ```env
@@ -77,6 +79,40 @@ SYNC_DIRECTORY=/path/to/your/photos
 DRY_RUN=false
 LOG_LEVEL=INFO
 ```
+
+### Option 2: Keyring (Secure Storage)
+
+For enhanced security, you can store your credentials in your system's credential store (Windows Credential Manager, macOS Keychain, Linux Secret Service). The application automatically detects keyring availability and uses the appropriate configuration class:
+
+- **KeyringConfig**: Used when keyring is available - supports both environment variables and secure credential storage
+- **EnvOnlyConfig**: Used when keyring is not available - only supports environment variables
+
+1. **Store credentials securely:**
+   ```bash
+   uv run python manage_credentials.py
+   ```
+
+2. **Update your .env file to only include sync settings:**
+   ```env
+   # Sync Settings (credentials will be retrieved from keyring)
+   SYNC_DIRECTORY=/path/to/your/photos
+   DRY_RUN=false
+   LOG_LEVEL=INFO
+   ```
+
+The application uses **polymorphism** to handle different credential storage strategies:
+- First checks for credentials in environment variables
+- If not found and keyring is available, retrieves them from your system's keyring
+- On Windows: Uses Windows Credential Manager
+- On macOS: Uses Keychain
+- On Linux: Uses Secret Service
+
+**Benefits of the polymorphic design:**
+- 🔧 **Automatic fallback**: Seamlessly switches between keyring and environment-only modes
+- 🔐 **Security first**: Credentials are encrypted by your operating system when using keyring
+- 🚫 **No plain text passwords**: Keep sensitive data out of configuration files
+- 🔄 **Transparent operation**: Same interface regardless of storage method
+- 🔒 **OS integration**: Works with your system's native credential storage
 
 ## 🧪 Development
 

@@ -2,7 +2,7 @@
 
 import typing as t
 
-from .config import Config
+from .config import BaseConfig
 from .icloud_client import iCloudClient
 from .deletion_tracker import DeletionTracker
 from .logger import get_logger
@@ -11,7 +11,7 @@ from .logger import get_logger
 class PhotoSyncer:
     """Handles the core photo synchronization logic."""
 
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: BaseConfig) -> None:
         """Initialize photo syncer.
         
         Args:
@@ -46,35 +46,41 @@ class PhotoSyncer:
         Returns:
             True if sync completed successfully, False otherwise
         """
-        self.logger.info("🚀 Starting iCloud photo sync")
-        
-        # Ensure sync directory exists
-        self.config.ensure_sync_directory()
-        
-        # Authenticate with iCloud
-        if not self.icloud_client.authenticate():
-            return False
-        
-        # Handle 2FA if required
-        if self.icloud_client.requires_2fa():
-            if not self._handle_2fa():
-                return False
-        
-        # Get local files
-        local_files = self._get_local_files()
-        self.logger.info(f"📁 Found {len(local_files)} existing local files")
-        
-        # Track files that were deleted locally
-        self._track_local_deletions(local_files)
-        
-        # Sync photos
-        self._sync_photos(local_files)
-        
-        # Print summary
-        self._print_summary()
-        
-        self.logger.info("✅ Photo sync completed successfully")
+        try:
+            self.logger.info("🚀 Starting iCloud photo sync")
             
+            # Ensure sync directory exists
+            self.config.ensure_sync_directory()
+            
+            # Authenticate with iCloud
+            if not self.icloud_client.authenticate():
+                return False
+            
+            # Handle 2FA if required
+            if self.icloud_client.requires_2fa():
+                if not self._handle_2fa():
+                    return False
+            
+            # Get local files
+            local_files = self._get_local_files()
+            self.logger.info(f"📁 Found {len(local_files)} existing local files")
+            
+            # Track files that were deleted locally
+            self._track_local_deletions(local_files)
+            
+            # Sync photos
+            self._sync_photos(local_files)
+            
+            # Print summary
+            self._print_summary()
+            
+            self.logger.info("✅ Photo sync completed successfully")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error during sync: {e}")
+            self.stats['errors'] += 1
+            return False
 
     
     def _handle_2fa(self) -> bool:
@@ -99,17 +105,21 @@ class PhotoSyncer:
         """Get set of existing local filenames.
         
         Returns:
-            Set of local filenames
+            Set of local image filenames
         """
         try:
             local_files = set()
             
+            # Define image file extensions
+            image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.tif', '.webp', '.heic', '.heif'}
+            
             if self.config.sync_directory.exists():
                 for file_path in self.config.sync_directory.rglob("*"):
-                    if file_path.is_file() and not file_path.name.startswith('.'):
-                        # Use relative path from sync directory
-                        rel_path = file_path.relative_to(self.config.sync_directory)
-                        local_files.add(str(rel_path))
+                    if (file_path.is_file() and 
+                        not file_path.name.startswith('.') and
+                        file_path.suffix.lower() in image_extensions):
+                        # Use just the filename, not the full path
+                        local_files.add(file_path.name)
             
             return local_files
             
@@ -124,11 +134,22 @@ class PhotoSyncer:
             local_files: Set of current local filenames
         """
         try:
-            # This is a simplified implementation
-            # In a real scenario, you'd need to track which files
-            # were previously downloaded but are now missing
-            
             self.logger.debug("🔍 Checking for locally deleted files")
+            
+            # Get previously tracked deleted photos
+            deleted_photos = self.deletion_tracker.get_deleted_photos()
+            
+            # Check if any deleted photos now exist locally (were restored)
+            for photo_id in deleted_photos:
+                # Check if this photo is back in local files
+                if self.deletion_tracker.is_filename_deleted(photo_id):
+                    # Get the filename associated with this photo
+                    for filename in local_files:
+                        if filename == photo_id or filename.startswith(photo_id):
+                            # Photo was restored, remove from deletion tracker
+                            self.deletion_tracker.remove_deleted_photo(photo_id)
+                            self.logger.info(f"� Restored deleted photo: {filename}")
+                            break
             
             # Get deletion tracker stats
             stats = self.deletion_tracker.get_stats()
@@ -176,18 +197,28 @@ class PhotoSyncer:
                 # Create subdirectories if needed
                 local_path.parent.mkdir(parents=True, exist_ok=True)
                 
-                if self.icloud_client.download_photo(photo_info, str(local_path)):
+                if self.config.dry_run:
+                    # In dry run mode, just log what would be downloaded
+                    self.logger.info(f"[DRY RUN] Would download: {filename}")
                     download_count += 1
                     self.stats['new_downloads'] += 1
-                    
-                    # Update file size stats
-                    if not self.config.dry_run and local_path.exists():
-                        self.stats['bytes_downloaded'] += local_path.stat().st_size
-                    
-                    self.logger.info(f"✅ Downloaded: {filename}")
+                    # Use the photo size from metadata if available
+                    if 'size' in photo_info:
+                        self.stats['bytes_downloaded'] += photo_info['size']
                 else:
-                    self.stats['errors'] += 1
-                    self.logger.warning(f"⚠️ Failed to download: {filename}")
+                    # Actually download the photo
+                    if self.icloud_client.download_photo(photo_info, str(local_path)):
+                        download_count += 1
+                        self.stats['new_downloads'] += 1
+                        
+                        # Update file size stats
+                        if local_path.exists():
+                            self.stats['bytes_downloaded'] += local_path.stat().st_size
+                        
+                        self.logger.info(f"✅ Downloaded: {filename}")
+                    else:
+                        self.stats['errors'] += 1
+                        self.logger.warning(f"⚠️ Failed to download: {filename}")
                 
                 # Log progress every 50 photos
                 if self.stats['total_photos'] % 50 == 0:
@@ -232,6 +263,19 @@ class PhotoSyncer:
         """Get sync statistics.
         
         Returns:
-            Dictionary with sync statistics
+            Dictionary with sync statistics including computed fields
         """
-        return self.stats.copy()
+        stats: dict[str, t.Any] = {}
+        
+        # Copy base stats
+        for key, value in self.stats.items():
+            stats[key] = value
+        
+        # Add computed fields
+        stats['mb_downloaded'] = round(stats['bytes_downloaded'] / (1024 * 1024), 2)
+        stats['success_rate'] = (
+            round((stats['new_downloads'] / max(stats['total_photos'], 1)) * 100, 2)
+            if stats['total_photos'] > 0 else 0.0
+        )
+        
+        return stats
