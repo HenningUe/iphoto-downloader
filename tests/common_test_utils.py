@@ -13,7 +13,33 @@ def temp_dir():
     """Create a temporary directory for testing."""
     temp_path = Path(tempfile.mkdtemp())
     yield temp_path
-    shutil.rmtree(temp_path)
+    
+    # Windows-specific cleanup with retry
+    def cleanup_dir(path, retries=3):
+        import time
+        import os
+        for attempt in range(retries):
+            try:
+                # Force close any open file handles
+                for root, dirs, files in os.walk(path):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        try:
+                            os.chmod(file_path, 0o777)
+                        except:
+                            pass
+                
+                shutil.rmtree(path)
+                break
+            except PermissionError:
+                if attempt < retries - 1:
+                    time.sleep(0.1 * (attempt + 1))  # Progressive delay
+                    continue
+                else:
+                    # If all attempts fail, try to clean up what we can
+                    print(f"Warning: Could not completely clean up {path}")
+    
+    cleanup_dir(temp_path)
 
 
 @pytest.fixture

@@ -58,7 +58,7 @@ This is the project TODO list for implementing the **iCloud Photo Sync Tool** as
 ## 5️⃣ 🐧🪟 Cross-Platform Build
 
 - [ ] Write **PyInstaller spec** for Windows `.exe`
-- [ ] Write PyInstaller config for Linux executable (consider static linking if possible)
+- [ ] Write **PyInstaller spec** for Linux executable (consider static linking if possible)
 - [ ] Test builds locally on Windows and Linux
 
 ---

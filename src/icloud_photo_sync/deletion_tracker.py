@@ -157,3 +157,14 @@ class DeletionTracker:
                 'last_deletion': times[1],
                 'db_path': str(self.db_path)
             }
+    
+    def close(self) -> None:
+        """Close any open database connections.
+        
+        This is useful for ensuring proper cleanup, especially on Windows
+        where file handles may prevent directory cleanup.
+        """
+        # Since we use context managers (with statements) throughout the class,
+        # connections are automatically closed. This method is here for
+        # explicit cleanup if needed.
+        pass
