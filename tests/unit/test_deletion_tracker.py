@@ -8,6 +8,7 @@ import pytest
 
 from icloud_photo_sync.deletion_tracker import DeletionTracker
 from icloud_photo_sync.logger import setup_logging
+from tests.common_test_utils import temp_dir
 
 
 class TestDeletionTracker:
