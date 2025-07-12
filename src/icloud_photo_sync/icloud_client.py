@@ -1,6 +1,7 @@
 """iCloud authentication and API interaction."""
 
 import typing as t
+from pathlib import Path
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import PyiCloudFailedLoginException, PyiCloudAPIResponseException
 
@@ -19,6 +20,10 @@ class iCloudClient:
         """
         self.config = config
         self._api: PyiCloudService | None = None
+        
+        # Set up session storage directory
+        self.session_dir = Path.home() / "icloud_photo_sync" / "sessions"
+        self.session_dir.mkdir(parents=True, exist_ok=True)
 
     @property
     def logger(self):
@@ -26,7 +31,7 @@ class iCloudClient:
         return get_logger()
     
     def authenticate(self) -> bool:
-        """Authenticate with iCloud.
+        """Authenticate with iCloud with session persistence.
         
         Returns:
             True if authentication successful, False otherwise
@@ -38,10 +43,16 @@ class iCloudClient:
             
             self.logger.info(f"Authenticating with iCloud as {self.config.icloud_username}")
             
+            # Create PyiCloudService with session storage
             self._api = PyiCloudService(
                 self.config.icloud_username,
-                self.config.icloud_password
+                self.config.icloud_password,
+                cookie_directory=str(self.session_dir)
             )
+            
+            # Check if we have a trusted session
+            if hasattr(self._api, 'is_trusted_session') and self._api.is_trusted_session:
+                self.logger.info("✅ Using existing trusted session - no 2FA required")
             
             # Test the connection by accessing photos
             if self._api.photos:
@@ -71,6 +82,16 @@ class iCloudClient:
             return False
         return self._api.requires_2fa
     
+    def is_trusted_session(self) -> bool:
+        """Check if the current session is trusted.
+        
+        Returns:
+            True if session is trusted, False otherwise
+        """
+        if not self._api:
+            return False
+        return hasattr(self._api, 'is_trusted_session') and self._api.is_trusted_session
+    
     def handle_2fa(self, code: str) -> bool:
         """Handle 2FA verification.
         
@@ -92,6 +113,30 @@ class iCloudClient:
             return result
         except Exception as e:
             self.logger.error(f"❌ Error during 2FA verification: {e}")
+            return False
+    
+    def trust_session(self) -> bool:
+        """Request to trust the current session to avoid future 2FA.
+        
+        Returns:
+            True if session was successfully trusted, False otherwise
+        """
+        if not self._api:
+            return False
+        
+        try:
+            if hasattr(self._api, 'trust_session'):
+                result = self._api.trust_session()
+                if result:
+                    self.logger.info("✅ Session trusted successfully")
+                else:
+                    self.logger.warning("⚠️ Failed to trust session")
+                return result
+            else:
+                self.logger.warning("⚠️ Session trusting not supported by this version of pyicloud")
+                return False
+        except Exception as e:
+            self.logger.error(f"❌ Error trusting session: {e}")
             return False
     
     def list_photos(self) -> t.Iterator[dict[str, t.Any]]:

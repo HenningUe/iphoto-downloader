@@ -91,15 +91,42 @@ class PhotoSyncer:
         """
         self.logger.info("🔐 Two-factor authentication required")
         
-        # In a real implementation, you might want to:
-        # 1. Show a GUI prompt
-        # 2. Use a CLI input
-        # 3. Read from environment variable
-        # For now, we'll log an error
-        
-        self.logger.error("❌ 2FA required but not implemented in this version")
-        self.logger.error("Please disable 2FA temporarily or use app-specific password")
-        return False
+        try:
+            # Prompt user for 2FA code
+            self.logger.info("📱 Please check your Apple device for a 2FA verification code")
+            
+            # Get 2FA code from user input
+            code = input("Enter the 6-digit 2FA code: ").strip()
+            
+            if not code:
+                self.logger.error("❌ No 2FA code provided")
+                return False
+            
+            if len(code) != 6 or not code.isdigit():
+                self.logger.error("❌ Invalid 2FA code format. Please enter a 6-digit number.")
+                return False
+            
+            self.logger.info("🔄 Validating 2FA code...")
+            
+            # Validate the 2FA code
+            if self.icloud_client.handle_2fa(code):
+                self.logger.info("✅ 2FA verification successful")
+                
+                # Try to trust the session to avoid future 2FA requirements
+                if self.icloud_client.trust_session():
+                    self.logger.info("✅ Session trusted - future logins may not require 2FA")
+                
+                return True
+            else:
+                self.logger.error("❌ 2FA verification failed. Please try again.")
+                return False
+                
+        except KeyboardInterrupt:
+            self.logger.info("\n❌ 2FA cancelled by user")
+            return False
+        except Exception as e:
+            self.logger.error(f"❌ Error during 2FA handling: {e}")
+            return False
     
     def _get_local_files(self) -> set[str]:
         """Get set of existing local filenames.
