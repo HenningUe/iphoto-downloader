@@ -19,6 +19,11 @@ The project will be managed as a **mono-repo** using **uv** for dependency manag
    - Locally deleted photos must **not** be removed from iCloud.
    - shall run on windows and linux
    - credentials shall be storable via keyrind or as environment variable
+   - if 2FA authentication is required, the user shall be notified via pushover
+   - The pushover notification shall include a http-link to a local address, see next requirement
+   - A local webserver shall be started, which enable the user to trigger a new F2A-request via a button
+   - When the button is actuated, a F2A authentication session shall be started, which in turn ask for a 2FA key. The user shall be able to enter the key in the web-interface of the locally started webserver.
+   - The http site needn't be secured as the server is running only in a private network.
 
 2. **Local Deletion Tracking**  
    - Persistently track which files have been deleted locally to avoid re-downloading.  

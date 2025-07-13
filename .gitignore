@@ -191,3 +191,7 @@ config.json
 # Logs
 logs/
 *.log
+
+#miscellaneous
+2FA_IMPLEMENTATION_SUMMARY.md
+2FA_SESSION_ANALYSIS.md
