@@ -21,6 +21,7 @@ dependencies = [
     "pyicloud>=2.0.1",
     "python-dotenv>=1.1.1",
     "keyring>=24.0.0",
+    "requests>=2.31.0",
 ]
 
 [project.scripts]

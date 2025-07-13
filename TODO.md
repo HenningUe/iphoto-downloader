@@ -30,11 +30,11 @@ This is the project TODO list for implementing the **iCloud Photo Sync Tool** as
 ### 2.2 2FA Authentication System
 
 #### 2.2.1 📱 Pushover Notification Integration
-- [ ] Add `pushover` dependency to `pyproject.toml`
-- [ ] Implement **Pushover notification service** for 2FA triggers
-- [ ] Create configuration for Pushover API token & user key
-- [ ] Implement notification content with HTTP link to local webserver
-- [ ] Add error handling for Pushover API failures
+- [x] Add `requests` dependency to `pyproject.toml` (for Pushover API)
+- [x] Implement **Pushover notification service** for 2FA triggers
+- [x] Create configuration for Pushover API token & user key
+- [x] Implement notification content with HTTP link to local webserver
+- [x] Add error handling for Pushover API failures
 
 #### 2.2.2 🌐 Local Web Server
 - [ ] Implement **local HTTP server** (Flask/FastAPI) for 2FA interface
@@ -130,7 +130,7 @@ This is the project TODO list for implementing the **iCloud Photo Sync Tool** as
 
 - [x] Add example `.env` template for credentials
 - [x] Support configurable local sync directory
-- [ ] Add **Pushover configuration** (API token, user key)
+- [x] Add **Pushover configuration** (API token, user key)
 - [ ] Add **2FA web server configuration** (port range, bind address)
 - [ ] Ensure credentials are not bundled in builds
 - [x] Implement robust **logging** to console & file
