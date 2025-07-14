@@ -72,8 +72,11 @@ MAX_DOWNLOADS=5
 """)
 
     # Run the sync tool as a subprocess
+    import sys
+    python_executable = sys.executable
+    
     result = subprocess.run([
-        "python", "-m", "icloud_photo_sync.main", "--config", str(env_file)
+        python_executable, "-m", "icloud_photo_sync.main", "--config", str(env_file)
     ], cwd=Path(__file__).parents[2], capture_output=True, text=True, timeout=120)
 
     print("STDOUT:\n", result.stdout)
@@ -107,8 +110,11 @@ LOG_LEVEL=DEBUG
 MAX_DOWNLOADS=2
 """)
 
+    import sys
+    python_executable = sys.executable
+    
     result = subprocess.run([
-        "python", "-m", "icloud_photo_sync.main", "--config", str(env_file)
+        python_executable, "-m", "icloud_photo_sync.main", "--config", str(env_file)
     ], cwd=Path(__file__).parents[2], capture_output=True, text=True, timeout=120)
 
     print("STDOUT:\n", result.stdout)
@@ -135,8 +141,11 @@ LOG_LEVEL=DEBUG
 MAX_DOWNLOADS=1
 """)
 
+    import sys
+    python_executable = sys.executable
+    
     result = subprocess.run([
-        "python", "-m", "icloud_photo_sync.main", "--config", str(env_file)
+        python_executable, "-m", "icloud_photo_sync.main", "--config", str(env_file)
     ], cwd=Path(__file__).parents[2], capture_output=True, text=True, timeout=60)
 
     print("STDOUT:\n", result.stdout)

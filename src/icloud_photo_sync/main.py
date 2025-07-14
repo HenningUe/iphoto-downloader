@@ -31,7 +31,15 @@ def main() -> None:
         
         # Initialize and run syncer
         syncer = PhotoSyncer(config)
-        syncer.sync()
+        success = syncer.sync()
+        
+        if success:
+            logger.info("✅ Sync completed successfully")
+            print("\n✅ Sync completed successfully!")
+        else:
+            logger.error("❌ Sync failed")
+            print("\n❌ Sync failed!")
+            sys.exit(1)
     except KeyboardInterrupt:
         print("\n🛑 Sync interrupted by user")
         sys.exit(130)
