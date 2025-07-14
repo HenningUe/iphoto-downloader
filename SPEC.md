@@ -20,38 +20,71 @@ The project will be managed as a **mono-repo** using **uv** for dependency manag
    - shall run on windows and linux
    - credentials shall be storable via keyrind or as environment variable
 
-2. **Local Deletion Tracking**  
+2. **2FA authenticaion**
+2.1. 2FA Trigger and Notification
+- If 2FA authentication is required, the user shall be notified immediately via a Pushover notification.
+
+2.2. Notification Content
+- The Pushover notification shall include an HTTP link to a local address (e.g., `http://localhost:<port>`), which directs the user to the local web interface.
+
+2.3. Local Webserver
+- A local webserver shall be started automatically when a 2FA authentication is required.
+- The webserver shall provide an interface that enables the user to trigger a new 2FA request via a button.
+
+2.4. 2FA Session Handling
+- When the user clicks the button in the web interface, a new 2FA authentication session shall be initiated.
+- The user shall be able to enter the 2FA key directly in the web interface provided by the local webserver.
+
+2.5. HTTP Site Security
+- The HTTP site does not need to be secured (i.e., no HTTPS), as the server runs only on the local machine within a private network.
+- The server shall bind only to `localhost` or `127.0.0.1` to prevent external access.
+
+2.6. Session Storage
+- Each 2FA session shall be stored locally in the system’s default user directory (e.g., `%USERPROFILE%` on Windows or `$HOME` on Linux/macOS).
+- The session data shall be stored in a dedicated sub-directory with an appropriate name (e.g., `2FA_Sessions`).
+- Stored session data shall include only necessary information and follow security best practices (e.g., appropriate file permissions).
+
+2.7 Error handling
+- The system shall handle errors gracefully if the local server cannot start (e.g., due to the port being in use).
+
+2.8. Logging
+- 2FA requests and sessions may be logged for debugging or audit purposes. Logs shall not include sensitive user information.
+
+
+
+
+3. **Local Deletion Tracking**  
    - Persistently track which files have been deleted locally to avoid re-downloading.  
    - Use a local lightweight database (e.g., SQLite or a JSON file) for tracking.
 
-3. **Idempotent Runs**  
+4. **Idempotent Runs**  
    - Running the tool multiple times must not create duplicate files or unintended deletions.
 
 ---
 
 ### 2️⃣ Non-Functional Requirements
 
-4. **Programming Language**  
+5. **Programming Language**  
    - Python.
 
-5. **iCloud API Integration**  
+6. **iCloud API Integration**  
    - Use the `pyicloud` package: [https://pypi.org/project/pyicloud/](https://pypi.org/project/pyicloud/)
 
-6. **Package Management**  
+7. **Package Management**  
    - Use `uv` for managing dependencies: [https://docs.astral.sh/uv/](https://docs.astral.sh/uv/)  
    - Maintain all dependencies in `pyproject.toml`.
 
-7. **Repository Structure**  
+8. **Repository Structure**  
    - Mono-repo structure as per the guide: [https://github.com/JasperHG90/uv-monorepo](https://github.com/JasperHG90/uv-monorepo)
 
-8. **Version Control**  
+9. **Version Control**  
    - Git repository, hosted on GitHub.
 
-9. **Executable Packaging**  
+10. **Executable Packaging**  
    - Build a standalone Windows .exe and a Linux executable using PyInstaller.
    - The Linux build must be statically linked if possible, or provide clear runtime requirements.
 
-10. **CI/CD Pipeline**  
+11. **CI/CD Pipeline**  
    - Use GitHub Actions for building, testing, packaging, and releasing the executables for both Windows and Linux.
    - Follow this guide for PyInstaller CI/CD: [https://ragug.medium.com/ci-cd-pipeline-for-pyinstaller-on-github-actions-for-windows-7f8274349278](https://ragug.medium.com/ci-cd-pipeline-for-pyinstaller-on-github-actions-for-windows-7f8274349278)
 

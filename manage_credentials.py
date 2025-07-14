@@ -20,9 +20,6 @@ def main():
     print("🔑 iCloud Photo Sync - Credential Manager")
     print("=" * 45)
     
-    # Use KeyringConfig directly for credential management
-    config = KeyringConfig()
-    
     while True:
         print("\nOptions:")
         print("1. Store credentials in keyring")
@@ -33,11 +30,11 @@ def main():
         choice = input("\nEnter your choice (1-4): ").strip()
         
         if choice == "1":
-            store_credentials(config)
+            store_credentials()
         elif choice == "2":
             check_credentials()
         elif choice == "3":
-            delete_credentials(config)
+            delete_credentials()
         elif choice == "4":
             print("👋 Goodbye!")
             break
@@ -45,7 +42,34 @@ def main():
             print("❌ Invalid choice. Please try again.")
 
 
-def store_credentials(config: KeyringConfig):
+def create_keyring_helper():
+    """Create a KeyringConfig instance that can be used for credential management."""
+    # Create a temporary KeyringConfig without validation by temporarily setting env vars
+    import os
+    temp_username = os.environ.get('ICLOUD_USERNAME')
+    temp_password = os.environ.get('ICLOUD_PASSWORD')
+    
+    # Set temporary values to avoid validation errors
+    os.environ['ICLOUD_USERNAME'] = 'temp'
+    os.environ['ICLOUD_PASSWORD'] = 'temp'
+    
+    try:
+        config = KeyringConfig()
+        return config
+    finally:
+        # Restore original environment
+        if temp_username is None:
+            os.environ.pop('ICLOUD_USERNAME', None)
+        else:
+            os.environ['ICLOUD_USERNAME'] = temp_username
+            
+        if temp_password is None:
+            os.environ.pop('ICLOUD_PASSWORD', None)
+        else:
+            os.environ['ICLOUD_PASSWORD'] = temp_password
+
+
+def store_credentials():
     """Store credentials in keyring."""
     print("\n🔐 Store iCloud Credentials")
     print("-" * 30)
@@ -62,6 +86,7 @@ def store_credentials(config: KeyringConfig):
     
     print("\n⏳ Storing credentials in keyring...")
     
+    config = create_keyring_helper()
     if config.store_credentials(username, password):
         print("✅ Credentials stored successfully in keyring!")
         print("💡 You can now remove ICLOUD_USERNAME and ICLOUD_PASSWORD from your .env file")
@@ -98,11 +123,12 @@ def check_credentials():
         print(f"❌ Error checking credentials: {e}")
 
 
-def delete_credentials(config: KeyringConfig):
+def delete_credentials():
     """Delete stored credentials."""
     print("\n🗑️ Delete Stored Credentials")
     print("-" * 30)
     
+    config = create_keyring_helper()
     if not config.has_stored_credentials():
         print("❌ No credentials found in keyring to delete.")
         return
