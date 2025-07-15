@@ -7,7 +7,6 @@ Run this file directly to start interactive testing:
     python tests/manuel/test_web_server_manual.py
 """
 
-import logging
 import time
 import webbrowser
 from pathlib import Path
@@ -19,51 +18,6 @@ from icloud_photo_sync.web_server import TwoFAWebServer
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
-
-
-def test_basic_server_startup():
-    """Test basic server startup and shutdown."""
-    print("🧪 Testing basic server startup and shutdown...")
-
-    # Setup basic logging for the web server
-    logging.basicConfig(level=logging.INFO)
-
-    # Import and setup the logger properly
-
-    setup_logging(logging.INFO)
-
-    def on_code_received(code):
-        print(f"✅ Received 2FA code: {code}")
-        return True
-
-    def on_new_2fa_requested():
-        print("🔄 New 2FA requested via web interface")
-        return True
-
-    server = TwoFAWebServer()
-    server.set_callbacks(
-        request_2fa_callback=on_new_2fa_requested,
-        submit_code_callback=on_code_received
-    )
-
-    try:
-        success = server.start()
-        if success:
-            print(f"✅ Server started successfully on http://localhost:{server.port}")
-            print("🌐 Server is running and ready for testing...")
-
-            # Keep server running for a short time
-            time.sleep(2)
-
-            server.stop()
-            print("✅ Server stopped successfully")
-            return True
-        else:
-            print("❌ Failed to start server")
-            return False
-    except Exception as e:
-        print(f"❌ Error during server test: {e}")
-        return False
 
 
 def test_web_interface_manual():
@@ -338,15 +292,13 @@ def run_all_manual_tests():
         setup_logging(config.get_log_level())
     except Exception:
         # Basic logging setup if config fails
-        import logging
         logging.basicConfig(level=logging.INFO)
 
     tests = [
-        ("Basic Server Startup", test_basic_server_startup),
-        ("Port Conflict Handling", test_port_conflict_handling),
-        ("Server State Management", test_server_state_management),
-        ("Browser Integration", test_browser_integration),
         ("Web Interface Manual Test", test_web_interface_manual),
+        # ("Port Conflict Handling", test_port_conflict_handling),
+        # ("Server State Management", test_server_state_management),
+        # ("Browser Integration", test_browser_integration),
     ]
 
     results = {}

@@ -107,12 +107,16 @@ class TwoFAHandler(BaseHTTPRequestHandler):
                 return;
             }
             
-            const formData = new FormData();
-            formData.append('code', code);
+            // Send as URL-encoded form data instead of FormData
+            const params = new URLSearchParams();
+            params.append('code', code);
             
             fetch('/submit_2fa', {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: params
             })
             .then(response => response.json())
             .then(data => {
@@ -381,7 +385,7 @@ button:hover {
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
 
-            # Parse form data
+            # Parse URL-encoded form data
             parsed_data = parse_qs(post_data.decode('utf-8'))
             code = parsed_data.get('code', [''])[0].strip()
 
@@ -608,11 +612,32 @@ class TwoFAWebServer:
         """
         try:
             self.logger.info("2FA code submitted via web interface")
+
+            # Validate code format
+            if not code or len(code) != 6 or not code.isdigit():
+                self.set_state('waiting_for_code',
+                               'Invalid code format. Please enter a 6-digit number.')
+                return False
+
+            # Update state to show processing
+            self.set_state('pending', 'Validating 2FA code...')
+
             self.submitted_code = code
             self.code_submitted_event.set()
+
+            # Call the callback if available
+            if self.submit_code_callback:
+                result = self.submit_code_callback(code)
+                if result:
+                    self.set_state('authenticated', 'Authentication successful!')
+                else:
+                    self.set_state('failed', 'Invalid 2FA code. Please try again.')
+                return result
+
             return True
         except Exception as e:
             self.logger.error(f"Error handling 2FA code submission: {e}")
+            self.set_state('failed', f'Error processing code: {e}')
             return False
 
     def request_new_2fa(self) -> bool:
@@ -623,11 +648,17 @@ class TwoFAWebServer:
         """
         try:
             self.logger.info("New 2FA code requested via web interface")
+
+            # Change state to waiting for code when new 2FA is requested
+            self.set_state('waiting_for_code',
+                           'New 2FA code requested. Please check your trusted device.')
+
             if self.request_2fa_callback:
                 return self.request_2fa_callback()
-            return False
+            return True  # Return True even if no callback, state change is successful
         except Exception as e:
             self.logger.error(f"Error handling new 2FA request: {e}")
+            self.set_state('failed', f'Failed to request new 2FA code: {e}')
             return False
 
     def wait_for_code(self, timeout: int = 300) -> Optional[str]:
