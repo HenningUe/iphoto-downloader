@@ -37,20 +37,20 @@ This is the project TODO list for implementing the **iCloud Photo Sync Tool** as
 - [x] Add error handling for Pushover API failures
 
 #### 2.2.2 🌐 Local Web Server
-- [ ] Implement **local HTTP server** (Flask/FastAPI) for 2FA interface
-- [ ] Create web interface with:
-  - [ ] Button to trigger new 2FA request
-  - [ ] Input field for 2FA code entry
-  - [ ] Status display for authentication progress
-- [ ] Ensure server binds only to `localhost`/`127.0.0.1`
-- [ ] Implement **automatic server startup** when 2FA required
-- [ ] Add **port conflict handling** (try multiple ports if needed)
+- [x] Implement **local HTTP server** (Flask/FastAPI) for 2FA interface
+- [x] Create web interface with:
+  - [x] Button to trigger new 2FA request
+  - [x] Input field for 2FA code entry
+  - [x] Status display for authentication progress
+- [x] Ensure server binds only to `localhost`/`127.0.0.1`
+- [x] Implement **automatic server startup** when 2FA required
+- [x] Add **port conflict handling** (try multiple ports if needed)
 
 #### 2.2.3 🔄 2FA Session Management
-- [ ] Implement **2FA session initiation** via web interface
-- [ ] Add **2FA code validation** through web form
-- [ ] Integrate with existing `pyicloud` 2FA handling
-- [ ] Implement **session state management** (pending, authenticated, failed)
+- [x] Implement **2FA session initiation** via web interface
+- [x] Add **2FA code validation** through web form
+- [x] Integrate with existing `pyicloud` 2FA handling
+- [x] Implement **session state management** (pending, authenticated, failed)
 
 #### 2.2.4 💾 Session Storage
 - [x] Store 2FA sessions in user directory (`%USERPROFILE%` or `$HOME`)

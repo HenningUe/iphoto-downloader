@@ -1,10 +1,9 @@
 """
 End-to-end tests for iCloud Photo Sync Tool.
-These tests require a dummy or sandbox iCloud account and will perform real sync operations in a temp directory.
+These tests require a dummy or sandbox iCloud account and will perform real 
+sync operations in a temp directory.
 """
 import os
-import tempfile
-import shutil
 from pathlib import Path
 import pytest
 import subprocess
@@ -14,11 +13,12 @@ import sys
 # These tests are marked as 'e2e' and 'slow' and are skipped by default unless --run-e2e is passed
 pytestmark = pytest.mark.slow
 
+
 def get_icloud_credentials():
     """Get iCloud credentials from environment variables or user input."""
     username = os.getenv("E2E_ICLOUD_USERNAME")
     password = os.getenv("E2E_ICLOUD_PASSWORD")
-    
+
     if not username or not password:
         print("\n" + "="*60)
         print("E2E Test Setup: iCloud Credentials Required")
@@ -30,27 +30,28 @@ def get_icloud_credentials():
         print("\nOr enter them interactively below:")
         print("(Use a dummy/test iCloud account, not your primary account!)")
         print("-"*60)
-        
+
         if not username:
             username = input("iCloud Username/Email: ").strip()
             if not username:
                 pytest.skip("No iCloud username provided.")
-        
+
         if not password:
             password = getpass.getpass("iCloud Password: ").strip()
             if not password:
                 pytest.skip("No iCloud password provided.")
-        
+
         print("Credentials received. Running E2E tests...")
         print("="*60)
-    
+
     return username, password
 
 
 @pytest.mark.e2e
 @pytest.mark.skipif(
     not os.getenv('E2E_ICLOUD_USERNAME') and not os.getenv('E2E_ICLOUD_PASSWORD'),
-    reason="E2E tests require iCloud credentials. Set E2E_ICLOUD_USERNAME and E2E_ICLOUD_PASSWORD env vars or run with -s to enter interactively."
+    reason=("E2E tests require iCloud credentials. Set E2E_ICLOUD_USERNAME and "
+            "E2E_ICLOUD_PASSWORD env vars or run with -s to enter interactively.")
 )
 def test_e2e_sync_real_icloud(tmp_path):
     """
@@ -74,7 +75,7 @@ MAX_DOWNLOADS=5
     # Run the sync tool as a subprocess
     import sys
     python_executable = sys.executable
-    
+
     result = subprocess.run([
         python_executable, "-m", "icloud_photo_sync.main", "--config", str(env_file)
     ], cwd=Path(__file__).parents[2], capture_output=True, text=True, timeout=120)
@@ -85,13 +86,16 @@ MAX_DOWNLOADS=5
     assert result.returncode == 0, f"Sync failed: {result.stderr}"
     photos_dir = tmp_path / "photos"
     assert photos_dir.exists(), "Photos directory was not created."
-    downloaded = list(photos_dir.glob("*.jpg")) + list(photos_dir.glob("*.jpeg")) + list(photos_dir.glob("*.png"))
+    downloaded = list(photos_dir.glob("*.jpg")) + \
+        list(photos_dir.glob("*.jpeg")) + list(photos_dir.glob("*.png"))
     assert len(downloaded) > 0, "No photos were downloaded."
+
 
 @pytest.mark.e2e
 @pytest.mark.skipif(
     not os.getenv('E2E_ICLOUD_USERNAME') and not os.getenv('E2E_ICLOUD_PASSWORD'),
-    reason="E2E tests require iCloud credentials. Set E2E_ICLOUD_USERNAME and E2E_ICLOUD_PASSWORD env vars or run with -s to enter interactively."
+    reason=("E2E tests require iCloud credentials. Set E2E_ICLOUD_USERNAME and "
+            "E2E_ICLOUD_PASSWORD env vars or run with -s to enter interactively.")
 )
 def test_e2e_sync_dry_run(tmp_path):
     """
@@ -110,9 +114,8 @@ LOG_LEVEL=DEBUG
 MAX_DOWNLOADS=2
 """)
 
-    import sys
     python_executable = sys.executable
-    
+
     result = subprocess.run([
         python_executable, "-m", "icloud_photo_sync.main", "--config", str(env_file)
     ], cwd=Path(__file__).parents[2], capture_output=True, text=True, timeout=120)
@@ -123,8 +126,10 @@ MAX_DOWNLOADS=2
     assert result.returncode == 0, f"Sync failed: {result.stderr}"
     photos_dir = tmp_path / "photos"
     assert photos_dir.exists(), "Photos directory was not created."
-    downloaded = list(photos_dir.glob("*.jpg")) + list(photos_dir.glob("*.jpeg")) + list(photos_dir.glob("*.png"))
+    downloaded = list(photos_dir.glob("*.jpg")) + \
+        list(photos_dir.glob("*.jpeg")) + list(photos_dir.glob("*.png"))
     assert len(downloaded) == 0, "Photos were downloaded in dry-run mode."
+
 
 @pytest.mark.e2e
 def test_e2e_sync_handles_invalid_credentials(tmp_path):
@@ -143,7 +148,7 @@ MAX_DOWNLOADS=1
 
     import sys
     python_executable = sys.executable
-    
+
     result = subprocess.run([
         python_executable, "-m", "icloud_photo_sync.main", "--config", str(env_file)
     ], cwd=Path(__file__).parents[2], capture_output=True, text=True, timeout=60)
@@ -152,4 +157,5 @@ MAX_DOWNLOADS=1
     print("STDERR:\n", result.stderr)
 
     assert result.returncode != 0, "Sync should fail with invalid credentials."
-    assert "authentication" in result.stderr.lower() or "failed" in result.stderr.lower() or result.returncode != 0
+    assert "authentication" in result.stderr.lower(
+    ) or "failed" in result.stderr.lower() or result.returncode != 0

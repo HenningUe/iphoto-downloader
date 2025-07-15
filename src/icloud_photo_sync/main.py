@@ -11,28 +11,28 @@ def main() -> None:
     """Main entry point for the application."""
     print("🌟 iCloud Photo Sync Tool v0.1.0")
     print("==================================")
-    
+
     logger = None
-    
+
     try:
         # Load configuration
-        config = get_config()        
+        config = get_config()
     except ValueError as e:
         print(f"❌ Configuration error: {e}")
         print("💡 Please check your .env file and ensure all required settings are configured.")
         sys.exit(1)
     try:
         # Set up logging with config
-        setup_logging(config)
+        setup_logging(config.get_log_level())
         logger = get_logger()
-        
+
         logger.info("Starting iCloud Photo Sync Tool")
         logger.info(f"Configuration: {config}")
-        
+
         # Initialize and run syncer
         syncer = PhotoSyncer(config)
         success = syncer.sync()
-        
+
         if success:
             logger.info("✅ Sync completed successfully")
             print("\n✅ Sync completed successfully!")

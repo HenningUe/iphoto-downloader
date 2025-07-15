@@ -3,9 +3,9 @@
 import tempfile
 import shutil
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 import pytest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 
 
 @pytest.fixture
@@ -13,7 +13,7 @@ def temp_dir():
     """Create a temporary directory for testing."""
     temp_path = Path(tempfile.mkdtemp())
     yield temp_path
-    
+
     # Windows-specific cleanup with retry
     def cleanup_dir(path, retries=3):
         import time
@@ -26,9 +26,9 @@ def temp_dir():
                         file_path = os.path.join(root, file)
                         try:
                             os.chmod(file_path, 0o777)
-                        except:
+                        except Exception:
                             pass
-                
+
                 shutil.rmtree(path)
                 break
             except PermissionError:
@@ -38,7 +38,7 @@ def temp_dir():
                 else:
                     # If all attempts fail, try to clean up what we can
                     print(f"Warning: Could not completely clean up {path}")
-    
+
     cleanup_dir(temp_path)
 
 
@@ -46,7 +46,7 @@ def temp_dir():
 def mock_config(temp_dir):
     """Create a mock configuration for testing."""
     from icloud_photo_sync.config import BaseConfig
-    
+
     config = Mock(spec=BaseConfig)
     config.icloud_username = "test@example.com"
     config.icloud_password = "test-password"
@@ -57,7 +57,7 @@ def mock_config(temp_dir):
     config.max_file_size_mb = 0
     config.ensure_sync_directory.return_value = None
     config.get_log_level.return_value = 20  # INFO level
-    
+
     return config
 
 
@@ -85,13 +85,13 @@ def mock_icloud_service():
 
 class MockPhotoInfo:
     """Mock photo info for testing."""
-    
+
     def __init__(self, filename: str, size: int = 1024, created: str = "2023-01-01T12:00:00Z"):
         self.filename = filename
         self.size = size
         self.created = created
         self.download_url = f"https://example.com/{filename}"
-    
+
     def download(self) -> bytes:
         """Mock download method."""
         return b"fake_image_data"
