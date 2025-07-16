@@ -1,8 +1,6 @@
 """Unit tests for iCloud client module."""
 
-import tempfile
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock, mock_open
+from unittest.mock import Mock, patch, mock_open
 import pytest
 
 from icloud_photo_sync.icloud_client import iCloudClient

@@ -2,7 +2,7 @@
 
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock, call
+from unittest.mock import Mock, patch
 import pytest
 
 from icloud_photo_sync.sync import PhotoSyncer
@@ -125,10 +125,7 @@ class TestPhotoSyncer:
         syncer.icloud_client.requires_2fa.return_value = True
 
         with patch.object(syncer, '_handle_2fa') as mock_2fa, \
-                patch.object(syncer, '_get_local_files') as mock_get_local, \
-                patch.object(syncer, '_track_local_deletions') as mock_track_deletions, \
-                patch.object(syncer, '_sync_photos') as mock_sync_photos, \
-                patch.object(syncer, '_print_summary') as mock_print_summary:
+                patch.object(syncer, '_get_local_files') as mock_get_local:
 
             mock_2fa.return_value = True
             mock_get_local.return_value = set()

@@ -6,7 +6,7 @@ import requests
 from unittest.mock import Mock, patch
 import pytest
 
-from icloud_photo_sync.web_server import TwoFAWebServer, TwoFAHandler
+from icloud_photo_sync.auth.web_server import TwoFAWebServer, TwoFAHandler
 from icloud_photo_sync.logger import setup_logging
 
 

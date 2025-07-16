@@ -8,7 +8,6 @@ import pytest
 
 from icloud_photo_sync.deletion_tracker import DeletionTracker
 from icloud_photo_sync.logger import setup_logging
-from tests.common_test_utils import temp_dir
 
 
 class TestDeletionTracker:
@@ -44,7 +43,7 @@ class TestDeletionTracker:
 
     def test_init_creates_database(self, temp_db):
         """Test that initialization creates the database and table."""
-        tracker = DeletionTracker(temp_db)
+        DeletionTracker(temp_db)
 
         # Check that database file exists
         assert Path(temp_db).exists()
@@ -68,7 +67,8 @@ class TestDeletionTracker:
         with sqlite3.connect(temp_db) as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT photo_id, filename, file_size, original_path FROM deleted_photos WHERE photo_id = ?",
+                "SELECT photo_id, filename, file_size, original_path "
+                "FROM deleted_photos WHERE photo_id = ?",
                 ("photo123",)
             )
             row = cursor.fetchone()
@@ -236,7 +236,8 @@ class TestDeletionTracker:
         with sqlite3.connect(temp_db) as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT photo_id, filename, file_size, original_path FROM deleted_photos WHERE photo_id = ?",
+                "SELECT photo_id, filename, file_size, original_path "
+                "FROM deleted_photos WHERE photo_id = ?",
                 ("photo123",)
             )
             row = cursor.fetchone()

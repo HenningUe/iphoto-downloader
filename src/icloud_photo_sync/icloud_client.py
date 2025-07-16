@@ -7,7 +7,7 @@ from pyicloud.exceptions import PyiCloudFailedLoginException, PyiCloudAPIRespons
 
 from .config import BaseConfig
 from .logger import get_logger
-from .web_server import TwoFAWebServer
+from .auth import handle_2fa_authentication
 
 
 class iCloudClient:
@@ -21,7 +21,6 @@ class iCloudClient:
         """
         self.config = config
         self._api: PyiCloudService | None = None
-        self._web_server: TwoFAWebServer | None = None
 
         # Set up session storage directory
         self.session_dir = Path.home() / "icloud_photo_sync" / "sessions"
@@ -60,7 +59,10 @@ class iCloudClient:
             # Check if 2FA is required
             if self.requires_2fa():
                 self.logger.info("🔐 2FA authentication required")
-                if not self._handle_2fa_with_web_server():
+                code = self._handle_2fa_with_web_server()
+                if code and self.handle_2fa(code):
+                    self.trust_session()
+                else:
                     return False
 
             # Verify access after authentication
@@ -93,77 +95,20 @@ class iCloudClient:
             self.logger.error(f"❌ Error verifying iCloud access: {e}")
             return False
 
-    def _handle_2fa_with_web_server(self) -> bool:
+    def _handle_2fa_with_web_server(self) -> str | None:
         """Handle 2FA authentication using the web server interface.
 
         Returns:
-            True if 2FA authentication successful, False otherwise
+            2FA code if successful, None if failed or timeout
         """
-        try:
-            # Initialize web server for 2FA
-            self._web_server = TwoFAWebServer()
+        username = self.config.icloud_username or "unknown"
 
-            # Set up callbacks
-            self._web_server.set_callbacks(
-                request_2fa_callback=self._request_new_2fa,
-                submit_code_callback=None  # Not needed for this implementation
-            )
-
-            # Start web server
-            if not self._web_server.start():
-                self.logger.error("❌ Failed to start 2FA web server")
-                return False
-
-            self.logger.info(f"🌐 2FA web interface available at: {self._web_server.get_url()}")
-
-            # Open browser automatically
-            if self._web_server.open_browser():
-                self.logger.info("🌐 Opened 2FA interface in browser")
-            else:
-                self.logger.warning("⚠️ Could not open browser automatically")
-                self.logger.info(f"Please open: {self._web_server.get_url()}")
-
-            # Wait for 2FA code through web interface
-            self._web_server.set_state('waiting_for_code')
-            code = self._web_server.wait_for_code(timeout=300)  # 5 minute timeout
-
-            if code:
-                self.logger.info("📱 2FA code received via web interface")
-
-                # Validate the 2FA code
-                if self.handle_2fa(code):
-                    self._web_server.set_state(
-                        'authenticated',
-                        'Authentication successful! You can close this window.'
-                    )
-
-                    # Try to trust the session for future use
-                    self.trust_session()
-                    return True
-                else:
-                    self._web_server.set_state(
-                        'failed',
-                        'Invalid 2FA code. Please try again.'
-                    )
-                    return False
-            else:
-                self.logger.error("❌ Timeout waiting for 2FA code")
-                self._web_server.set_state('failed', 'Timeout waiting for 2FA code')
-                return False
-
-        except Exception as e:
-            self.logger.error(f"❌ Error during web-based 2FA: {e}")
-            if self._web_server:
-                self._web_server.set_state('failed', f'Error: {str(e)}')
-            return False
-        finally:
-            # Clean up web server
-            if self._web_server:
-                # Give user a moment to see the final status
-                import time
-                time.sleep(2)
-                self._web_server.stop()
-                self._web_server = None
+        return handle_2fa_authentication(
+            config=self.config,
+            username=username,
+            request_2fa_callback=self._request_new_2fa,
+            validate_2fa_callback=self.handle_2fa
+        )
 
     def _request_new_2fa(self) -> bool:
         """Request a new 2FA code from Apple.

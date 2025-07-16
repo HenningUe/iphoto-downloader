@@ -14,7 +14,7 @@ import sys
 
 from icloud_photo_sync.config import get_config
 from icloud_photo_sync.logger import setup_logging
-from icloud_photo_sync.web_server import TwoFAWebServer
+from icloud_photo_sync.auth.web_server import TwoFAWebServer
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))

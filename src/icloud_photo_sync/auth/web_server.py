@@ -8,7 +8,7 @@ import socket
 from typing import Optional, Dict, Any
 import webbrowser
 
-from .logger import get_logger
+from ..logger import get_logger
 
 
 class TwoFAHandler(BaseHTTPRequestHandler):
@@ -58,7 +58,7 @@ class TwoFAHandler(BaseHTTPRequestHandler):
     <link rel="stylesheet" href="/styles.css">
     <script>
         let statusCheckInterval;
-        
+
         function updateStatus() {
             fetch('/status')
                 .then(response => response.json())
@@ -66,17 +66,17 @@ class TwoFAHandler(BaseHTTPRequestHandler):
                     const statusEl = document.getElementById('status');
                     const formEl = document.getElementById('2fa-form');
                     const messageEl = document.getElementById('message');
-                    
+
                     statusEl.textContent = data.status;
                     statusEl.className = 'status-' + data.state;
-                    
+
                     if (data.message) {
                         messageEl.textContent = data.message;
                         messageEl.style.display = 'block';
                     } else {
                         messageEl.style.display = 'none';
                     }
-                    
+
                     // Show/hide form based on state
                     if (data.state === 'waiting_for_code') {
                         formEl.style.display = 'block';
@@ -84,7 +84,7 @@ class TwoFAHandler(BaseHTTPRequestHandler):
                     } else {
                         formEl.style.display = 'none';
                     }
-                    
+
                     // Stop polling if authentication completed
                     if (data.state === 'authenticated' || data.state === 'failed') {
                         clearInterval(statusCheckInterval);
@@ -99,18 +99,18 @@ class TwoFAHandler(BaseHTTPRequestHandler):
                     console.error('Status check failed:', error);
                 });
         }
-        
+
         function submitCode() {
             const code = document.getElementById('2fa-code').value.trim();
             if (!code) {
                 alert('Please enter the 2FA code');
                 return;
             }
-            
+
             // Send as URL-encoded form data instead of FormData
             const params = new URLSearchParams();
             params.append('code', code);
-            
+
             fetch('/submit_2fa', {
                 method: 'POST',
                 headers: {
@@ -132,7 +132,7 @@ class TwoFAHandler(BaseHTTPRequestHandler):
                 alert('Failed to submit code');
             });
         }
-        
+
         function requestNew2FA() {
             fetch('/request_new_2fa', {
                 method: 'POST'
@@ -150,12 +150,12 @@ class TwoFAHandler(BaseHTTPRequestHandler):
                 alert('Failed to request new 2FA');
             });
         }
-        
+
         // Start status polling when page loads
         window.onload = function() {
             updateStatus();
             statusCheckInterval = setInterval(updateStatus, 2000);
-            
+
             // Handle Enter key in code input
             document.getElementById('2fa-code').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
@@ -169,27 +169,27 @@ class TwoFAHandler(BaseHTTPRequestHandler):
     <div class="container">
         <h1>🔐 iCloud Photo Sync</h1>
         <h2>Two-Factor Authentication</h2>
-        
+
         <div class="status-section">
             <p><strong>Status:</strong> <span id="status">Checking...</span></p>
             <div id="message" class="message" style="display: none;"></div>
         </div>
-        
+
         <div id="2fa-form" class="form-section" style="display: none;">
             <h3>Enter 2FA Code</h3>
             <p>Check your trusted device for the 6-digit verification code from Apple.</p>
             <div class="input-group">
-                <input type="text" id="2fa-code" placeholder="123456" maxlength="6" pattern="[0-9]{6}">
-                <button onclick="submitCode()">Submit Code</button>
+             <input type="text" id="2fa-code" placeholder="123456" maxlength="6" pattern="[0-9]{6}">
+             <button onclick="submitCode()">Submit Code</button>
             </div>
         </div>
-        
+
         <div class="action-section">
             <button onclick="requestNew2FA()" class="secondary-button">Request New 2FA Code</button>
         </div>
-        
+
         <div class="info-section">
-            <p><small>This page will automatically close when authentication is complete.</small></p>
+           <p><small>This page will automatically close when authentication is complete.</small></p>
         </div>
     </div>
 </body>

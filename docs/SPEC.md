@@ -35,19 +35,22 @@ The project will be managed as a **mono-repo** using **uv** for dependency manag
 - When the user clicks the button in the web interface, a new 2FA authentication session shall be initiated.
 - The user shall be able to enter the 2FA key directly in the web interface provided by the local webserver.
 
-2.5. HTTP Site Security
+2.5. Folder structure
+- All files related to the authentication topic shall be placed inside a python sub-package
+
+2.7. HTTP Site Security
 - The HTTP site does not need to be secured (i.e., no HTTPS), as the server runs only on the local machine within a private network.
 - The server shall bind only to `localhost` or `127.0.0.1` to prevent external access.
 
-2.6. Session Storage
+2.8. Session Storage
 - Each 2FA session shall be stored locally in the system’s default user directory (e.g., `%USERPROFILE%` on Windows or `$HOME` on Linux/macOS).
 - The session data shall be stored in a dedicated sub-directory with an appropriate name (e.g., `2FA_Sessions`).
 - Stored session data shall include only necessary information and follow security best practices (e.g., appropriate file permissions).
 
-2.7 Error handling
+2.9. Error handling
 - The system shall handle errors gracefully if the local server cannot start (e.g., due to the port being in use).
 
-2.8. Logging
+2.10. Logging
 - 2FA requests and sessions may be logged for debugging or audit purposes. Logs shall not include sensitive user information.
 
 

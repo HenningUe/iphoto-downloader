@@ -7,7 +7,7 @@ without running the full iCloud Photo Sync.
 """
 
 from icloud_photo_sync.logger import setup_logging
-from icloud_photo_sync.pushover_service import PushoverNotificationService
+from icloud_photo_sync.auth.pushover_service import PushoverService as PushoverNotificationService
 from icloud_photo_sync.config import KeyringConfig, get_config
 import sys
 import logging
