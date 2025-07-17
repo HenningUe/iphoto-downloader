@@ -39,13 +39,12 @@ class PushoverService:
         """
         self.config = config
 
-    def send_2fa_notification(self, web_server_url: str, username: str) -> bool:
+    def send_2fa_notification(self, web_server_url: str) -> bool:
         """
         Send a 2FA notification to the user with a link to the web interface.
 
         Args:
             web_server_url: URL of the local web server for 2FA code entry
-            username: iCloud username for context
 
         Returns:
             True if notification was sent successfully, False otherwise
@@ -53,7 +52,7 @@ class PushoverService:
         try:
             title = "iCloud Photo Sync - 2FA Required"
             message = (
-                f"2FA authentication required for iCloud account '{username}'.\n\n"
+                f"2FA authentication required.\n\n"
                 f"Click the link below to enter your 2FA code:\n"
                 f"{web_server_url}"
             )
@@ -72,7 +71,7 @@ class PushoverService:
             if self.config.device:
                 payload["device"] = self.config.device
 
-            logger.info(f"Sending 2FA notification via Pushover for user: {username}")
+            logger.info("Sending 2FA notification via Pushover")
 
             response = requests.post(
                 self.PUSHOVER_API_URL,
@@ -102,33 +101,30 @@ class PushoverService:
             logger.error(f"Unexpected error sending Pushover notification: {e}")
             return False
 
-    def send_auth_success_notification(self, username: str) -> bool:
+    def send_auth_success_notification(self) -> bool:
         """
         Send a notification when 2FA authentication is successful.
-
-        Args:
-            username: iCloud username for context
 
         Returns:
             True if notification was sent successfully, False otherwise
         """
         try:
             title = "iCloud Photo Sync - Authentication Successful"
-            message = (f"2FA authentication completed successfully for '{username}'. "
-                       f"Photo sync will continue.")
+            message = ("2FA authentication completed successfully. "
+                       "Photo sync will continue.")
 
             payload = {
                 "token": self.config.api_token,
                 "user": self.config.user_key,
                 "title": title,
                 "message": message,
-                "priority": 0  # Normal priority for success notifications
+                "priority": -1,
             }
 
             if self.config.device:
                 payload["device"] = self.config.device
 
-            logger.info(f"Sending authentication success notification for user: {username}")
+            logger.info("Sending authentication success notification.")
 
             response = requests.post(
                 self.PUSHOVER_API_URL,

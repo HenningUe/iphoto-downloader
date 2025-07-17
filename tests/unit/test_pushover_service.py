@@ -1,7 +1,6 @@
 """Unit tests for Pushover notification service."""
 
 import pytest
-import json
 from unittest.mock import Mock, patch
 from requests.exceptions import RequestException, Timeout
 
@@ -67,7 +66,6 @@ class TestPushoverNotificationService:
 
         result = self.service.send_2fa_notification(
             web_server_url="http://localhost:8080",
-            username="test@example.com"
         )
 
         assert result is True
@@ -98,7 +96,6 @@ class TestPushoverNotificationService:
 
         result = self.service.send_2fa_notification(
             web_server_url="http://localhost:8080",
-            username="test@example.com"
         )
 
         assert result is False
@@ -114,7 +111,6 @@ class TestPushoverNotificationService:
 
         result = self.service.send_2fa_notification(
             web_server_url="http://localhost:8080",
-            username="test@example.com"
         )
 
         assert result is False
@@ -127,7 +123,6 @@ class TestPushoverNotificationService:
 
         result = self.service.send_2fa_notification(
             web_server_url="http://localhost:8080",
-            username="test@example.com"
         )
 
         assert result is False
@@ -186,7 +181,7 @@ class TestPushoverNotificationService:
             mock_response.json.return_value = {"status": 1}
             mock_post.return_value = mock_response
 
-            service.send_2fa_notification("http://localhost:8080", "test@example.com")
+            service.send_2fa_notification("http://localhost:8080")
 
             # Check that device is not in payload
             call_args = mock_post.call_args
@@ -200,7 +195,6 @@ class TestPushoverNotificationService:
 
         result = self.service.send_2fa_notification(
             web_server_url="http://localhost:8080",
-            username="test@example.com"
         )
 
         assert result is False
@@ -212,7 +206,6 @@ class TestPushoverNotificationService:
 
         result = self.service.send_2fa_notification(
             web_server_url="http://localhost:8080",
-            username="test@example.com"
         )
 
         assert result is False

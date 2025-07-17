@@ -148,8 +148,7 @@ class PhotoSyncer:
             # TODO: Replace with actual web server URL once implemented
             web_server_url = "http://localhost:8080/2fa"
 
-            username = self.config.icloud_username or "unknown"
-            if notification_service.send_2fa_notification(web_server_url, username):
+            if notification_service.send_2fa_notification(web_server_url):
                 self.logger.info("📱 2FA notification sent via Pushover")
             else:
                 self.logger.warning("⚠️ Failed to send 2FA notification via Pushover")
@@ -167,8 +166,7 @@ class PhotoSyncer:
             from .auth.pushover_service import PushoverService as PushoverNotificationService
             notification_service = PushoverNotificationService(pushover_config)
 
-            username = self.config.icloud_username or "unknown"
-            if notification_service.send_auth_success_notification(username):
+            if notification_service.send_auth_success_notification():
                 self.logger.info("📱 2FA success notification sent via Pushover")
             else:
                 self.logger.warning("⚠️ Failed to send 2FA success notification via Pushover")

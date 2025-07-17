@@ -49,7 +49,6 @@ class TestTwoFactorAuthHandler:
 
         # Test
         result = self.handler.handle_2fa_authentication(
-            username="test@example.com",
             request_2fa_callback=request_callback,
             validate_2fa_callback=validate_callback
         )
@@ -71,7 +70,6 @@ class TestTwoFactorAuthHandler:
 
         # Test
         result = self.handler.handle_2fa_authentication(
-            username="test@example.com"
         )
 
         # Verify
@@ -93,7 +91,6 @@ class TestTwoFactorAuthHandler:
 
         # Test
         result = self.handler.handle_2fa_authentication(
-            username="test@example.com"
         )
 
         # Verify
@@ -118,7 +115,6 @@ class TestTwoFactorAuthHandler:
 
         # Test
         result = self.handler.handle_2fa_authentication(
-            username="test@example.com",
             validate_2fa_callback=validate_callback
         )
 
@@ -141,7 +137,7 @@ class TestTwoFactorAuthHandler:
         mock_pushover_service_class.return_value = mock_service
 
         # Test
-        self.handler._send_pushover_notification("test@example.com", "http://localhost:8080")
+        self.handler._send_pushover_notification("http://localhost:8080")
 
         # Verify
         mock_service.send_2fa_notification.assert_called_once_with(
@@ -163,7 +159,7 @@ class TestTwoFactorAuthHandler:
         mock_pushover_service_class.return_value = mock_service
 
         # Test
-        self.handler._send_success_notification("test@example.com")
+        self.handler._send_success_notification()
 
         # Verify
         mock_service.send_auth_success_notification.assert_called_once_with("test@example.com")
@@ -202,14 +198,12 @@ class TestHandleTwoFactorAuthenticationFunction:
         # Test
         result = handle_2fa_authentication(
             config=self.config,
-            username="test@example.com"
         )
 
         # Verify
         assert result == "123456"
         mock_handler_class.assert_called_once_with(self.config)
         mock_handler.handle_2fa_authentication.assert_called_once_with(
-            username="test@example.com",
             request_2fa_callback=None,
             validate_2fa_callback=None
         )

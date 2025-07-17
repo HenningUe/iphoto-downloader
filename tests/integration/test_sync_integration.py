@@ -2,16 +2,12 @@
 Integration tests for iCloud Photo Sync Tool with mocked pyicloud.
 These tests simulate various sync scenarios without requiring real iCloud credentials.
 """
-import tempfile
-import shutil
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 import pytest
 
 from icloud_photo_sync.sync import PhotoSyncer
-from icloud_photo_sync.config import get_config
 from icloud_photo_sync.logger import setup_logging
-from tests.common_test_utils import temp_dir, create_test_files
 
 
 @pytest.mark.integration
@@ -30,7 +26,7 @@ class TestSyncIntegration:
         setup_logging(mock_log_config)
 
     @pytest.fixture
-    def mock_config(self, temp_dir):
+    def mock_config(self, temp_dir):  # noqa
         """Create a mock configuration for integration testing."""
         config = Mock()
         config.icloud_username = "test@example.com"
@@ -115,7 +111,8 @@ class TestSyncIntegration:
                 syncer.deletion_tracker.close()
 
     @patch('icloud_photo_sync.sync.iCloudClient')
-    def test_integration_sync_with_existing_photos(self, mock_icloud_client_class, mock_config, mock_photos):
+    def test_integration_sync_with_existing_photos(
+            self, mock_icloud_client_class, mock_config, mock_photos):
         """Integration test: Sync when some photos already exist locally."""
         # Pre-create some local photos
         photos_dir = mock_config.sync_directory
@@ -155,7 +152,8 @@ class TestSyncIntegration:
                 syncer.deletion_tracker.close()
 
     @patch('icloud_photo_sync.sync.iCloudClient')
-    def test_integration_sync_dry_run_mode(self, mock_icloud_client_class, mock_config, mock_photos):
+    def test_integration_sync_dry_run_mode(
+            self, mock_icloud_client_class, mock_config, mock_photos):
         """Integration test: Sync in dry-run mode should not download files."""
         # Enable dry-run mode
         mock_config.dry_run = True

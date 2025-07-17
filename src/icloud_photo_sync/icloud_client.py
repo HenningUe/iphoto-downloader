@@ -101,11 +101,9 @@ class iCloudClient:
         Returns:
             2FA code if successful, None if failed or timeout
         """
-        username = self.config.icloud_username or "unknown"
 
         return handle_2fa_authentication(
             config=self.config,
-            username=username,
             request_2fa_callback=self._request_new_2fa,
             validate_2fa_callback=self.handle_2fa
         )

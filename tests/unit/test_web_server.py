@@ -46,7 +46,12 @@ class TestTwoFAWebServer:
 
         # Test URL generation
         url = web_server.get_url()
-        assert url == f"http://localhost:{web_server.port}"
+        assert url == f"http://{web_server.host}:{web_server.port}"
+        # Verify that we have a valid IP address (either localhost fallback or real IP)
+        import re
+        ip_pattern = (r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}"
+                      r"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
+        assert re.match(ip_pattern, web_server.host), f"Invalid IP address: {web_server.host}"
 
         # Test stop
         web_server.stop()

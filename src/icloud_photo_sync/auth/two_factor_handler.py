@@ -22,9 +22,16 @@ class TwoFactorAuthHandler:
         self.logger = get_logger()
         self._web_server: Optional[TwoFAWebServer] = None
 
+    @property
+    def port(self) -> int:
+        """Get the port of the web server."""
+        port = self._web_server.port if self._web_server else 0
+        if not port:
+            port = 0
+        return port
+
     def handle_2fa_authentication(
         self,
-        username: str,
         request_2fa_callback: Optional[Callable[[], bool]] = None,
         validate_2fa_callback: Optional[Callable[[str], bool]] = None
     ) -> Optional[str]:
@@ -38,7 +45,6 @@ class TwoFactorAuthHandler:
         5. Returns the 2FA code
 
         Args:
-            username: iCloud username for notifications
             request_2fa_callback: Optional callback to request new 2FA code from Apple
             validate_2fa_callback: Optional callback to validate 2FA code
 
@@ -70,7 +76,7 @@ class TwoFactorAuthHandler:
             self.logger.info(f"🌐 2FA web interface available at: {web_url}")
 
             # Send Pushover notification if configured
-            self._send_pushover_notification(username, web_url)
+            self._send_pushover_notification(web_url)
 
             # Open browser automatically
             if self._web_server.open_browser():
@@ -95,7 +101,7 @@ class TwoFactorAuthHandler:
                         )
 
                         # Send success notification
-                        self._send_success_notification(username)
+                        self._send_success_notification()
                         return code
                     else:
                         self._web_server.set_state(
@@ -128,11 +134,10 @@ class TwoFactorAuthHandler:
                 self._web_server.stop()
                 self._web_server = None
 
-    def _send_pushover_notification(self, username: str, web_url: str) -> None:
+    def _send_pushover_notification(self, web_url: str) -> None:
         """Send Pushover notification if configured.
 
         Args:
-            username: iCloud username for context
             web_url: Web server URL for the notification
         """
         try:
@@ -143,7 +148,7 @@ class TwoFactorAuthHandler:
 
             notification_service = PushoverService(pushover_config)
 
-            if notification_service.send_2fa_notification(web_url, username):
+            if notification_service.send_2fa_notification(web_url):
                 self.logger.info("📱 2FA notification sent via Pushover")
             else:
                 self.logger.warning("⚠️ Failed to send 2FA notification via Pushover")
@@ -151,11 +156,8 @@ class TwoFactorAuthHandler:
         except Exception as e:
             self.logger.error(f"❌ Error sending Pushover notification: {e}")
 
-    def _send_success_notification(self, username: str) -> None:
+    def _send_success_notification(self) -> None:
         """Send success notification via Pushover if configured.
-
-        Args:
-            username: iCloud username for context
         """
         try:
             pushover_config = self.config.get_pushover_config()
@@ -164,7 +166,7 @@ class TwoFactorAuthHandler:
 
             notification_service = PushoverService(pushover_config)
 
-            if notification_service.send_auth_success_notification(username):
+            if notification_service.send_auth_success_notification():
                 self.logger.info("📱 2FA success notification sent via Pushover")
             else:
                 self.logger.warning("⚠️ Failed to send 2FA success notification via Pushover")
@@ -182,7 +184,6 @@ class TwoFactorAuthHandler:
 # Convenience function for external use
 def handle_2fa_authentication(
     config: BaseConfig,
-    username: str,
     request_2fa_callback: Optional[Callable[[], bool]] = None,
     validate_2fa_callback: Optional[Callable[[str], bool]] = None
 ) -> Optional[str]:
@@ -192,7 +193,6 @@ def handle_2fa_authentication(
 
     Args:
         config: Application configuration
-        username: iCloud username for notifications
         request_2fa_callback: Optional callback to request new 2FA code from Apple
         validate_2fa_callback: Optional callback to validate 2FA code
 
@@ -202,7 +202,6 @@ def handle_2fa_authentication(
     handler = TwoFactorAuthHandler(config)
     try:
         return handler.handle_2fa_authentication(
-            username=username,
             request_2fa_callback=request_2fa_callback,
             validate_2fa_callback=validate_2fa_callback
         )

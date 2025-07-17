@@ -7,6 +7,7 @@ Run this file directly to start interactive testing:
     python tests/manuel/test_web_server_manual.py
 """
 
+import logging
 import time
 import webbrowser
 from pathlib import Path

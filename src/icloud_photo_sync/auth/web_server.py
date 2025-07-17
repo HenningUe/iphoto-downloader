@@ -474,6 +474,7 @@ class TwoFAWebServer:
         self.server: Optional[HTTPServer] = None
         self.server_thread: Optional[threading.Thread] = None
         self.port: Optional[int] = None
+        self.host: str = "0.0.0.0"  # Default to localhost
         self.logger = get_logger()
 
         # 2FA state management
@@ -486,13 +487,34 @@ class TwoFAWebServer:
         self.request_2fa_callback = None
         self.submit_code_callback = None
 
+    def get_local_ipv4(self) -> str:
+        """Get the local IPv4 address of the current machine.
+
+        Returns:
+            The local IPv4 address or '0.0.0.0' if not found
+        """
+        try:
+            # Create a socket and connect to a remote address to determine local IP
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+                # Connect to Google's DNS server (doesn't actually send data)
+                s.connect(("8.8.8.8", 80))
+                local_ip = s.getsockname()[0]
+                return local_ip
+        except Exception as e:
+            self.logger.warning(f"Could not determine local IP address: {e}")
+            # Fallback to localhost
+            return "127.0.0.1"
+
     def find_available_port(self) -> Optional[int]:
         """Find an available port in the specified range."""
+        # Get the host IP first
+        self.host = self.get_local_ipv4()
+
         for port in range(self.port_range[0], self.port_range[1] + 1):
             try:
-                # Test if port is available
+                # Test if port is available on the determined host
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                    s.bind(('localhost', port))
+                    s.bind((self.host, port))
                     return port
             except OSError:
                 continue
@@ -512,7 +534,7 @@ class TwoFAWebServer:
                 return False
 
             # Create and configure server
-            self.server = HTTPServer(('localhost', self.port), TwoFAHandler)
+            self.server = HTTPServer((self.host, self.port), TwoFAHandler)
             setattr(self.server, 'twofa_server', self)  # Reference for handlers
 
             # Start server in separate thread
@@ -522,7 +544,7 @@ class TwoFAWebServer:
             )
             self.server_thread.start()
 
-            self.logger.info(f"2FA web server started on http://localhost:{self.port}")
+            self.logger.info(f"2FA web server started on http://{self.host}:{self.port}")
             return True
 
         except Exception as e:
@@ -548,8 +570,8 @@ class TwoFAWebServer:
         Returns:
             Server URL if running, None otherwise
         """
-        if self.port:
-            return f"http://localhost:{self.port}"
+        if self.port and self.host:
+            return f"http://{self.host}:{self.port}"
         return None
 
     def open_browser(self) -> bool:

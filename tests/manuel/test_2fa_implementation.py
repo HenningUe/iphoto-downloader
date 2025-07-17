@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Test script for 2FA implementation with session storage."""
 
+import os
+import sys
+from pathlib import Path
+
 from icloud_photo_sync.sync import PhotoSyncer
 from icloud_photo_sync.logger import setup_logging
 from icloud_photo_sync.icloud_client import iCloudClient
 from icloud_photo_sync.config import get_config, KEYRING_AVAILABLE
-import sys
-from pathlib import Path
 
 # Add the src directory to the path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -82,12 +84,11 @@ def test_syncer_integration():
         config = get_config()
 
         # Override settings for testing
-        import os
         os.environ['DRY_RUN'] = 'true'
         os.environ['MAX_DOWNLOADS'] = '1'
 
         # Create syncer
-        syncer = PhotoSyncer(config)
+        PhotoSyncer(config)
         print("✅ PhotoSyncer created successfully")
         print("💡 2FA handling is now implemented in PhotoSyncer._handle_2fa()")
         print("💡 Sessions will be stored in: %USERPROFILE%\\icloud_photo_sync\\sessions")
