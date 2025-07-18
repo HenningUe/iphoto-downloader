@@ -7,7 +7,7 @@ from pyicloud.exceptions import PyiCloudFailedLoginException, PyiCloudAPIRespons
 
 from .config import BaseConfig
 from .logger import get_logger
-from .auth2fa import handle_2fa_authentication
+from auth2fa import handle_2fa_authentication
 
 
 class iCloudClient:

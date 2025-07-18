@@ -1,14 +1,20 @@
+[tool.uv.workspace]
+members = [
+  "shared/*", 
+  "src/*"
+]
+
 [project]
-name = "icloud-photo-sync"
+name = "icloud-photo-sync-workspace"
 version = "0.1.0"
-description = "A tool to sync photos from iCloud to local storage with deletion tracking"
+description = "A monorepo workspace for iCloud photo sync tools"
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [
     { name = "Your Name", email = "your.email@example.com" }
 ]
 license = { file = "LICENSE" }
-keywords = ["icloud", "photos", "sync", "backup"]
+keywords = ["icloud", "photos", "sync", "backup", "workspace"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: End Users/Desktop",
@@ -18,39 +24,29 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "pyicloud>=2.0.1",
-    "python-dotenv>=1.1.1",
-    "keyring>=24.0.0",
-    "requests>=2.31.0",
+    "icloud-photo-sync",
+    "auth2fa",
 ]
 
-[project.scripts]
-icloud-photo-sync = "icloud_photo_sync.main:main"
+[tool.uv.sources]
+icloud-photo-sync = { workspace = true }
+auth2fa = { workspace = true }
 
 [project.urls]
 Homepage = "https://github.com/your-username/icloud-photo-sync"
 Repository = "https://github.com/your-username/icloud-photo-sync"
 Issues = "https://github.com/your-username/icloud-photo-sync/issues"
 
-[dependency-groups]
-dev = [
-    "mypy>=1.16.1",
-    "ruff>=0.12.2",
-    "pytest>=8.0.0",
-    "pytest-cov>=4.0.0",
-    "pytest-mock>=3.12.0",
-    "pytest-asyncio>=0.23.0",
-]
-
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "shared/*/tests", "src/*/tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = [
     "--strict-markers",
     "--strict-config",
-    "--cov=src/icloud_photo_sync",
+    "--cov=src",
+    "--cov=shared",
     "--cov-report=term-missing",
     "--cov-report=html",
     "--cov-report=xml",

@@ -2,11 +2,9 @@
 
 from unittest.mock import Mock, patch
 
-from src.icloud_photo_sync.auth2fa.two_factor_handler import (
+from auth2fa.authenticator import (
     TwoFactorAuthHandler, handle_2fa_authentication
 )
-from src.icloud_photo_sync.config import BaseConfig
-from src.icloud_photo_sync.logger import setup_logging
 
 
 class TestTwoFactorAuthHandler:
@@ -14,10 +12,7 @@ class TestTwoFactorAuthHandler:
 
     def setup_method(self):
         """Set up test fixtures."""
-        # Setup logging
-        mock_config = Mock(spec=BaseConfig)
-        mock_config.get_log_level.return_value = 20
-        setup_logging(mock_config)
+        pass
 
         # Create a mock config
         self.config = Mock(spec=BaseConfig)

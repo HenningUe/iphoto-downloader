@@ -1,0 +1,25 @@
+[project]
+name = "auth2fa"
+version = "0.1.0"
+description = "A package for handling 2FA with a web server and Pushover notifications."
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [
+    { name = "Your Name", email = "your.email@example.com" }
+]
+license = { file = "LICENSE" }
+keywords = ["2fa", "authentication", "pushover"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "requests>=2.31.0",
+]
+
+[tool.uv.sources]
+auth2fa = { path = "." }

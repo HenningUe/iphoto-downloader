@@ -1,23 +1,40 @@
-# 📸 iCloud Photo Sync Tool
+# 📸 iCloud Photo Sync Workspace
 
-A Python-based tool that synchronizes photos from iCloud to local storage with intelligent deletion tracking. This tool ensures that locally deleted photos are not re-downloaded while never touching your iCloud photos.
+A uv monorepo workspace for iCloud photo synchronization tools and utilities.
 
 ## ✨ Features
 
 - **🔄 Smart Sync**: Only downloads new photos that don't exist locally
-- **🛡️ Deletion Protection**: Tracks locally deleted photos to prevent re-downloading
+- **🛡️ Deletion Protection**: Tracks locally deleted photos to prevent
+  re-downloading
 - **☁️ iCloud Safe**: Never deletes photos from your iCloud account
 - **🎯 Idempotent**: Safe to run multiple times without duplicates
 - **🖥️ Cross-Platform**: Works on Windows and Linux
 - **📊 Logging**: Detailed console and file logging
 - **🔧 Configurable**: Customizable sync directory and settings
+- **🔐 2FA Support**: Integrated two-factor authentication for iCloud
+
+## 🏗️ Workspace Structure
+
+This workspace contains the following packages:
+
+### `src/icloud_photo_sync/`
+
+The main application package for syncing photos from iCloud to local storage
+with deletion tracking.
+
+### `shared/auth2fa/`
+
+A shared authentication package providing 2FA functionality for iCloud
+authentication.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Python 3.9+
+- Python 3.12+
 - iCloud account with Two-Factor Authentication enabled
+- [uv](https://docs.astral.sh/uv/) package manager
 
 ### Installation
 
@@ -27,7 +44,7 @@ A Python-based tool that synchronizes photos from iCloud to local storage with i
    cd icloud-photo-sync
    ```
 
-2. **Install dependencies:**
+2. **Install all workspace dependencies:**
    ```bash
    uv sync
    ```
@@ -43,25 +60,73 @@ A Python-based tool that synchronizes photos from iCloud to local storage with i
    uv run icloud-photo-sync
    ```
 
-## 📁 Project Structure
+## 📁 Workspace Structure
 
 ```
 icloud-photo-sync/
+├── shared/
+│   └── auth2fa/              # 2FA authentication package
+│       ├── src/
+│       │   └── auth2fa/
+│       │       ├── __init__.py
+│       │       ├── authenticator.py
+│       │       └── web_server.py
+│       ├── pyproject.toml
+│       └── README.md
 ├── src/
-│   └── icloud_photo_sync/
-│       ├── __init__.py
-│       ├── main.py              # Entry point
-│       ├── sync.py              # Core sync logic
-│       ├── deletion_tracker.py  # Local deletion tracking
-│       └── config.py            # Configuration management
-├── tests/
+│   └── icloud_photo_sync/    # Main application package
+│       ├── src/
+│       │   └── icloud_photo_sync/
+│       │       ├── __init__.py
+│       │       ├── main.py
+│       │       ├── sync.py
+│       │       ├── icloud_client.py
+│       │       ├── config.py
+│       │       └── deletion_tracker.py
+│       ├── pyproject.toml
+│       ├── README.md
+├── tests/                   # Test files
 │   ├── unit/
 │   └── integration/
-├── docs/
-├── pyproject.toml              # Project configuration
-├── .env.example               # Environment template
-└── README.md
+├── logs/                    # Application logs
+├── pyproject.toml          # Workspace configuration
+├── uv.lock                 # Lock file
+├── .env.example           # Environment template
+└── README.md              # This file
 ```
+
+## 🔧 Development
+
+This workspace uses [uv](https://docs.astral.sh/uv/) for dependency management
+and workspace orchestration.
+
+### Installing Development Dependencies
+
+```bash
+uv sync --dev
+```
+
+### Running Tests
+
+Run tests across all packages:
+
+```bash
+uv run pytest
+```
+
+Run tests for a specific package:
+
+```bash
+uv run pytest src/icloud_photo_sync/tests/
+uv run pytest shared/auth2fa/tests/
+```
+
+### Package Dependencies
+
+The workspace is configured so that packages can depend on each other:
+
+- `icloud_photo_sync` depends on `auth2fa` for authentication functionality
+- Both packages can be developed and tested together
 
 ## ⚙️ Configuration
 
@@ -82,10 +147,15 @@ LOG_LEVEL=INFO
 
 ### Option 2: Keyring (Secure Storage)
 
-For enhanced security, you can store your credentials in your system's credential store (Windows Credential Manager, macOS Keychain, Linux Secret Service). The application automatically detects keyring availability and uses the appropriate configuration class:
+For enhanced security, you can store your credentials in your system's
+credential store (Windows Credential Manager, macOS Keychain, Linux Secret
+Service). The application automatically detects keyring availability and uses
+the appropriate configuration class:
 
-- **KeyringConfig**: Used when keyring is available - supports both environment variables and secure credential storage
-- **EnvOnlyConfig**: Used when keyring is not available - only supports environment variables
+- **KeyringConfig**: Used when keyring is available - supports both environment
+  variables and secure credential storage
+- **EnvOnlyConfig**: Used when keyring is not available - only supports
+  environment variables
 
 1. **Store credentials securely:**
    ```bash
@@ -100,16 +170,22 @@ For enhanced security, you can store your credentials in your system's credentia
    LOG_LEVEL=INFO
    ```
 
-The application uses **polymorphism** to handle different credential storage strategies:
+The application uses **polymorphism** to handle different credential storage
+strategies:
+
 - First checks for credentials in environment variables
-- If not found and keyring is available, retrieves them from your system's keyring
+- If not found and keyring is available, retrieves them from your system's
+  keyring
 - On Windows: Uses Windows Credential Manager
 - On macOS: Uses Keychain
 - On Linux: Uses Secret Service
 
 **Benefits of the polymorphic design:**
-- 🔧 **Automatic fallback**: Seamlessly switches between keyring and environment-only modes
-- 🔐 **Security first**: Credentials are encrypted by your operating system when using keyring
+
+- 🔧 **Automatic fallback**: Seamlessly switches between keyring and
+  environment-only modes
+- 🔐 **Security first**: Credentials are encrypted by your operating system when
+  using keyring
 - 🚫 **No plain text passwords**: Keep sensitive data out of configuration files
 - 🔄 **Transparent operation**: Same interface regardless of storage method
 - 🔒 **OS integration**: Works with your system's native credential storage
@@ -145,7 +221,8 @@ uv run pyinstaller icloud-photo-sync.spec
 1. **Authentication**: Securely connects to iCloud using your credentials
 2. **Photo Discovery**: Scans your iCloud photo library for all photos
 3. **Local Check**: Compares with existing local files and deletion database
-4. **Smart Download**: Downloads only new photos that haven't been deleted locally
+4. **Smart Download**: Downloads only new photos that haven't been deleted
+   locally
 5. **Tracking**: Updates deletion database for any locally missing photos
 
 ## 🔒 Security & Privacy
@@ -157,7 +234,8 @@ uv run pyinstaller icloud-photo-sync.spec
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
+for details.
 
 ## 🤝 Contributing
 
@@ -177,13 +255,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you encounter issues:
 
-1. Check the [Issues](https://github.com/your-username/icloud-photo-sync/issues) page
+1. Check the [Issues](https://github.com/your-username/icloud-photo-sync/issues)
+   page
 2. Review the logs in the `logs/` directory
 3. Ensure your iCloud credentials are correct
 4. Verify Two-Factor Authentication is enabled
 
 ## 🙏 Acknowledgments
 
-- Built with [pyicloud](https://pypi.org/project/pyicloud/) for iCloud API access
+- Built with [pyicloud](https://pypi.org/project/pyicloud/) for iCloud API
+  access
 - Dependency management by [uv](https://docs.astral.sh/uv/)
 - Inspired by the need for safe, local photo backups

@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import Mock, patch
 from requests.exceptions import RequestException, Timeout
 
-from src.icloud_photo_sync.auth.pushover_service import (
+from src.icloud_photo_sync.auth2fa.pushover_service import (
     PushoverConfig,
     PushoverService as PushoverNotificationService
 )

@@ -2,9 +2,15 @@
 
 ## Overview
 
-The goal is to develop a **Python-based tool** that synchronizes photos from an iCloud account to a local directory. It must **only download new photos** and must respect local deletions — i.e., if a photo is deleted locally, it must not be re-synced. The tool **must not delete any photos** from the iCloud account.
+The goal is to develop a **Python-based tool** that synchronizes photos from an
+iCloud account to a local directory. It must **only download new photos** and
+must respect local deletions — i.e., if a photo is deleted locally, it must not
+be re-synced. The tool **must not delete any photos** from the iCloud account.
 
-The project will be managed as a **mono-repo** using **uv** for dependency management, hosted on **GitHub**, and packaged into a standalone **Windows `.exe`** using **PyInstaller**. CI/CD will build and release the executable automatically using **GitHub Actions**.
+The project will be managed as a **mono-repo** using **uv** for dependency
+management, hosted on **GitHub**, and packaged into a standalone **Windows
+`.exe`** using **PyInstaller**. CI/CD will build and release the executable
+automatically using **GitHub Actions**.
 
 ---
 
@@ -12,84 +18,126 @@ The project will be managed as a **mono-repo** using **uv** for dependency manag
 
 ### 1️⃣ Functional Requirements
 
-1. **Photo Sync**  
-   - Sync photos from iCloud to a local directory.  
-   - Only download photos that do not yet exist locally.  
-   - If a photo is deleted locally, it must **not** be re-downloaded on the next sync.  
+1. **Photo Sync**
+   - Sync photos from iCloud to a local directory.
+   - Only download photos that do not yet exist locally.
+   - If a photo is deleted locally, it must **not** be re-downloaded on the next
+     sync.
    - Locally deleted photos must **not** be removed from iCloud.
    - shall run on windows and linux
    - credentials shall be storable via keyrind or as environment variable
 
 2. **2FA authenticaion**
-2.1. 2FA Trigger and Notification
-- If 2FA authentication is required, the user shall be notified immediately via a Pushover notification.
 
-2.2. Notification Content
-- The Pushover notification shall include an HTTP link to a local address (e.g., `http://localhost:<port>`), which directs the user to the local web interface.
+2.1. Separate package 2FA authentication
 
-2.3. Local Webserver
-- A local webserver shall be started automatically when a 2FA authentication is required.
-- The webserver shall provide an interface that enables the user to trigger a new 2FA request via a button.
+- 2FA authentication shall be handled as a separate package
+- The separate 2FA authentication package shall be placed in folder
+  shared/auth2fa
+- This package shall have its own test-suite, its own pyproject.toml, thus its
+  own dependency list
+- This package shall not depend on any code of the main icloud_photo_sync app
 
-2.4. 2FA Session Handling
-- When the user clicks the button in the web interface, a new 2FA authentication session shall be initiated.
-- The user shall be able to enter the 2FA key directly in the web interface provided by the local webserver.
+2.5. 2FA Trigger and Notification
 
-2.5. Folder structure
-- All files related to the authentication topic shall be placed inside a python sub-package
+- If 2FA authentication is required, the user shall be notified immediately via
+  a Pushover notification.
 
-2.7. HTTP Site Security
-- The HTTP site does not need to be secured (i.e., no HTTPS), as the server runs only on the local machine within a private network.
-- The server shall bind only to `localhost` or `127.0.0.1` to prevent external access.
+2.6. Notification Content
 
-2.8. Session Storage
-- Each 2FA session shall be stored locally in the system’s default user directory (e.g., `%USERPROFILE%` on Windows or `$HOME` on Linux/macOS).
-- The session data shall be stored in a dedicated sub-directory with an appropriate name (e.g., `2FA_Sessions`).
-- Stored session data shall include only necessary information and follow security best practices (e.g., appropriate file permissions).
+- The Pushover notification shall include an HTTP link to a local address (e.g.,
+  `http://localhost:<port>`), which directs the user to the local web interface.
 
-2.9. Error handling
-- The system shall handle errors gracefully if the local server cannot start (e.g., due to the port being in use).
+2.7. Local Webserver
 
-2.10. Logging
-- 2FA requests and sessions may be logged for debugging or audit purposes. Logs shall not include sensitive user information.
+- A local webserver shall be started automatically when a 2FA authentication is
+  required.
+- The webserver shall provide an interface that enables the user to trigger a
+  new 2FA request via a button.
 
+2.8. 2FA Session Handling
 
+- When the user clicks the button in the web interface, a new 2FA authentication
+  session shall be initiated.
+- The user shall be able to enter the 2FA key directly in the web interface
+  provided by the local webserver.
 
+2.9. Folder structure
 
-3. **Local Deletion Tracking**  
-   - Persistently track which files have been deleted locally to avoid re-downloading.  
-   - Use a local lightweight database (e.g., SQLite or a JSON file) for tracking.
+- All files related to the authentication topic shall be placed inside a python
+  sub-package
 
-4. **Idempotent Runs**  
-   - Running the tool multiple times must not create duplicate files or unintended deletions.
+2.10. HTTP Site Security
+
+- The HTTP site does not need to be secured (i.e., no HTTPS), as the server runs
+  only on the local machine within a private network.
+- The server shall bind only to `localhost` or `127.0.0.1` to prevent external
+  access.
+
+2.11. Session Storage
+
+- Each 2FA session shall be stored locally in the system’s default user
+  directory (e.g., `%USERPROFILE%` on Windows or `$HOME` on Linux/macOS).
+- The session data shall be stored in a dedicated sub-directory with an
+  appropriate name (e.g., `2FA_Sessions`).
+- Stored session data shall include only necessary information and follow
+  security best practices (e.g., appropriate file permissions).
+
+2.12. Error handling
+
+- The system shall handle errors gracefully if the local server cannot start
+  (e.g., due to the port being in use).
+
+2.13. Logging
+
+- 2FA requests and sessions may be logged for debugging or audit purposes. Logs
+  shall not include sensitive user information.
+
+3. **Local Deletion Tracking**
+   - Persistently track which files have been deleted locally to avoid
+     re-downloading.
+   - Use a local lightweight database (e.g., SQLite or a JSON file) for
+     tracking.
+
+4. **Idempotent Runs**
+   - Running the tool multiple times must not create duplicate files or
+     unintended deletions.
 
 ---
 
 ### 2️⃣ Non-Functional Requirements
 
-5. **Programming Language**  
+5. **Programming Language**
    - Python.
 
-6. **iCloud API Integration**  
-   - Use the `pyicloud` package: [https://pypi.org/project/pyicloud/](https://pypi.org/project/pyicloud/)
+6. **iCloud API Integration**
+   - Use the `pyicloud` package:
+     [https://pypi.org/project/pyicloud/](https://pypi.org/project/pyicloud/)
 
-7. **Package Management**  
-   - Use `uv` for managing dependencies: [https://docs.astral.sh/uv/](https://docs.astral.sh/uv/)  
+7. **Package Management**
+   - Use `uv` for managing dependencies:
+     [https://docs.astral.sh/uv/](https://docs.astral.sh/uv/)
    - Maintain all dependencies in `pyproject.toml`.
 
-8. **Repository Structure**  
-   - Mono-repo structure as per the guide: [https://github.com/JasperHG90/uv-monorepo](https://github.com/JasperHG90/uv-monorepo)
+8. **Repository Structure**
+   - Mono-repo structure as per the guide:
+     [https://github.com/JasperHG90/uv-monorepo](https://github.com/JasperHG90/uv-monorepo)
 
-9. **Version Control**  
+9. **Version Control**
    - Git repository, hosted on GitHub.
 
-10. **Executable Packaging**  
-   - Build a standalone Windows .exe and a Linux executable using PyInstaller.
-   - The Linux build must be statically linked if possible, or provide clear runtime requirements.
+10. **Executable Packaging**
 
-11. **CI/CD Pipeline**  
-   - Use GitHub Actions for building, testing, packaging, and releasing the executables for both Windows and Linux.
-   - Follow this guide for PyInstaller CI/CD: [https://ragug.medium.com/ci-cd-pipeline-for-pyinstaller-on-github-actions-for-windows-7f8274349278](https://ragug.medium.com/ci-cd-pipeline-for-pyinstaller-on-github-actions-for-windows-7f8274349278)
+- Build a standalone Windows .exe and a Linux executable using PyInstaller.
+- The Linux build must be statically linked if possible, or provide clear
+  runtime requirements.
+
+11. **CI/CD Pipeline**
+
+- Use GitHub Actions for building, testing, packaging, and releasing the
+  executables for both Windows and Linux.
+- Follow this guide for PyInstaller CI/CD:
+  [https://ragug.medium.com/ci-cd-pipeline-for-pyinstaller-on-github-actions-for-windows-7f8274349278](https://ragug.medium.com/ci-cd-pipeline-for-pyinstaller-on-github-actions-for-windows-7f8274349278)
 
 ---
 
@@ -105,11 +153,12 @@ The project will be managed as a **mono-repo** using **uv** for dependency manag
 
 ## ✅ 4️⃣ Testing Requirements
 
-**Purpose:** Ensure high reliability, protect iCloud data integrity, and verify that local deletion tracking works as specified.
+**Purpose:** Ensure high reliability, protect iCloud data integrity, and verify
+that local deletion tracking works as specified.
 
-**Scope of Testing:**  
+**Scope of Testing:**
 
-1. **Unit Tests**  
+1. **Unit Tests**
    - Core sync logic:
      - Identify new photos.
      - Correctly skip already downloaded photos.
@@ -118,25 +167,27 @@ The project will be managed as a **mono-repo** using **uv** for dependency manag
    - Database or file persistence for deleted photo tracking.
    - Utility functions (e.g., file system operations).
 
-2. **Integration Tests**  
+2. **Integration Tests**
    - Mocked iCloud interaction:
      - Verify that the tool interacts correctly with the `pyicloud` API.
      - Simulate partial downloads, API errors, and retries.
    - Test local sync end-to-end with dummy files and directories.
 
-3. **End-to-End Tests** *(Optional but recommended)*  
-   - Run the tool in a test mode against a dummy or sandboxed iCloud account (or fully mocked).  
+3. **End-to-End Tests** _(Optional but recommended)_
+   - Run the tool in a test mode against a dummy or sandboxed iCloud account (or
+     fully mocked).
    - Verify that:
      - New photos are downloaded.
      - Local deletions are respected.
      - No unintended deletions occur on iCloud.
 
-4. **Test Automation**  
-   - Tests must run automatically in the CI/CD pipeline on each pull request and push.
+4. **Test Automation**
+   - Tests must run automatically in the CI/CD pipeline on each pull request and
+     push.
    - Minimum coverage target (recommended: 80%+ for core sync logic).
    - Linting and static checks using `ruff` and `mypy`
 
-5. **Manual Tests**  
+5. **Manual Tests**
    - Run the `.exe` on Windows to verify:
      - The packaged app starts successfully.
      - It syncs as expected.
@@ -154,9 +205,12 @@ The project will be managed as a **mono-repo** using **uv** for dependency manag
   - Install dependencies.
   - Run tests & linting.
   - Package Windows .exe and Linux executable.
-  - The linux package shall be published as APT repository, see [https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository](https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository)
-  - The required APT-package-structure shall be taken into account, see [https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository](https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository)
-  - The windows package shall be published as WinGet package, see https://techwatching.dev/posts/wingetcreate
+  - The linux package shall be published as APT repository, see
+    [https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository](https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository)
+  - The required APT-package-structure shall be taken into account, see
+    [https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository](https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository)
+  - The windows package shall be published as WinGet package, see
+    https://techwatching.dev/posts/wingetcreate
 - ✅ Full unit & integration test suite.
 - ✅ Example config or `.env` template.
 - ✅ End-user documentation.
@@ -177,11 +231,16 @@ The project will be managed as a **mono-repo** using **uv** for dependency manag
 
 ## ✅ References
 
-- **pyicloud**: [https://pypi.org/project/pyicloud/](https://pypi.org/project/pyicloud/)  
-- **uv**: [https://docs.astral.sh/uv/](https://docs.astral.sh/uv/)  
-- **uv Monorepo Guide**: [https://github.com/JasperHG90/uv-monorepo](https://github.com/JasperHG90/uv-monorepo)  
-- **PyInstaller CI/CD Guide**: [https://ragug.medium.com/ci-cd-pipeline-for-pyinstaller-on-github-actions-for-windows-7f8274349278](https://ragug.medium.com/ci-cd-pipeline-for-pyinstaller-on-github-actions-for-windows-7f8274349278)
-- **APT Repository**: [https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository](https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository)
+- **pyicloud**:
+  [https://pypi.org/project/pyicloud/](https://pypi.org/project/pyicloud/)
+- **uv**: [https://docs.astral.sh/uv/](https://docs.astral.sh/uv/)
+- **uv Monorepo Guide**:
+  [https://github.com/JasperHG90/uv-monorepo](https://github.com/JasperHG90/uv-monorepo)
+- **PyInstaller CI/CD Guide**:
+  [https://ragug.medium.com/ci-cd-pipeline-for-pyinstaller-on-github-actions-for-windows-7f8274349278](https://ragug.medium.com/ci-cd-pipeline-for-pyinstaller-on-github-actions-for-windows-7f8274349278)
+- **APT Repository**:
+  [https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository](https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository)
+
 ---
 
 **End of Specification**

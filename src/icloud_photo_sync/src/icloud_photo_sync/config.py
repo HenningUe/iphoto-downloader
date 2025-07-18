@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from dotenv import load_dotenv
 
 if TYPE_CHECKING:
-    from .auth2fa.pushover_service import PushoverConfig
+    from .auth.pushover_service import PushoverConfig
 
 try:
     import keyring
@@ -93,7 +93,7 @@ class BaseConfig(ABC):
         if not self.pushover_api_token or not self.pushover_user_key:
             return None
 
-        from .auth2fa.pushover_service import PushoverConfig
+        from .auth.pushover_service import PushoverConfig
         return PushoverConfig(
             api_token=self.pushover_api_token,
             user_key=self.pushover_user_key,

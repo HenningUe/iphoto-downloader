@@ -141,7 +141,7 @@ class PhotoSyncer:
                 self.logger.debug("Pushover notifications not configured, skipping notification")
                 return
 
-            from .auth2fa.pushover_service import PushoverService as PushoverNotificationService
+            from .auth.pushover_service import PushoverService as PushoverNotificationService
             notification_service = PushoverNotificationService(pushover_config)
 
             # For now, we'll use a placeholder URL since we haven't implemented the web server yet
@@ -163,7 +163,7 @@ class PhotoSyncer:
             if not pushover_config:
                 return
 
-            from .auth2fa.pushover_service import PushoverService as PushoverNotificationService
+            from .auth.pushover_service import PushoverService as PushoverNotificationService
             notification_service = PushoverNotificationService(pushover_config)
 
             if notification_service.send_auth_success_notification():

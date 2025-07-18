@@ -11,7 +11,7 @@ def check_imports():
     """Check if all required modules can be imported."""
     try:
         from icloud_photo_sync.config import KeyringConfig
-        from icloud_photo_sync.auth.two_factor_handler import TwoFactorAuthHandler
+        from icloud_photo_sync.auth2fa.two_factor_handler import TwoFactorAuthHandler
         print("✅ All imports successful")
         return True
     except Exception as e:
@@ -22,7 +22,7 @@ def run_basic_test():
     """Run a basic test to verify the handler can be created."""
     try:
         from icloud_photo_sync.config import KeyringConfig
-        from icloud_photo_sync.auth.two_factor_handler import TwoFactorAuthHandler
+        from icloud_photo_sync.auth2fa.two_factor_handler import TwoFactorAuthHandler
         
         config = KeyringConfig()
         handler = TwoFactorAuthHandler(config)

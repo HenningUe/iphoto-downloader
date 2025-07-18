@@ -6,20 +6,16 @@ import requests
 from unittest.mock import Mock, patch
 import pytest
 
-from icloud_photo_sync.auth2fa.web_server import TwoFAWebServer, TwoFAHandler
-from icloud_photo_sync.logger import setup_logging
+from auth2fa.web_server import TwoFAWebServer, TwoFAHandler
 
 
 class TestTwoFAWebServer:
     """Test cases for the 2FA web server."""
 
     @pytest.fixture(autouse=True)
-    def setup_logging(self):
-        """Setup logging for tests."""
-        from icloud_photo_sync.config import BaseConfig
-        mock_config = Mock(spec=BaseConfig)
-        mock_config.get_log_level.return_value = 20
-        setup_logging(mock_config)
+    def setup_test(self):
+        """Setup test environment."""
+        pass
 
     @pytest.fixture
     def web_server(self):

@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from icloud_photo_sync.config import KeyringConfig
 from icloud_photo_sync.logger import setup_logging
-from icloud_photo_sync.auth.two_factor_handler import TwoFactorAuthHandler, handle_2fa_authentication
+from icloud_photo_sync.auth2fa.two_factor_handler import TwoFactorAuthHandler, handle_2fa_authentication
 
 
 def test_complete_2fa_flow():
@@ -177,7 +177,7 @@ def test_web_server_integration():
         print("🌐 Testing web server startup...")
         
         # Create a web server directly for testing
-        from icloud_photo_sync.auth.web_server import TwoFAWebServer
+        from icloud_photo_sync.auth2fa.web_server import TwoFAWebServer
         test_server = TwoFAWebServer()
         test_server.set_callbacks(
             request_2fa_callback=on_request_2fa,
