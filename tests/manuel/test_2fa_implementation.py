@@ -8,7 +8,7 @@ from pathlib import Path
 from icloud_photo_sync.sync import PhotoSyncer
 from icloud_photo_sync.logger import setup_logging
 from icloud_photo_sync.icloud_client import iCloudClient
-from icloud_photo_sync.config import get_config, KEYRING_AVAILABLE
+from icloud_photo_sync.config import get_config
 
 # Add the src directory to the path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -18,10 +18,6 @@ def test_2fa_implementation():
     """Test the 2FA implementation with session storage."""
     print("🧪 Testing 2FA Implementation with Session Storage")
     print("=" * 55)
-
-    if not KEYRING_AVAILABLE:
-        print("❌ Keyring not available")
-        return False
 
     try:
         # Get config and set up logging

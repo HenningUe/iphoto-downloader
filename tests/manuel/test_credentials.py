@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Test script for credential manager functionality."""
 
-from icloud_photo_sync.config import KEYRING_AVAILABLE, KeyringConfig
+from icloud_photo_sync.config import KeyringConfig
 import sys
 import os
 from pathlib import Path
@@ -48,13 +48,8 @@ def test_keyring_helper():
 
 
 if __name__ == "__main__":
-    print(f"KEYRING_AVAILABLE: {KEYRING_AVAILABLE}")
-
-    if KEYRING_AVAILABLE:
-        config = test_keyring_helper()
-        if config:
-            print("✅ Credential manager helper approach works!")
-        else:
-            print("❌ Credential manager helper approach failed!")
+    config = test_keyring_helper()
+    if config:
+        print("✅ Credential manager helper approach works!")
     else:
-        print("❌ Keyring not available!")
+        print("❌ Credential manager helper approach failed!")

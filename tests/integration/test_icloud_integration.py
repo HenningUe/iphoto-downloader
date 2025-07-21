@@ -5,7 +5,7 @@ import pytest
 import tempfile
 from pathlib import Path
 
-from icloud_photo_sync.config import get_config, KEYRING_AVAILABLE
+from icloud_photo_sync.config import get_config
 from icloud_photo_sync.icloud_client import iCloudClient
 from icloud_photo_sync.sync import PhotoSyncer
 from icloud_photo_sync.logger import setup_logging
@@ -45,9 +45,6 @@ class TestiCloudIntegration:
 
     def test_config_loads_with_keyring_credentials(self):
         """Test that configuration loads credentials from keyring."""
-        if not KEYRING_AVAILABLE:
-            pytest.skip("Keyring not available")
-
         config = get_config()
 
         # Should have credentials either from env or keyring
@@ -60,9 +57,6 @@ class TestiCloudIntegration:
 
     def test_icloud_authentication_without_2fa(self):
         """Test iCloud authentication when 2FA is not required."""
-        if not KEYRING_AVAILABLE:
-            pytest.skip("Keyring not available")
-
         config = get_config()
         client = iCloudClient(config)
 
@@ -79,9 +73,6 @@ class TestiCloudIntegration:
     @pytest.mark.slow
     def test_icloud_authentication_with_2fa_simulation(self):
         """Test iCloud authentication workflow when 2FA is required."""
-        if not KEYRING_AVAILABLE:
-            pytest.skip("Keyring not available")
-
         config = get_config()
         client = iCloudClient(config)
 
@@ -115,9 +106,6 @@ class TestiCloudIntegration:
     @pytest.mark.slow
     def test_photo_listing_integration(self):
         """Test fetching photo list from iCloud."""
-        if not KEYRING_AVAILABLE:
-            pytest.skip("Keyring not available")
-
         config = get_config()
         client = iCloudClient(config)
 
@@ -146,9 +134,6 @@ class TestiCloudIntegration:
 
     def test_full_sync_dry_run(self):
         """Test full sync operation in dry run mode."""
-        if not KEYRING_AVAILABLE:
-            pytest.skip("Keyring not available")
-
         config = get_config()
         sync = PhotoSyncer(config)
 
@@ -178,9 +163,6 @@ class TestiCloudInteractive:
 
     def test_interactive_2fa_authentication(self):
         """Interactive test for 2FA authentication (requires manual input)."""
-        if not KEYRING_AVAILABLE:
-            pytest.skip("Keyring not available")
-
         # This test should only run when explicitly requested
         if not os.getenv('RUN_INTERACTIVE_TESTS'):
             pytest.skip("Interactive tests disabled - set RUN_INTERACTIVE_TESTS=1 to enable")

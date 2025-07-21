@@ -11,7 +11,8 @@ import sys
 
 from icloud_photo_sync.config import get_config
 from icloud_photo_sync.logger import setup_logging
-from icloud_photo_sync.auth2fa import TwoFactorAuthHandler
+from auth2fa import TwoFactorAuthHandler
+from auth2fa.authenticator import Auth2FAConfig
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
@@ -39,7 +40,8 @@ def test_web_interface_manual():
 
     config = get_config()
     setup_logging(config.get_log_level())
-    two_factor_hdl = TwoFactorAuthHandler(config)
+    cfg_2fa = Auth2FAConfig(pushover_config=config.get_pushover_config())
+    two_factor_hdl = TwoFactorAuthHandler(cfg_2fa)
     try:
         two_factor_hdl.handle_2fa_authentication(
             request_2fa_callback=on_new_2fa_requested,

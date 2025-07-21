@@ -7,7 +7,7 @@ Provides easy ways to run all tests, specific test files, or test categories.
 import sys
 import subprocess
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 
 def get_python_executable() -> str:
@@ -23,7 +23,7 @@ def run_command(cmd: List[str], description: str) -> int:
     print(f"\n🔄 {description}")
     print(f"Running: {' '.join(cmd)}")
     print("-" * 50)
-    
+
     try:
         result = subprocess.run(cmd, check=False)
         return result.returncode
@@ -35,32 +35,32 @@ def run_command(cmd: List[str], description: str) -> int:
 def main():
     """Main test runner function."""
     python_exe = get_python_executable()
-    
+
     if len(sys.argv) > 1:
         test_target = sys.argv[1]
-        
+
         if test_target == "unit":
             # Run only unit tests
             cmd = [python_exe, "-m", "pytest", "tests/unit/", "-v", "--tb=short"]
             return run_command(cmd, "Running Unit Tests")
-            
+
         elif test_target == "integration":
             # Run only integration tests
             cmd = [python_exe, "-m", "pytest", "tests/integration/", "-v", "--tb=short"]
             return run_command(cmd, "Running Integration Tests")
-            
+
         elif test_target == "coverage":
             # Run tests with coverage
             cmd = [
-                python_exe, "-m", "pytest", 
-                "tests/", 
-                "--cov=src", 
+                python_exe, "-m", "pytest",
+                "tests/",
+                "--cov=src",
                 "--cov-report=term-missing",
                 "--cov-report=html",
                 "--cov-fail-under=80"
             ]
             return run_command(cmd, "Running Tests with Coverage")
-            
+
         elif test_target.startswith("test_"):
             # Run specific test file
             test_file = f"tests/unit/{test_target}.py"
@@ -69,7 +69,7 @@ def main():
                 return 1
             cmd = [python_exe, "-m", "pytest", test_file, "-v", "--tb=short"]
             return run_command(cmd, f"Running {test_file}")
-            
+
         else:
             print(f"❌ Unknown test target: {test_target}")
             print_usage()
@@ -107,12 +107,12 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] in ["-h", "--help", "help"]:
         print_usage()
         sys.exit(0)
-    
+
     exit_code = main()
-    
+
     if exit_code == 0:
         print("\n✅ All tests completed successfully!")
     else:
         print(f"\n❌ Tests failed with exit code: {exit_code}")
-    
+
     sys.exit(exit_code)
