@@ -3,7 +3,7 @@
 Example usage of the auth2fa package with proper typing.
 """
 
-from auth2fa import Auth2FAConfig, PushoverConfig, TwoFactorAuthHandler, handle_2fa_authentication
+from auth2fa import Auth2FAConfig, PushoverConfig, TwoFactorAuthHandler
 
 
 def main():
@@ -51,7 +51,8 @@ def main():
     print("Auth2FA configuration is properly typed!")
     print(f"Config type: {type(auth_config)}")
     print(
-        f"Available methods: {[method for method in dir(auth_config) if not method.startswith('_')]}")
+        f"Available methods: "
+        f"{[method for method in dir(auth_config) if not method.startswith('_')]}")
 
 
 if __name__ == "__main__":

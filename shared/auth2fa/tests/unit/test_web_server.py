@@ -3,7 +3,7 @@
 import threading
 import time
 import requests
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 import pytest
 
 from auth2fa.web_server import TwoFAWebServer, TwoFAHandler

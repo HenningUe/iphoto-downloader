@@ -27,7 +27,7 @@ class Auth2FAConfig:
 class TwoFactorAuthHandler:
     """Handles complete 2FA authentication flow including notifications and web interface."""
 
-    def __init__(self, config: Optional[Auth2FAConfig] = None):
+    def __init__(self, config: Auth2FAConfig):
         """Initialize the 2FA handler.
 
         Args:
@@ -202,7 +202,7 @@ class TwoFactorAuthHandler:
 
 # Convenience function for external use
 def handle_2fa_authentication(
-    config: Optional[Auth2FAConfig] = None,
+    config: Auth2FAConfig,
     request_2fa_callback: Optional[Callable[[], bool]] = None,
     validate_2fa_callback: Optional[Callable[[str], bool]] = None
 ) -> Optional[str]:

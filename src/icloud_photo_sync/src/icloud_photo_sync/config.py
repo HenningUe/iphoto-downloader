@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from dotenv import load_dotenv
 
 if TYPE_CHECKING:
-    from .auth.pushover_service import PushoverConfig
+    from auth2fa.pushover_service import PushoverConfig
 
 try:
     import keyring
@@ -46,10 +46,10 @@ class BaseConfig(ABC):
         self.max_file_size_mb = int(os.getenv('MAX_FILE_SIZE_MB', '0'))
 
         # Pushover notification settings
-        self.pushover_api_token = os.getenv('PUSHOVER_API_TOKEN')
-        self.pushover_user_key = os.getenv('PUSHOVER_USER_KEY')
-        self.pushover_device = os.getenv('PUSHOVER_DEVICE')  # Optional device name
-        self.enable_pushover = os.getenv('ENABLE_PUSHOVER', 'true').lower() == 'true'
+        self.pushover_api_token: str = os.getenv('PUSHOVER_API_TOKEN', '')
+        self.pushover_user_key: str = os.getenv('PUSHOVER_USER_KEY', '')
+        self.pushover_device: str | None = os.getenv('PUSHOVER_DEVICE', '')
+        self.enable_pushover: bool = os.getenv('ENABLE_PUSHOVER', 'true').lower() == 'true'
 
         # Validate required settings
         self._validate()
@@ -93,7 +93,7 @@ class BaseConfig(ABC):
         if not self.pushover_api_token or not self.pushover_user_key:
             return None
 
-        from .auth.pushover_service import PushoverConfig
+        from auth2fa.pushover_service import PushoverConfig
         return PushoverConfig(
             api_token=self.pushover_api_token,
             user_key=self.pushover_user_key,

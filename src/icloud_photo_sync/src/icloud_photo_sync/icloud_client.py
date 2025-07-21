@@ -7,7 +7,7 @@ from pyicloud.exceptions import PyiCloudFailedLoginException, PyiCloudAPIRespons
 
 from .config import BaseConfig
 from .logger import get_logger
-from auth2fa import handle_2fa_authentication
+from auth2fa import handle_2fa_authentication, Auth2FAConfig, PushoverConfig
 
 
 class iCloudClient:
@@ -101,9 +101,14 @@ class iCloudClient:
         Returns:
             2FA code if successful, None if failed or timeout
         """
-
+        cfg_2fa = Auth2FAConfig(
+            pushover_config=PushoverConfig(
+                api_token=self.config.pushover_api_token,
+                user_key=self.config.pushover_user_key
+            ),
+        )
         return handle_2fa_authentication(
-            config=self.config,
+            config=cfg_2fa,
             request_2fa_callback=self._request_new_2fa,
             validate_2fa_callback=self.handle_2fa
         )

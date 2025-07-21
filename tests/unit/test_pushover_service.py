@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import Mock, patch
 from requests.exceptions import RequestException, Timeout
 
-from src.icloud_photo_sync.auth2fa.pushover_service import (
+from auth2fa.pushover_service import (
     PushoverConfig,
     PushoverService as PushoverNotificationService
 )
@@ -136,7 +136,7 @@ class TestPushoverNotificationService:
         mock_response.json.return_value = {"status": 1}
         mock_post.return_value = mock_response
 
-        result = self.service.send_auth_success_notification("test@example.com")
+        result = self.service.send_auth_success_notification()
 
         assert result is True
         mock_post.assert_called_once()

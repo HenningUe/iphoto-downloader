@@ -2,11 +2,11 @@
 
 from unittest.mock import Mock, patch
 
-from src.icloud_photo_sync.auth2fa.two_factor_handler import (
+from auth2fa import (
     TwoFactorAuthHandler, handle_2fa_authentication
 )
-from src.icloud_photo_sync.config import BaseConfig
-from src.icloud_photo_sync.logger import setup_logging
+from icloud_photo_sync.config import BaseConfig
+from icloud_photo_sync.logger import setup_logging
 
 
 class TestTwoFactorAuthHandler:

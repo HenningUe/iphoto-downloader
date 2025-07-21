@@ -3,6 +3,7 @@
 from unittest.mock import Mock, patch
 
 from auth2fa.authenticator import (
+    Auth2FAConfig, PushoverConfig,
     TwoFactorAuthHandler, handle_2fa_authentication
 )
 
@@ -15,10 +16,12 @@ class TestTwoFactorAuthHandler:
         pass
 
         # Create a mock config
-        self.config = Mock(spec=BaseConfig)
-        self.config.enable_pushover = False
-        self.config.pushover_api_token = None
-        self.config.pushover_user_key = None
+        self.config = Mock(spec=Auth2FAConfig)
+        push_over_config = PushoverConfig(
+            api_token="test_token",
+            user_key="test_user"
+        )
+        self.config.push_over_config = push_over_config
         self.handler = TwoFactorAuthHandler(self.config)
 
     def test_init(self):
@@ -122,9 +125,8 @@ class TestTwoFactorAuthHandler:
     def test_send_pushover_notification(self, mock_pushover_service_class):
         """Test sending Pushover notification."""
         # Enable Pushover in config
-        self.config.enable_pushover = True
-        self.config.pushover_api_token = "test_token"
-        self.config.pushover_user_key = "test_user"
+        self.config.pushover_config.api_token = "test_token"
+        self.config.pushover_config.user_key = "test_user"
 
         # Mock Pushover service
         mock_service = Mock()
@@ -144,9 +146,8 @@ class TestTwoFactorAuthHandler:
     def test_send_success_notification(self, mock_pushover_service_class):
         """Test sending success notification."""
         # Enable Pushover in config
-        self.config.enable_pushover = True
-        self.config.pushover_api_token = "test_token"
-        self.config.pushover_user_key = "test_user"
+        self.config.pushover_config.api_token = "test_token"
+        self.config.pushover_config.user_key = "test_user"
 
         # Mock Pushover service
         mock_service = Mock()
@@ -179,7 +180,12 @@ class TestHandleTwoFactorAuthenticationFunction:
     def setup_method(self):
         """Set up test fixtures."""
         # Create a mock config
-        self.config = Mock(spec=BaseConfig)
+        self.config = Mock(spec=Auth2FAConfig)
+        push_over_config = PushoverConfig(
+            api_token="test_token",
+            user_key="test_user"
+        )
+        self.config.pushover_config = push_over_config
         self.config.enable_pushover = False
 
     @patch('src.icloud_photo_sync.auth.two_factor_handler.TwoFactorAuthHandler')
