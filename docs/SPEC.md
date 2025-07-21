@@ -25,7 +25,12 @@ automatically using **GitHub Actions**.
      sync.
    - Locally deleted photos must **not** be removed from iCloud.
    - shall run on windows and linux
-   - credentials shall be storable via keyrind or as environment variable
+   - credentials (iCloud and pushover) shall be storable via keyrind
+   - if credentials are not yet stored on local PC at startup of the App they
+     should be request via input (CLI)
+   - credentials shall be stored for icloud and for pushover
+   - A separate app shall be provided, which allows credential management. That
+     means user must be able to store, delete and check credentials
 
 2. **2FA authenticaion**
 

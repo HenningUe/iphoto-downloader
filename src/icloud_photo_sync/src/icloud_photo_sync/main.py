@@ -5,6 +5,7 @@ import sys
 from icloud_photo_sync.config import get_config
 from icloud_photo_sync.sync import PhotoSyncer
 from icloud_photo_sync.logger import setup_logging, get_logger
+from icloud_photo_sync import manage_credentials
 
 
 def main() -> None:
@@ -14,13 +15,23 @@ def main() -> None:
 
     logger = None
 
+    config = get_config()
+
+    if not config.icloud_has_stored_credentials:
+        print("🔑 iCloud credentials not found in keyring.")
+        manage_credentials.icloud_store_credentials()
+
+    if not config.pushover_has_stored_credentials:
+        print("🔑 Pushover credentials not found in keyring.")
+        manage_credentials.pushover_store_credentials()
+
     try:
-        # Load configuration
-        config = get_config()
+        config.validate()
     except ValueError as e:
         print(f"❌ Configuration error: {e}")
         print("💡 Please check your .env file and ensure all required settings are configured.")
         sys.exit(1)
+
     try:
         # Set up logging with config
         setup_logging(config.get_log_level())

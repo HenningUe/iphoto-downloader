@@ -146,7 +146,7 @@ class TestKeyringConfig:
 
         config = KeyringConfig(str(env_file))
 
-        result = config.store_credentials("new@example.com", "new-password")
+        result = config.icloud_store_credentials("new@example.com", "new-password")
 
         assert result is True
         mock_keyring.set_password.assert_any_call(
@@ -167,7 +167,7 @@ class TestKeyringConfig:
 
         config = KeyringConfig(str(env_file))
 
-        result = config.store_credentials("new@example.com", "new-password")
+        result = config.icloud_store_credentials("new@example.com", "new-password")
 
         assert result is False
 
@@ -187,7 +187,7 @@ class TestKeyringConfig:
 
         config = KeyringConfig(str(env_file))
 
-        assert config.has_stored_credentials() is True
+        assert config.icloud_has_stored_credentials() is True
 
     def test_delete_credentials_success(self, temp_dir, clean_env, mock_keyring):
         """Test successful credential deletion."""
@@ -202,7 +202,7 @@ class TestKeyringConfig:
 
         config = KeyringConfig(str(env_file))
 
-        result = config.delete_credentials()
+        result = config.icloud_delete_credentials()
 
         assert result is True
         mock_keyring.delete_password.assert_any_call("icloud-photo-sync", "stored@example.com")

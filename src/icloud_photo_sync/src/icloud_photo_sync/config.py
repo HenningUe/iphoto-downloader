@@ -3,23 +3,21 @@
 import os
 import logging
 from pathlib import Path
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import TYPE_CHECKING
 from dotenv import load_dotenv
+import keyring
 
 if TYPE_CHECKING:
     from auth2fa.pushover_service import PushoverConfig
 
-try:
-    import keyring
-    KEYRING_AVAILABLE = True
-except ImportError:
-    keyring = None
-    KEYRING_AVAILABLE = False
-
 
 class BaseConfig(ABC):
     """Base configuration class with common functionality."""
+
+    # Keyring service name for storing credentials
+    ICLOUD_KEYRING_SERVICE_NAME = "icloud-photo-sync"
+    PUSHOVER_KEYRING_SERVICE_NAME = "pushover-photo-sync"
 
     def __init__(self, env_file: str | None = None) -> None:
         """Initialize configuration.
@@ -33,9 +31,6 @@ class BaseConfig(ABC):
             load_dotenv(env_path)
 
         # iCloud credentials - try multiple sources
-        self.icloud_username = self._get_username()
-        self.icloud_password = self._get_password()
-
         # Sync settings
         self.sync_directory = Path(os.getenv('SYNC_DIRECTORY', './photos'))
         self.dry_run = os.getenv('DRY_RUN', 'false').lower() == 'true'
@@ -46,23 +41,50 @@ class BaseConfig(ABC):
         self.max_file_size_mb = int(os.getenv('MAX_FILE_SIZE_MB', '0'))
 
         # Pushover notification settings
-        self.pushover_api_token: str = os.getenv('PUSHOVER_API_TOKEN', '')
-        self.pushover_user_key: str = os.getenv('PUSHOVER_USER_KEY', '')
         self.pushover_device: str | None = os.getenv('PUSHOVER_DEVICE', '')
         self.enable_pushover: bool = os.getenv('ENABLE_PUSHOVER', 'true').lower() == 'true'
 
-        # Validate required settings
-        self._validate()
+    @property
+    def icloud_username(self) -> str:
+        """Get iCloud username from environment variables or credential store."""
+        v = self._icloud_get_username_from_store()
+        if not v and self.enable_pushover:
+            raise ValueError("icloud_username is required (store in keyring)")
+        return v or ""
 
-    def _validate(self) -> None:
+    @property
+    def icloud_password(self) -> str:
+        """Get iCloud password from environment variables or credential store."""
+        v = self._icloud_get_password_from_store()
+        if not v and self.enable_pushover:
+            raise ValueError("icloud_password is required (store in keyring)")
+        return v or ""
+
+    @property
+    def pushover_user_key(self) -> str:
+        """Get Pushover user key from environment variables or credential store."""
+        v = self._pushover_get_user_key_from_store()
+        if not v:
+            raise ValueError("pushover_user_key is required (store in keyring)")
+        return v
+
+    @property
+    def pushover_api_token(self) -> str:
+        """Get Pushover API token from environment variables or credential store."""
+        v = self._pushover_get_api_token_from_store()
+        if not v:
+            raise ValueError("pushover_api_token is required (store in keyring)")
+        return v
+
+    def validate(self) -> None:
         """Validate configuration settings."""
         errors = []
 
         if not self.icloud_username:
-            errors.append(self._get_username_error_message())
+            errors.append("icloud_username is required (store in keyring)")
 
         if not self.icloud_password:
-            errors.append(self._get_password_error_message())
+            errors.append("icloud_password is required (store in keyring)")
 
         if self.log_level not in ['DEBUG', 'INFO', 'WARNING', 'ERROR']:
             errors.append(f"Invalid LOG_LEVEL: {self.log_level}")
@@ -100,223 +122,142 @@ class BaseConfig(ABC):
             device=self.pushover_device
         )
 
-    def _get_username(self) -> str | None:
-        """Get iCloud username from environment variables first, then from credential store."""
-        # First try environment variable
-        username = os.getenv('ICLOUD_USERNAME')
-        if username:
-            return username
-
-        # Then try credential store
-        return self._get_username_from_store()
-
-    def _get_password(self) -> str | None:
-        """Get iCloud password from environment variables first, then from credential store."""
-        # First try environment variable
-        password = os.getenv('ICLOUD_PASSWORD')
-        if password:
-            return password
-
-        # Then try credential store
-        return self._get_password_from_store()
-
-    def __str__(self) -> str:
-        """String representation of config (without sensitive data)."""
-        # Determine credential source
-        username_source = "env" if os.getenv(
-            'ICLOUD_USERNAME') else self._get_credential_source_name()
-        password_source = "env" if os.getenv(
-            'ICLOUD_PASSWORD') else self._get_credential_source_name()
-
-        return (
-            f"Config("
-            f"username={'***' if self.icloud_username else None} ({username_source}), "
-            f"password={'***' if self.icloud_password else None} ({password_source}), "
-            f"sync_dir={self.sync_directory}, "
-            f"dry_run={self.dry_run}, "
-            f"log_level={self.log_level}, "
-            f"credential_store={self._get_credential_source_name()}"
-            f")"
-        )
-
-    # Abstract methods to be implemented by subclasses
-    @abstractmethod
-    def _get_username_from_store(self) -> str | None:
-        """Get username from credential store."""
-        pass
-
-    @abstractmethod
-    def _get_password_from_store(self) -> str | None:
-        """Get password from credential store."""
-        pass
-
-    @abstractmethod
-    def store_credentials(self, username: str, password: str) -> bool:
-        """Store credentials in credential store."""
-        pass
-
-    @abstractmethod
-    def delete_credentials(self) -> bool:
-        """Delete credentials from credential store."""
-        pass
-
-    @abstractmethod
-    def has_stored_credentials(self) -> bool:
-        """Check if credentials are stored in credential store."""
-        pass
-
-    @abstractmethod
-    def _get_username_error_message(self) -> str:
-        """Get error message for missing username."""
-        pass
-
-    @abstractmethod
-    def _get_password_error_message(self) -> str:
-        """Get error message for missing password."""
-        pass
-
-    @abstractmethod
-    def _get_credential_source_name(self) -> str:
-        """Get the name of the credential source."""
-        pass
-
-
-class KeyringConfig(BaseConfig):
-    """Configuration class that uses keyring for credential storage."""
-
-    # Keyring service name for storing credentials
-    KEYRING_SERVICE_NAME = "icloud-photo-sync"
-
-    def _get_username_from_store(self) -> str | None:
+    def _icloud_get_username_from_store(self) -> str | None:
         """Get username from keyring."""
-        if not KEYRING_AVAILABLE or keyring is None:
-            return None
-
         try:
             # Try to get username from keyring (stored as a separate entry)
-            stored_username = keyring.get_password(self.KEYRING_SERVICE_NAME, "username")
+            stored_username = keyring.get_password(self.ICLOUD_KEYRING_SERVICE_NAME, "username")
             return stored_username
         except Exception:
             # Keyring access failed
             return None
 
-    def _get_password_from_store(self) -> str | None:
+    def _icloud_get_password_from_store(self) -> str | None:
         """Get password from keyring."""
-        if not KEYRING_AVAILABLE or keyring is None or not self.icloud_username:
-            return None
-
         try:
-            stored_password = keyring.get_password(self.KEYRING_SERVICE_NAME, self.icloud_username)
+            stored_password = keyring.get_password(
+                self.ICLOUD_KEYRING_SERVICE_NAME, self.icloud_username)
             return stored_password
         except Exception:
             # Keyring access failed
             return None
 
-    def store_credentials(self, username: str, password: str) -> bool:
+    def icloud_store_credentials(self, username: str, password: str) -> bool:
         """Store iCloud credentials in keyring."""
-        if not KEYRING_AVAILABLE or keyring is None:
-            return False
-
         try:
             # Store username as a separate entry
-            keyring.set_password(self.KEYRING_SERVICE_NAME, "username", username)
+            keyring.set_password(self.ICLOUD_KEYRING_SERVICE_NAME, "username", username)
             # Store password with username as the key
-            keyring.set_password(self.KEYRING_SERVICE_NAME, username, password)
+            keyring.set_password(self.ICLOUD_KEYRING_SERVICE_NAME, username, password)
             return True
         except Exception:
             return False
 
-    def delete_credentials(self) -> bool:
+    def icloud_delete_credentials(self) -> bool:
         """Delete stored credentials from keyring."""
-        if not KEYRING_AVAILABLE or keyring is None:
-            return False
-
         try:
             # Get stored username first
-            stored_username = keyring.get_password(self.KEYRING_SERVICE_NAME, "username")
+            stored_username = keyring.get_password(self.ICLOUD_KEYRING_SERVICE_NAME, "username")
             if stored_username:
                 # Delete password entry
-                keyring.delete_password(self.KEYRING_SERVICE_NAME, stored_username)
+                keyring.delete_password(self.ICLOUD_KEYRING_SERVICE_NAME, stored_username)
                 # Delete username entry
-                keyring.delete_password(self.KEYRING_SERVICE_NAME, "username")
+                keyring.delete_password(self.ICLOUD_KEYRING_SERVICE_NAME, "username")
             return True
         except Exception:
             return False
 
-    def has_stored_credentials(self) -> bool:
+    def icloud_has_stored_credentials(self) -> bool:
         """Check if credentials are stored in keyring."""
-        if not KEYRING_AVAILABLE or keyring is None:
+        stored_username = keyring.get_password(self.ICLOUD_KEYRING_SERVICE_NAME, "username")
+        if stored_username:
+            stored_password = keyring.get_password(
+                self.ICLOUD_KEYRING_SERVICE_NAME, stored_username)
+            return stored_password is not None
+        return False
+
+    def _pushover_get_user_key_from_store(self) -> str | None:
+        """Get pushover user key from keyring."""
+        try:
+            # Try to get user key from keyring (stored as a separate entry)
+            stored_user_key = keyring.get_password(
+                self.PUSHOVER_KEYRING_SERVICE_NAME, "user_key")
+            return stored_user_key
+        except Exception:
+            # Keyring access failed
+            return None
+
+    def _pushover_get_api_token_from_store(self) -> str | None:
+        """Get pushover API token from keyring."""
+        try:
+            stored_api_token = keyring.get_password(
+                self.PUSHOVER_KEYRING_SERVICE_NAME, self.pushover_user_key)
+            return stored_api_token
+        except Exception:
+            # Keyring access failed
+            return None
+
+    def pushover_store_credentials(self, user_key: str, api_token: str) -> bool:
+        """Store pushover credentials in keyring."""
+        try:
+            # Store user key as a separate entry
+            keyring.set_password(self.PUSHOVER_KEYRING_SERVICE_NAME, "user_key", user_key)
+            # Store API token with user key as the key
+            keyring.set_password(self.PUSHOVER_KEYRING_SERVICE_NAME, user_key, api_token)
+            return True
+        except Exception:
             return False
 
+    def pushover_delete_credentials(self) -> bool:
+        """Delete stored credentials from keyring."""
         try:
-            stored_username = keyring.get_password(self.KEYRING_SERVICE_NAME, "username")
-            if stored_username:
-                stored_password = keyring.get_password(self.KEYRING_SERVICE_NAME, stored_username)
-                return stored_password is not None
+            # Get stored user key first
+            stored_user_key = keyring.get_password(self.PUSHOVER_KEYRING_SERVICE_NAME, "user_key")
+            if stored_user_key:
+                # Delete API token entry
+                keyring.delete_password(self.PUSHOVER_KEYRING_SERVICE_NAME, stored_user_key)
+                # Delete user key entry
+                keyring.delete_password(self.PUSHOVER_KEYRING_SERVICE_NAME, "user_key")
+            return True
         except Exception:
-            pass
+            return False
 
+    def pushover_has_stored_credentials(self) -> bool:
+        """Check if credentials are stored in keyring."""
+        stored_user_key = keyring.get_password(self.PUSHOVER_KEYRING_SERVICE_NAME, "user_key")
+        if stored_user_key:
+            stored_api_token = keyring.get_password(
+                self.PUSHOVER_KEYRING_SERVICE_NAME, stored_user_key)
+            return stored_api_token is not None
         return False
 
-    def _get_username_error_message(self) -> str:
-        """Get error message for missing username."""
-        return "ICLOUD_USERNAME is required (set in environment variable or store in keyring)"
+    def __str__(self) -> str:
+        """String representation of config (without sensitive data)."""
 
-    def _get_password_error_message(self) -> str:
-        """Get error message for missing password."""
-        return "ICLOUD_PASSWORD is required (set in environment variable or store in keyring)"
-
-    def _get_credential_source_name(self) -> str:
-        """Get the name of the credential source."""
-        return "keyring"
-
-
-class EnvOnlyConfig(BaseConfig):
-    """Configuration class that only uses environment variables for credentials."""
-
-    def _get_username_from_store(self) -> str | None:
-        """Environment-only config doesn't use credential store."""
-        return None
-
-    def _get_password_from_store(self) -> str | None:
-        """Environment-only config doesn't use credential store."""
-        return None
-
-    def store_credentials(self, username: str, password: str) -> bool:
-        """Environment-only config doesn't support credential storage."""
-        return False
-
-    def delete_credentials(self) -> bool:
-        """Environment-only config doesn't support credential deletion."""
-        return False
-
-    def has_stored_credentials(self) -> bool:
-        """Environment-only config doesn't have stored credentials."""
-        return False
-
-    def _get_username_error_message(self) -> str:
-        """Get error message for missing username."""
-        return "ICLOUD_USERNAME is required (set in environment variable)"
-
-    def _get_password_error_message(self) -> str:
-        """Get error message for missing password."""
-        return "ICLOUD_PASSWORD is required (set in environment variable)"
-
-    def _get_credential_source_name(self) -> str:
-        """Get the name of the credential source."""
-        return "env-only"
+        return (
+            f"Config("
+            f"icloud_username={'***' if self.icloud_username else None}, "
+            f"icloud_password={'***' if self.icloud_password else None}, "
+            f"pushover is {'enabled' if self.enable_pushover else 'disabled'}, "
+            f"pushover_device={self.pushover_device}, "
+            f"pushover_user_key={'***' if self.pushover_user_key else None}, "
+            f"pushover_api_token={'***' if self.pushover_api_token else None}, "
+            f"sync_dir={self.sync_directory}, "
+            f"dry_run={self.dry_run}, "
+            f"log_level={self.log_level}, "
+            f"credential_store=keyring"
+            f")"
+        )
 
 
-def get_config(env_file: str | None = None) -> BaseConfig:
+class KeyringConfig(BaseConfig):
+    """Configuration class that uses keyring for storing sensitive data."""
+
+
+def get_config() -> BaseConfig:
     """Factory function to create appropriate config instance.
-
-    Args:
-        env_file: Path to .env file. If None, uses default .env
 
     Returns:
         KeyringConfig if keyring is available, EnvOnlyConfig otherwise
     """
-    if KEYRING_AVAILABLE:
-        return KeyringConfig(env_file)
-    else:
-        return EnvOnlyConfig(env_file)
+    return KeyringConfig()

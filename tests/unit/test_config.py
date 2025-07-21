@@ -6,7 +6,8 @@ from unittest.mock import patch
 import pytest
 
 from icloud_photo_sync.config import (
-    get_config, BaseConfig, KeyringConfig, EnvOnlyConfig, KEYRING_AVAILABLE)
+    get_config, BaseConfig, KeyringConfig,
+)
 
 
 @pytest.fixture
@@ -43,17 +44,8 @@ class TestConfigFactory:
 
     def test_returns_keyring_config_when_available(self):
         """Test that get_config returns KeyringConfig when keyring is available."""
-        if KEYRING_AVAILABLE:
-            config = get_config()
-            assert isinstance(config, KeyringConfig)
-        else:
-            pytest.skip("Keyring not available")
-
-    def test_returns_env_only_config_when_keyring_unavailable(self):
-        """Test that get_config returns EnvOnlyConfig when keyring is not available."""
-        with patch('icloud_photo_sync.config.KEYRING_AVAILABLE', False):
-            config = get_config()
-            assert isinstance(config, EnvOnlyConfig)
+        config = get_config()
+        assert isinstance(config, KeyringConfig)
 
 
 class TestKeyringConfig:
@@ -146,7 +138,7 @@ class TestKeyringConfig:
 
         config = KeyringConfig(str(env_file))
 
-        result = config.store_credentials("new@example.com", "new-password")
+        result = config.icloud_store_credentials("new@example.com", "new-password")
 
         assert result is True
         mock_keyring.set_password.assert_any_call(
@@ -167,7 +159,7 @@ class TestKeyringConfig:
 
         config = KeyringConfig(str(env_file))
 
-        result = config.store_credentials("new@example.com", "new-password")
+        result = config.icloud_store_credentials("new@example.com", "new-password")
 
         assert result is False
 
@@ -187,7 +179,7 @@ class TestKeyringConfig:
 
         config = KeyringConfig(str(env_file))
 
-        assert config.has_stored_credentials() is True
+        assert config.icloud_has_stored_credentials() is True
 
     def test_delete_credentials_success(self, temp_dir, clean_env, mock_keyring):
         """Test successful credential deletion."""
@@ -202,7 +194,7 @@ class TestKeyringConfig:
 
         config = KeyringConfig(str(env_file))
 
-        result = config.delete_credentials()
+        result = config.icloud_delete_credentials()
 
         assert result is True
         mock_keyring.delete_password.assert_any_call("icloud-photo-sync", "stored@example.com")
@@ -256,84 +248,28 @@ class TestKeyringConfig:
         assert "keyring" in config_str
 
 
-class TestEnvOnlyConfig:
+class TestConfigsWithEnvVars:
     """Test EnvOnlyConfig class."""
 
     def test_init_with_env_variables(self, temp_dir, clean_env):
         """Test initialization with environment variables."""
         env_file = temp_dir / ".env"
         env_file.write_text(
-            "ICLOUD_USERNAME=test@example.com\n"
-            "ICLOUD_PASSWORD=test-password\n"
             "SYNC_DIRECTORY=./test_photos\n"
         )
 
-        config = EnvOnlyConfig(str(env_file))
+        config = KeyringConfig(str(env_file))
 
-        assert config.icloud_username == "test@example.com"
-        assert config.icloud_password == "test-password"
-
-    def test_store_credentials_always_fails(self, temp_dir, clean_env):
-        """Test that store_credentials always returns False for env-only config."""
-        env_file = temp_dir / ".env"
-        env_file.write_text(
-            "ICLOUD_USERNAME=test@example.com\n"
-            "ICLOUD_PASSWORD=test-password\n"
-            "SYNC_DIRECTORY=./test_photos\n"
-        )
-
-        config = EnvOnlyConfig(str(env_file))
-
-        result = config.store_credentials("new@example.com", "new-password")
-
-        assert result is False
-
-    def test_has_stored_credentials_always_false(self, temp_dir, clean_env):
-        """Test that has_stored_credentials always returns False for env-only config."""
-        env_file = temp_dir / ".env"
-        env_file.write_text(
-            "ICLOUD_USERNAME=test@example.com\n"
-            "ICLOUD_PASSWORD=test-password\n"
-            "SYNC_DIRECTORY=./test_photos\n"
-        )
-
-        config = EnvOnlyConfig(str(env_file))
-
-        assert config.has_stored_credentials() is False
-
-    def test_delete_credentials_always_fails(self, temp_dir, clean_env):
-        """Test that delete_credentials always returns False for env-only config."""
-        env_file = temp_dir / ".env"
-        env_file.write_text(
-            "ICLOUD_USERNAME=test@example.com\n"
-            "ICLOUD_PASSWORD=test-password\n"
-            "SYNC_DIRECTORY=./test_photos\n"
-        )
-
-        config = EnvOnlyConfig(str(env_file))
-
-        result = config.delete_credentials()
-
-        assert result is False
-
-    def test_error_messages_mention_env_only(self, temp_dir, clean_env):
-        """Test that error messages mention environment variables only."""
-        env_file = temp_dir / ".env"
-        env_file.write_text("SYNC_DIRECTORY=./test_photos\n")
-
-        with pytest.raises(ValueError, match="set in environment variable"):
-            EnvOnlyConfig(str(env_file))
+        assert config.sync_directory == "./test_photos"
 
     def test_string_representation_shows_env_only(self, temp_dir, clean_env):
         """Test that string representation shows env-only source."""
         env_file = temp_dir / ".env"
         env_file.write_text(
-            "ICLOUD_USERNAME=test@example.com\n"
-            "ICLOUD_PASSWORD=test-password\n"
             "SYNC_DIRECTORY=./test_photos\n"
         )
 
-        config = EnvOnlyConfig(str(env_file))
+        config = KeyringConfig(str(env_file))
         config_str = str(config)
 
         assert "env-only" in config_str
