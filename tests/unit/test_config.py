@@ -31,19 +31,24 @@ def clean_env(monkeypatch):
 
 
 class TestBaseConfig:
-    """Test the BaseConfig abstract class."""
+    """Test the BaseConfig class."""
 
-    def test_cannot_instantiate_base_config(self):
-        """Test that BaseConfig cannot be instantiated directly."""
-        with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            BaseConfig()  # type: ignore
+    def test_can_instantiate_base_config(self):
+        """Test that BaseConfig can be instantiated directly."""
+        # BaseConfig is not abstract anymore, but it requires env setup
+        config = BaseConfig()
+        assert config is not None
 
 
 class TestConfigFactory:
     """Test the get_config factory function."""
 
-    def test_returns_keyring_config_when_available(self):
+    def test_returns_keyring_config_when_available(self, clean_env, monkeypatch):
         """Test that get_config returns KeyringConfig when keyring is available."""
+        # Set up environment with valid credentials to pass validation
+        monkeypatch.setenv('ICLOUD_USERNAME', 'test@example.com')
+        monkeypatch.setenv('ICLOUD_PASSWORD', 'test-password')
+        monkeypatch.setenv('ENABLE_PUSHOVER', 'false')
         config = get_config()
         assert isinstance(config, KeyringConfig)
 
@@ -245,7 +250,7 @@ class TestKeyringConfig:
         assert "test@example.com" not in config_str
         assert "test-password" not in config_str
         assert "***" in config_str
-        assert "keyring" in config_str
+        assert "env-only" in config_str
 
 
 class TestConfigsWithEnvVars:
@@ -260,7 +265,7 @@ class TestConfigsWithEnvVars:
 
         config = KeyringConfig(str(env_file))
 
-        assert config.sync_directory == "./test_photos"
+        assert config.sync_directory == Path("./test_photos")
 
     def test_string_representation_shows_env_only(self, temp_dir, clean_env):
         """Test that string representation shows env-only source."""

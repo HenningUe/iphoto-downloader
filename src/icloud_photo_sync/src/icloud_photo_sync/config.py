@@ -42,11 +42,17 @@ class BaseConfig(ABC):
 
         # Pushover notification settings
         self.pushover_device: str | None = os.getenv('PUSHOVER_DEVICE', '')
-        self.enable_pushover: bool = os.getenv('ENABLE_PUSHOVER', 'true').lower() == 'true'
+        self.enable_pushover: bool = os.getenv('ENABLE_PUSHOVER', 'false').lower() == 'true'
 
     @property
     def icloud_username(self) -> str:
         """Get iCloud username from environment variables or credential store."""
+        # Try environment variable first
+        env_username = os.getenv('ICLOUD_USERNAME')
+        if env_username:
+            return env_username
+
+        # Fall back to keyring
         v = self._icloud_get_username_from_store()
         if not v and self.enable_pushover:
             raise ValueError("icloud_username is required (store in keyring)")
@@ -55,6 +61,12 @@ class BaseConfig(ABC):
     @property
     def icloud_password(self) -> str:
         """Get iCloud password from environment variables or credential store."""
+        # Try environment variable first
+        env_password = os.getenv('ICLOUD_PASSWORD')
+        if env_password:
+            return env_password
+
+        # Fall back to keyring
         v = self._icloud_get_password_from_store()
         if not v and self.enable_pushover:
             raise ValueError("icloud_password is required (store in keyring)")
@@ -63,27 +75,48 @@ class BaseConfig(ABC):
     @property
     def pushover_user_key(self) -> str:
         """Get Pushover user key from environment variables or credential store."""
+        # Try environment variable first
+        env_user_key = os.getenv('PUSHOVER_USER_KEY')
+        if env_user_key:
+            return env_user_key
+
+        # Fall back to keyring
         v = self._pushover_get_user_key_from_store()
-        if not v:
+        if not v and self.enable_pushover:
             raise ValueError("pushover_user_key is required (store in keyring)")
-        return v
+        return v or ""
 
     @property
     def pushover_api_token(self) -> str:
         """Get Pushover API token from environment variables or credential store."""
+        # Try environment variable first
+        env_api_token = os.getenv('PUSHOVER_API_TOKEN')
+        if env_api_token:
+            return env_api_token
+
+        # Fall back to keyring
         v = self._pushover_get_api_token_from_store()
-        if not v:
+        if not v and self.enable_pushover:
             raise ValueError("pushover_api_token is required (store in keyring)")
-        return v
+        return v or ""
 
     def validate(self) -> None:
         """Validate configuration settings."""
         errors = []
 
-        if not self.icloud_username:
+        # Check iCloud credentials without triggering exceptions
+        try:
+            username = self.icloud_username
+            if not username:
+                errors.append("icloud_username is required (store in keyring)")
+        except ValueError:
             errors.append("icloud_username is required (store in keyring)")
 
-        if not self.icloud_password:
+        try:
+            password = self.icloud_password
+            if not password:
+                errors.append("icloud_password is required (store in keyring)")
+        except ValueError:
             errors.append("icloud_password is required (store in keyring)")
 
         if self.log_level not in ['DEBUG', 'INFO', 'WARNING', 'ERROR']:
@@ -91,9 +124,18 @@ class BaseConfig(ABC):
 
         # Validate Pushover settings if enabled
         if self.enable_pushover:
-            if not self.pushover_api_token:
+            try:
+                api_token = self.pushover_api_token
+                if not api_token:
+                    errors.append("PUSHOVER_API_TOKEN is required when ENABLE_PUSHOVER=true")
+            except ValueError:
                 errors.append("PUSHOVER_API_TOKEN is required when ENABLE_PUSHOVER=true")
-            if not self.pushover_user_key:
+
+            try:
+                user_key = self.pushover_user_key
+                if not user_key:
+                    errors.append("PUSHOVER_USER_KEY is required when ENABLE_PUSHOVER=true")
+            except ValueError:
                 errors.append("PUSHOVER_USER_KEY is required when ENABLE_PUSHOVER=true")
 
         if errors:
@@ -233,6 +275,35 @@ class BaseConfig(ABC):
 
     def __str__(self) -> str:
         """String representation of config (without sensitive data)."""
+        # Safely get pushover properties
+        try:
+            pushover_user_key = self.pushover_user_key
+            pushover_user_key_display = '***' if pushover_user_key else None
+        except ValueError:
+            pushover_user_key_display = None
+
+        try:
+            pushover_api_token = self.pushover_api_token
+            pushover_api_token_display = '***' if pushover_api_token else None
+        except ValueError:
+            pushover_api_token_display = None
+
+        # Determine credential source
+        using_env_for_icloud = bool(os.getenv('ICLOUD_USERNAME') or os.getenv('ICLOUD_PASSWORD'))
+        using_env_for_pushover = bool(
+            os.getenv('PUSHOVER_USER_KEY') or os.getenv('PUSHOVER_API_TOKEN')
+        )
+        using_keyring = (
+            self.icloud_has_stored_credentials() or
+            self.pushover_has_stored_credentials()
+        )
+
+        if using_env_for_icloud or using_env_for_pushover:
+            credential_store = "env-only"
+        elif using_keyring:
+            credential_store = "keyring"
+        else:
+            credential_store = "none"
 
         return (
             f"Config("
@@ -240,18 +311,30 @@ class BaseConfig(ABC):
             f"icloud_password={'***' if self.icloud_password else None}, "
             f"pushover is {'enabled' if self.enable_pushover else 'disabled'}, "
             f"pushover_device={self.pushover_device}, "
-            f"pushover_user_key={'***' if self.pushover_user_key else None}, "
-            f"pushover_api_token={'***' if self.pushover_api_token else None}, "
+            f"pushover_user_key={pushover_user_key_display}, "
+            f"pushover_api_token={pushover_api_token_display}, "
             f"sync_dir={self.sync_directory}, "
             f"dry_run={self.dry_run}, "
             f"log_level={self.log_level}, "
-            f"credential_store=keyring"
+            f"credential_store={credential_store}"
             f")"
         )
 
 
 class KeyringConfig(BaseConfig):
     """Configuration class that uses keyring for storing sensitive data."""
+
+    def __init__(self, env_file: str | None = None) -> None:
+        """Initialize configuration.
+
+        Args:
+            env_file: Path to .env file. If None, uses default .env
+        """
+        # Call parent __init__ to set up all properties
+        super().__init__(env_file)
+
+        # Validate configuration
+        self.validate()
 
 
 def get_config() -> BaseConfig:

@@ -170,10 +170,10 @@ class TestDeletionTracker:
         assert stats['first_deletion'] is None
         assert stats['last_deletion'] is None
 
-    def test_database_error_handling(self, temp_dir):
+    def test_database_error_handling(self, tmp_path):
         """Test handling of database errors."""
         # Create tracker with invalid database path
-        invalid_path = temp_dir / "nonexistent" / "database.db"
+        invalid_path = tmp_path / "nonexistent" / "database.db"
 
         with pytest.raises(Exception):
             DeletionTracker(str(invalid_path))
