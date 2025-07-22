@@ -1,5 +1,6 @@
 """iCloud authentication and API interaction."""
 
+import time
 import typing as t
 from pathlib import Path
 from pyicloud import PyiCloudService
@@ -38,6 +39,9 @@ class iCloudClient:
             True if authentication successful, False otherwise
         """
         try:
+            # Clean up expired session files before authentication
+            self.cleanup_expired_sessions()
+
             if not self.config.icloud_username or not self.config.icloud_password:
                 self.logger.error("❌ iCloud username or password not configured")
                 return False
@@ -204,6 +208,49 @@ class iCloudClient:
             self.logger.error(f"❌ Error trusting session: {e}")
             return False
 
+    def cleanup_expired_sessions(self, max_age_days: int = 30) -> None:
+        """Clean up expired session files older than specified days.
+
+        Args:
+            max_age_days: Maximum age in days for session files (default: 30)
+        """
+        try:
+            if not self.session_dir.exists():
+                return
+
+            current_time = time.time()
+            cutoff_time = current_time - (max_age_days * 24 * 60 * 60)  # Convert days to seconds
+
+            cleaned_count = 0
+            total_size = 0
+
+            # Clean up session files (cookies, cache, etc.)
+            for session_file in self.session_dir.iterdir():
+                if session_file.is_file():
+                    try:
+                        file_mtime = session_file.stat().st_mtime
+                        if file_mtime < cutoff_time:
+                            file_size = session_file.stat().st_size
+                            session_file.unlink()
+                            cleaned_count += 1
+                            total_size += file_size
+                            self.logger.debug(f"Removed expired session file: {session_file.name}")
+                    except (OSError, FileNotFoundError) as e:
+                        self.logger.warning(
+                            f"Failed to remove session file {session_file.name}: {e}"
+                        )
+
+            if cleaned_count > 0:
+                self.logger.info(
+                    f"🧹 Cleaned up {cleaned_count} expired session files "
+                    f"({total_size / 1024:.1f} KB freed)"
+                )
+            else:
+                self.logger.debug("No expired session files found to clean up")
+
+        except Exception as e:
+            self.logger.error(f"❌ Error during session cleanup: {e}")
+
     def list_photos(self) -> t.Iterator[dict[str, t.Any]]:
         """List all photos from iCloud.
 
@@ -299,3 +346,56 @@ class iCloudClient:
             True if authenticated, False otherwise
         """
         return self._api is not None and self._api.photos is not None
+
+
+def cleanup_sessions(max_age_days: int = 30, session_dir: t.Optional[Path] = None) -> None:
+    """Standalone utility to clean up expired session files.
+
+    This can be used independently of the iCloudClient class.
+
+    Args:
+        max_age_days: Maximum age in days for session files (default: 30)
+        session_dir: Optional custom session directory path
+    """
+    import time
+    from .logger import get_logger
+
+    logger = get_logger()
+
+    if session_dir is None:
+        session_dir = Path.home() / "icloud_photo_sync" / "sessions"
+
+    try:
+        if not session_dir.exists():
+            logger.debug("Session directory does not exist, nothing to clean")
+            return
+
+        current_time = time.time()
+        cutoff_time = current_time - (max_age_days * 24 * 60 * 60)
+
+        cleaned_count = 0
+        total_size = 0
+
+        for session_file in session_dir.iterdir():
+            if session_file.is_file():
+                try:
+                    file_mtime = session_file.stat().st_mtime
+                    if file_mtime < cutoff_time:
+                        file_size = session_file.stat().st_size
+                        session_file.unlink()
+                        cleaned_count += 1
+                        total_size += file_size
+                        logger.debug(f"Removed expired session file: {session_file.name}")
+                except (OSError, FileNotFoundError) as e:
+                    logger.warning(f"Failed to remove session file {session_file.name}: {e}")
+
+        if cleaned_count > 0:
+            logger.info(
+                f"🧹 Cleaned up {cleaned_count} expired session files "
+                f"({total_size / 1024:.1f} KB freed)"
+            )
+        else:
+            logger.debug("No expired session files found to clean up")
+
+    except Exception as e:
+        logger.error(f"❌ Error during session cleanup: {e}")

@@ -67,7 +67,12 @@ class TwoFactorAuthHandler:
             2FA code if successful, None if failed or timeout
         """
         try:
-            self.logger.info("🔐 Starting 2FA authentication flow")
+            # Structured audit logging for 2FA session start
+            self.logger.info("🔐 Starting 2FA authentication flow", extra={
+                "event": "2fa_session_start",
+                "session_id": id(self),
+                "timestamp": time.time()
+            })
 
             # Initialize web server for 2FA
             self._web_server = TwoFAWebServer()
@@ -95,21 +100,43 @@ class TwoFactorAuthHandler:
 
             # Open browser automatically
             if self._web_server.open_browser():
-                self.logger.info("🌐 Opened 2FA interface in browser")
+                self.logger.info("🌐 Opened 2FA interface in browser", extra={
+                    "event": "browser_opened",
+                    "session_id": id(self),
+                    "url": web_url
+                })
             else:
-                self.logger.warning("⚠️ Could not open browser automatically")
+                self.logger.warning("⚠️ Could not open browser automatically", extra={
+                    "event": "browser_open_failed",
+                    "session_id": id(self)
+                })
                 self.logger.info(f"Please open: {web_url}")
 
             # Wait for 2FA code through web interface
             self._web_server.set_state('waiting_for_code')
+            self.logger.info("⏳ Waiting for 2FA code via web interface", extra={
+                "event": "waiting_for_code",
+                "session_id": id(self),
+                "timeout_seconds": 300
+            })
             code = self._web_server.wait_for_code(timeout=300)  # 5 minute timeout
 
             if code:
-                self.logger.info("📱 2FA code received via web interface")
+                self.logger.info("📱 2FA code received via web interface", extra={
+                    "event": "2fa_code_received",
+                    "session_id": id(self),
+                    "code_length": len(code)
+                })
 
                 # If validation callback is provided, validate the code
                 if validate_2fa_callback:
-                    if validate_2fa_callback(code):
+                    validation_result = validate_2fa_callback(code)
+                    self.logger.info("🔍 2FA code validation attempt", extra={
+                        "event": "2fa_code_validation",
+                        "session_id": id(self),
+                        "validation_result": validation_result
+                    })
+                    if validation_result:
                         self._web_server.set_state(
                             'authenticated',
                             'Authentication successful! You can close this window.'
@@ -117,12 +144,21 @@ class TwoFactorAuthHandler:
 
                         # Send success notification
                         self._send_success_notification()
+                        self.logger.info("✅ 2FA authentication successful", extra={
+                            "event": "2fa_auth_success",
+                            "session_id": id(self)
+                        })
                         return code
                     else:
                         self._web_server.set_state(
                             'failed',
                             'Invalid 2FA code. Please try again.'
                         )
+                        self.logger.warning("❌ 2FA authentication failed - invalid code", extra={
+                            "event": "2fa_auth_failed",
+                            "session_id": id(self),
+                            "reason": "invalid_code"
+                        })
                         return None
                 else:
                     # No validation callback, just return the code
@@ -130,14 +166,27 @@ class TwoFactorAuthHandler:
                         'authenticated',
                         'Code received! You can close this window.'
                     )
+                    self.logger.info("✅ 2FA code received (no validation)", extra={
+                        "event": "2fa_code_received_no_validation",
+                        "session_id": id(self)
+                    })
                     return code
             else:
-                self.logger.error("❌ Timeout waiting for 2FA code")
+                self.logger.error("❌ Timeout waiting for 2FA code", extra={
+                    "event": "2fa_timeout",
+                    "session_id": id(self),
+                    "timeout_seconds": 300
+                })
                 self._web_server.set_state('failed', 'Timeout waiting for 2FA code')
                 return None
 
         except Exception as e:
-            self.logger.error(f"❌ Error during 2FA authentication: {e}")
+            self.logger.error(f"❌ Error during 2FA authentication: {e}", extra={
+                "event": "2fa_error",
+                "session_id": id(self),
+                "error_type": type(e).__name__,
+                "error_message": str(e)
+            })
             if self._web_server:
                 self._web_server.set_state('failed', f'Error: {str(e)}')
             return None
@@ -148,6 +197,10 @@ class TwoFactorAuthHandler:
                 time.sleep(2)
                 self._web_server.stop()
                 self._web_server = None
+                self.logger.info("🔒 2FA session ended", extra={
+                    "event": "2fa_session_end",
+                    "session_id": id(self)
+                })
 
     def _send_pushover_notification(self, web_url: str) -> None:
         """Send Pushover notification if configured.
@@ -160,18 +213,35 @@ class TwoFactorAuthHandler:
         try:
             pushover_config = self.config.get_pushover_config()
             if not pushover_config:
-                self.logger.debug("Pushover notifications not configured, skipping notification")
+                self.logger.debug(
+                    "Pushover notifications not configured, skipping notification",
+                    extra={
+                        "event": "pushover_notification_skipped",
+                        "reason": "not_configured"
+                    }
+                )
                 return
 
             notification_service = PushoverService(pushover_config)
 
             if notification_service.send_2fa_notification(web_url):
-                self.logger.info("📱 2FA notification sent via Pushover")
+                self.logger.info("📱 2FA notification sent via Pushover", extra={
+                    "event": "pushover_notification_sent",
+                    "notification_type": "2fa_request"
+                })
             else:
-                self.logger.warning("⚠️ Failed to send 2FA notification via Pushover")
+                self.logger.warning("⚠️ Failed to send 2FA notification via Pushover", extra={
+                    "event": "pushover_notification_failed",
+                    "notification_type": "2fa_request"
+                })
 
         except Exception as e:
-            self.logger.error(f"❌ Error sending Pushover notification: {e}")
+            self.logger.error(f"❌ Error sending Pushover notification: {e}", extra={
+                "event": "pushover_notification_error",
+                "notification_type": "2fa_request",
+                "error_type": type(e).__name__,
+                "error_message": str(e)
+            })
 
     def _send_success_notification(self) -> None:
         """Send success notification via Pushover if configured.
@@ -186,12 +256,26 @@ class TwoFactorAuthHandler:
             notification_service = PushoverService(pushover_config)
 
             if notification_service.send_auth_success_notification():
-                self.logger.info("📱 2FA success notification sent via Pushover")
+                self.logger.info("📱 2FA success notification sent via Pushover", extra={
+                    "event": "pushover_notification_sent",
+                    "notification_type": "2fa_success"
+                })
             else:
-                self.logger.warning("⚠️ Failed to send 2FA success notification via Pushover")
+                self.logger.warning(
+                    "⚠️ Failed to send 2FA success notification via Pushover",
+                    extra={
+                        "event": "pushover_notification_failed",
+                        "notification_type": "2fa_success"
+                    }
+                )
 
         except Exception as e:
-            self.logger.error(f"❌ Error sending success notification: {e}")
+            self.logger.error(f"❌ Error sending success notification: {e}", extra={
+                "event": "pushover_notification_error",
+                "notification_type": "2fa_success",
+                "error_type": type(e).__name__,
+                "error_message": str(e)
+            })
 
     def cleanup(self) -> None:
         """Clean up resources."""

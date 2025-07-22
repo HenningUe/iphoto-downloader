@@ -51,21 +51,20 @@ automatically using **GitHub Actions**.
 2.6. Notification Content
 
 - The Pushover notification shall include an HTTP link to a local address (e.g.,
-  `http://localhost:<port>`), which directs the user to the local web interface.
+  `http://<local-ip-address-of-pc>:<port>`), which directs the user to the local
+  web interface.
 
 2.7. Local Webserver
 
 - A local webserver shall be started automatically when a 2FA authentication is
   required.
-- The webserver shall provide an interface that enables the user to trigger a
-  new 2FA request via a button.
 
 2.8. 2FA Session Handling
 
-- When the user clicks the button in the web interface, a new 2FA authentication
-  session shall be initiated.
 - The user shall be able to enter the 2FA key directly in the web interface
   provided by the local webserver.
+- The webserver shall provide an interface that enables the user to trigger a
+  new 2FA request via a button.
 
 2.9. Folder structure
 
@@ -76,7 +75,7 @@ automatically using **GitHub Actions**.
 
 - The HTTP site does not need to be secured (i.e., no HTTPS), as the server runs
   only on the local machine within a private network.
-- The server shall bind only to `localhost` or `127.0.0.1` to prevent external
+- The server shall bind only to `<local-ip-address-of-pc>` or prevent external
   access.
 
 2.11. Session Storage

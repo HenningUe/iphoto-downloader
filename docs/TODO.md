@@ -1,11 +1,12 @@
-
-This is the project TODO list for implementing the **iCloud Photo Sync Tool** as specified.
+This is the project TODO list for implementing the **iCloud Photo Sync Tool** as
+specified.
 
 ---
 
 ## 1️⃣ 📁 Project Setup
 
-- [x] Create **GitHub repo** with mono-repo structure ([uv monorepo guide](https://github.com/JasperHG90/uv-monorepo))
+- [x] Create **GitHub repo** with mono-repo structure
+      ([uv monorepo guide](https://github.com/JasperHG90/uv-monorepo))
 - [x] Initialize **`pyproject.toml`** using `uv`
 - [x] Add `pyicloud` dependency
 - [x] Add linting tools: `ruff`, `mypy`
@@ -14,9 +15,10 @@ This is the project TODO list for implementing the **iCloud Photo Sync Tool** as
 
 ---
 
-## 2️⃣ ⚙️ Core  Logic
+## 2️⃣ ⚙️ Core Logic
 
 ### 2.1 Core Sync Logic
+
 - [x] Implement **iCloud authentication** using `pyicloud`
 - [x] Implement **configurable local sync directory**
 - [x] Develop logic to:
@@ -30,6 +32,7 @@ This is the project TODO list for implementing the **iCloud Photo Sync Tool** as
 ### 2.2 2FA Authentication System
 
 #### 2.2.1 📱 Pushover Notification Integration
+
 - [x] Add `requests` dependency to `pyproject.toml` (for Pushover API)
 - [x] Implement **Pushover notification service** for 2FA triggers
 - [x] Create configuration for Pushover API token & user key
@@ -37,6 +40,7 @@ This is the project TODO list for implementing the **iCloud Photo Sync Tool** as
 - [x] Add error handling for Pushover API failures
 
 #### 2.2.2 🌐 Local Web Server
+
 - [x] Implement **local HTTP server** (Flask/FastAPI) for 2FA interface
 - [x] Create web interface with:
   - [x] Button to trigger new 2FA request
@@ -47,32 +51,37 @@ This is the project TODO list for implementing the **iCloud Photo Sync Tool** as
 - [x] Add **port conflict handling** (try multiple ports if needed)
 
 #### 2.2.3 🔄 2FA Session Management
+
 - [x] Implement **2FA session initiation** via web interface
 - [x] Add **2FA code validation** through web form
 - [x] Integrate with existing `pyicloud` 2FA handling
 - [x] Implement **session state management** (pending, authenticated, failed)
 
 #### 2.2.4 💾 Session Storage
+
 - [x] Store 2FA sessions in user directory (`%USERPROFILE%` or `$HOME`)
 - [x] Create dedicated subdirectory (`icloud_photo_sync/sessions`)
 - [x] Implement secure file permissions for session data
 - [x] Store only necessary session information
-- [ ] Add **session cleanup** for expired sessions
+- [x] Add **session cleanup** for expired sessions
 
 #### 2.2.5 🛡️ Security & Error Handling
-- [ ] Implement **graceful error handling** for server startup failures
-- [ ] Add **port availability checking** before server start
-- [ ] Implement **session timeout** mechanisms
-- [ ] Add **rate limiting** for 2FA attempts
-- [ ] Ensure no sensitive data in logs
+
+- [x] Implement **graceful error handling** for server startup failures
+- [x] Add **port availability checking** before server start
+- [x] Implement **session timeout** mechanisms
+- [x] Add **rate limiting** for 2FA attempts
+- [x] Ensure no sensitive data in logs
 
 #### 2.2.6 📝 2FA Logging
-- [ ] Add **2FA-specific logging** for debugging
-- [ ] Log 2FA requests and session states (without sensitive data)
-- [ ] Implement **audit trail** for 2FA sessions
-- [ ] Add **structured logging** for 2FA events
+
+- [x] Add **2FA-specific logging** for debugging
+- [x] Log 2FA requests and session states (without sensitive data)
+- [x] Implement **audit trail** for 2FA sessions
+- [x] Add **structured logging** for 2FA events
 
 ### 2.3 Local Deletion Tracking
+
 - [x] Design lightweight **SQLite** or **JSON-based** local deletion tracker
 - [x] Create functions to:
   - [x] Record deleted files when missing locally
@@ -99,14 +108,16 @@ This is the project TODO list for implementing the **iCloud Photo Sync Tool** as
   - [ ] Test error handling (port conflicts, API failures)
 - [ ] (Optional) Add **end-to-end test** using dummy or sandbox iCloud
 - [ ] Add all tests to CI/CD
-- [x] Achieve ≥ **80% test coverage** for core sync logic (✅ **85.21%** achieved)
+- [x] Achieve ≥ **80% test coverage** for core sync logic (✅ **85.21%**
+      achieved)
 
 ---
 
 ## 6️⃣ 🐧🪟 Cross-Platform Build
 
 - [ ] Write **PyInstaller spec** for Windows `.exe`
-- [ ] Write **PyInstaller spec** for Linux executable (consider static linking if possible)
+- [ ] Write **PyInstaller spec** for Linux executable (consider static linking
+      if possible)
 - [ ] Test builds locally on Windows and Linux
 - [ ] Ensure **2FA web server** works in packaged builds
 - [ ] Test **Pushover notifications** in packaged builds
@@ -120,8 +131,10 @@ This is the project TODO list for implementing the **iCloud Photo Sync Tool** as
   - [ ] Run unit & integration tests
   - [ ] Run `ruff` and `mypy`
   - [ ] Build `.exe` for Windows and executable for Linux
-  - [ ] Package Linux build for **APT repo** ([APT guide](https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository))
-  - [ ] Package Windows build for **WinGet** ([WinGetCreate](https://techwatching.dev/posts/wingetcreate))
+  - [ ] Package Linux build for **APT repo**
+        ([APT guide](https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository))
+  - [ ] Package Windows build for **WinGet**
+        ([WinGetCreate](https://techwatching.dev/posts/wingetcreate))
   - [ ] Publish releases automatically
 
 ---
@@ -178,26 +191,27 @@ This is the project TODO list for implementing the **iCloud Photo Sync Tool** as
 
 ## 🎉 DONE when:
 
-- ✔️ No re-downloads of locally deleted photos  
-- ✔️ No accidental deletions on iCloud  
-- ✔️ Idempotent sync runs  
-- ✔️ **2FA notifications via Pushover work**  
-- ✔️ **Local web server for 2FA works**  
-- ✔️ **2FA sessions are stored securely**  
-- ✔️ `.exe` builds automatically and runs on Windows  
-- ✔️ CI/CD builds, tests, packages, and releases  
-- ✔️ Clear logs for all sync operations  
-- ✔️ Versioned releases available to users  
-- ✔️ Users can easily install & configure  
+- ✔️ No re-downloads of locally deleted photos
+- ✔️ No accidental deletions on iCloud
+- ✔️ Idempotent sync runs
+- ✔️ **2FA notifications via Pushover work**
+- ✔️ **Local web server for 2FA works**
+- ✔️ **2FA sessions are stored securely**
+- ✔️ `.exe` builds automatically and runs on Windows
+- ✔️ CI/CD builds, tests, packages, and releases
+- ✔️ Clear logs for all sync operations
+- ✔️ Versioned releases available to users
+- ✔️ Users can easily install & configure
 
 ---
 
-**References:**  
-- [pyicloud](https://pypi.org/project/pyicloud/)  
-- [uv](https://docs.astral.sh/uv/)  
-- [uv Monorepo Guide](https://github.com/JasperHG90/uv-monorepo)  
-- [PyInstaller CI/CD Guide](https://ragug.medium.com/ci-cd-pipeline-for-pyinstaller-on-github-actions-for-windows-7f8274349278)  
-- [APT Repo Guide](https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository)  
+**References:**
+
+- [pyicloud](https://pypi.org/project/pyicloud/)
+- [uv](https://docs.astral.sh/uv/)
+- [uv Monorepo Guide](https://github.com/JasperHG90/uv-monorepo)
+- [PyInstaller CI/CD Guide](https://ragug.medium.com/ci-cd-pipeline-for-pyinstaller-on-github-actions-for-windows-7f8274349278)
+- [APT Repo Guide](https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository)
 - [WinGetCreate](https://techwatching.dev/posts/wingetcreate)
 
 ---

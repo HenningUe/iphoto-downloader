@@ -360,3 +360,74 @@ class TestiCloudClient:
         client._api = mock_pyicloud_api
 
         assert client.is_authenticated is False
+
+    def test_cleanup_expired_sessions(self, mock_config, tmp_path):
+        """Test cleanup of expired session files."""
+        import time
+
+        # Create a temporary session directory
+        session_dir = tmp_path / "sessions"
+        session_dir.mkdir()
+
+        # Create some test session files with different ages
+        current_time = time.time()
+
+        # Old file (40 days old)
+        old_file = session_dir / "old_session.txt"
+        old_file.write_text("old session data")
+        old_time = current_time - (40 * 24 * 60 * 60)  # 40 days ago
+        import os
+        os.utime(old_file, (old_time, old_time))
+
+        # Recent file (10 days old)
+        recent_file = session_dir / "recent_session.txt"
+        recent_file.write_text("recent session data")
+        recent_time = current_time - (10 * 24 * 60 * 60)  # 10 days ago
+        os.utime(recent_file, (recent_time, recent_time))
+
+        # Very recent file (1 day old)
+        very_recent_file = session_dir / "very_recent_session.txt"
+        very_recent_file.write_text("very recent session data")
+
+        client = iCloudClient(mock_config)
+        client.session_dir = session_dir
+
+        # Clean up files older than 30 days
+        client.cleanup_expired_sessions(max_age_days=30)
+
+        # Check that only the old file was removed
+        assert not old_file.exists()
+        assert recent_file.exists()
+        assert very_recent_file.exists()
+
+    def test_cleanup_expired_sessions_no_session_dir(self, mock_config, tmp_path):
+        """Test cleanup when session directory doesn't exist."""
+        client = iCloudClient(mock_config)
+        client.session_dir = tmp_path / "nonexistent"
+
+        # Should not raise an exception
+        client.cleanup_expired_sessions()
+
+    def test_cleanup_sessions_standalone(self, tmp_path):
+        """Test standalone cleanup_sessions function."""
+        from icloud_photo_sync.icloud_client import cleanup_sessions
+        import time
+
+        # Create test files
+        session_dir = tmp_path / "sessions"
+        session_dir.mkdir()
+
+        old_file = session_dir / "old.txt"
+        old_file.write_text("old data")
+        # Manually set old timestamp
+        old_time = time.time() - (40 * 24 * 60 * 60)
+        import os
+        os.utime(old_file, (old_time, old_time))
+
+        recent_file = session_dir / "recent.txt"
+        recent_file.write_text("recent data")
+
+        cleanup_sessions(max_age_days=30, session_dir=session_dir)
+
+        assert not old_file.exists()
+        assert recent_file.exists()
