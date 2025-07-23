@@ -2,8 +2,10 @@
 """Utility script to manage iCloud credentials in keyring."""
 
 import getpass
+import shutil
 
 from icloud_photo_sync.config import get_config, KeyringConfig
+from icloud_photo_sync.icloud_client import iCloudClient
 
 
 def main():
@@ -17,12 +19,13 @@ def main():
         print("1. iCloud - Store credentials in keyring")
         print("2. iCloud - Check stored credentials")
         print("3. iCloud - Delete stored credentials")
-        print("4. Pushover - Store credentials in keyring")
-        print("5. Pushover - Check stored credentials")
-        print("6. Pushover - Delete stored credentials")
-        print("7. Exit")
+        print("4. iCloud - Delete 2FA sessions")
+        print("5. Pushover - Store credentials in keyring")
+        print("6. Pushover - Check stored credentials")
+        print("7. Pushover - Delete stored credentials")
+        print("8. Exit")
 
-        choice = input("\nEnter your choice (1-7): ").strip()
+        choice = input("\nEnter your choice (1-8): ").strip()
 
         if choice == "1":
             icloud_store_credentials()
@@ -31,12 +34,14 @@ def main():
         elif choice == "3":
             icloud_delete_credentials()
         elif choice == "4":
-            pushover_store_credentials()
+            icloud_delete_2fa_sessions()
         elif choice == "5":
-            pushover_check_credentials()
+            pushover_store_credentials()
         elif choice == "6":
-            pushover_delete_credentials()
+            pushover_check_credentials()
         elif choice == "7":
+            pushover_delete_credentials()
+        elif choice == "8":
             print("👋 Goodbye!")
             break
         else:
@@ -109,6 +114,22 @@ def icloud_delete_credentials():
         print("✅ Credentials deleted successfully from keyring!")
     else:
         print("❌ Failed to delete credentials from keyring.")
+
+
+def icloud_delete_2fa_sessions():
+    """Delete iCloud 2FA sessions."""
+    print("\n🗑️ Delete iCloud 2FA Sessions")
+    print("-" * 30)
+
+    config = _create_temp_config()
+    icloud_client = iCloudClient(config)
+    if not icloud_client.session_dir.exists():
+        print("No 2FA sessions found in session directory.")
+        return
+
+    shutil.rmtree(icloud_client.session_dir, ignore_errors=True)
+    if not icloud_client.session_dir.exists():
+        print("✅ 2FA sessions deleted successfully from session directory")
 
 
 def pushover_store_credentials():

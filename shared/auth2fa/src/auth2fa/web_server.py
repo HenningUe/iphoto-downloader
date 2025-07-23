@@ -801,7 +801,6 @@ class TwoFAWebServer:
             "event": "2fa_state_change",
             "old_state": old_state,
             "new_state": state,
-            "message": message,
             "session_id": id(self)
         })
         if message:

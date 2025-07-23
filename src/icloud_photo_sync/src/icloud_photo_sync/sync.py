@@ -111,7 +111,7 @@ class PhotoSyncer:
             self.logger.info("🔄 Validating 2FA code...")
 
             # Validate the 2FA code
-            if self.icloud_client.handle_2fa(code):
+            if self.icloud_client.handle_2fa_validation(code):
                 self.logger.info("✅ 2FA verification successful")
 
                 # Send success notification if configured

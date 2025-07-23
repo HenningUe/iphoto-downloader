@@ -17,11 +17,11 @@ def main() -> None:
 
     config = get_config()
 
-    if not config.icloud_has_stored_credentials:
+    if not config.icloud_has_stored_credentials():
         print("🔑 iCloud credentials not found in keyring.")
         manage_credentials.icloud_store_credentials()
 
-    if not config.pushover_has_stored_credentials:
+    if config.enable_pushover and not config.pushover_has_stored_credentials():
         print("🔑 Pushover credentials not found in keyring.")
         manage_credentials.pushover_store_credentials()
 

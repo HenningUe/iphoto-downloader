@@ -127,59 +127,29 @@ class TwoFactorAuthHandler:
                     "session_id": id(self),
                     "code_length": len(code)
                 })
+                self._web_server.set_state(
+                    'authenticated',
+                    'Authentication successful! You can close this window.'
+                )
 
-                # If validation callback is provided, validate the code
-                if validate_2fa_callback:
-                    validation_result = validate_2fa_callback(code)
-                    self.logger.info("🔍 2FA code validation attempt", extra={
-                        "event": "2fa_code_validation",
-                        "session_id": id(self),
-                        "validation_result": validation_result
-                    })
-                    if validation_result:
-                        self._web_server.set_state(
-                            'authenticated',
-                            'Authentication successful! You can close this window.'
-                        )
-
-                        # Send success notification
-                        self._send_success_notification()
-                        self.logger.info("✅ 2FA authentication successful", extra={
-                            "event": "2fa_auth_success",
-                            "session_id": id(self)
-                        })
-                        return code
-                    else:
-                        self._web_server.set_state(
-                            'failed',
-                            'Invalid 2FA code. Please try again.'
-                        )
-                        self.logger.warning("❌ 2FA authentication failed - invalid code", extra={
-                            "event": "2fa_auth_failed",
-                            "session_id": id(self),
-                            "reason": "invalid_code"
-                        })
-                        return None
-                else:
-                    # No validation callback, just return the code
-                    self._web_server.set_state(
-                        'authenticated',
-                        'Code received! You can close this window.'
-                    )
-                    self.logger.info("✅ 2FA code received (no validation)", extra={
-                        "event": "2fa_code_received_no_validation",
-                        "session_id": id(self)
-                    })
-                    return code
-            else:
-                self.logger.error("❌ Timeout waiting for 2FA code", extra={
-                    "event": "2fa_timeout",
-                    "session_id": id(self),
-                    "timeout_seconds": 300
+                # Send success notification
+                self._send_success_notification()
+                self.logger.info("✅ 2FA authentication successful", extra={
+                    "event": "2fa_auth_success",
+                    "session_id": id(self)
                 })
-                self._web_server.set_state('failed', 'Timeout waiting for 2FA code')
+                return code
+            else:
+                self._web_server.set_state(
+                    'failed',
+                    'Invalid 2FA code or timeout. Please try again.'
+                )
+                self.logger.warning("❌ 2FA authentication failed - invalid code", extra={
+                    "event": "2fa_auth_failed",
+                    "session_id": id(self),
+                    "reason": "invalid_code"
+                })
                 return None
-
         except Exception as e:
             self.logger.error(f"❌ Error during 2FA authentication: {e}", extra={
                 "event": "2fa_error",

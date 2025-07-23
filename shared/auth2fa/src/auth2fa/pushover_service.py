@@ -11,6 +11,14 @@ from dataclasses import dataclass
 logger = logging.getLogger(__name__)
 
 
+PUSOVER_PRIORITY = {
+    "low": -1,
+    "normal": 0,
+    "high": 1,
+    "emergency": 2
+}
+
+
 @dataclass
 class PushoverConfig:
     """Configuration for Pushover notifications."""
@@ -62,7 +70,7 @@ class PushoverService:
                 "user": self.config.user_key,
                 "title": title,
                 "message": message,
-                "priority": 1,  # High priority to ensure delivery
+                "priority": PUSOVER_PRIORITY["high"],
                 "url": web_server_url,
                 "url_title": "Enter 2FA Code"
             }
@@ -118,7 +126,7 @@ class PushoverService:
                 "user": self.config.user_key,
                 "title": title,
                 "message": message,
-                "priority": -1,
+                "priority": PUSOVER_PRIORITY["low"],
             }
 
             if self.config.device:

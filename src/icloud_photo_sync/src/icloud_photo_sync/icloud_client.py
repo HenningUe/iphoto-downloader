@@ -64,7 +64,7 @@ class iCloudClient:
             if self.requires_2fa():
                 self.logger.info("🔐 2FA authentication required")
                 code = self._handle_2fa_with_web_server()
-                if code and self.handle_2fa(code):
+                if code:
                     self.trust_session()
                 else:
                     return False
@@ -114,7 +114,7 @@ class iCloudClient:
         return handle_2fa_authentication(
             config=cfg_2fa,
             request_2fa_callback=self._request_new_2fa,
-            validate_2fa_callback=self.handle_2fa
+            validate_2fa_callback=self.handle_2fa_validation
         )
 
     def _request_new_2fa(self) -> bool:
@@ -161,7 +161,7 @@ class iCloudClient:
             return False
         return hasattr(self._api, 'is_trusted_session') and self._api.is_trusted_session
 
-    def handle_2fa(self, code: str) -> bool:
+    def handle_2fa_validation(self, code: str) -> bool:
         """Handle 2FA verification.
 
         Args:

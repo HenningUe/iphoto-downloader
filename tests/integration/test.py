@@ -24,7 +24,7 @@ def test_interactive_2fa_authentication():
         # For automated testing, this would need to be mocked
         code = input("Enter 2FA code: ")
 
-        result = client.handle_2fa(code)
+        result = client.handle_2fa_validation(code)
         assert result, "2FA verification should succeed"
         print("✅ 2FA verification successful!")
 

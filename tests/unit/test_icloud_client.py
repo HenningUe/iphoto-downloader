@@ -114,7 +114,7 @@ class TestiCloudClient:
         client = iCloudClient(mock_config)
         client._api = mock_pyicloud_api
 
-        result = client.handle_2fa("123456")
+        result = client.handle_2fa_validation("123456")
 
         assert result is True
         mock_pyicloud_api.validate_2fa_code.assert_called_once_with("123456")
@@ -126,7 +126,7 @@ class TestiCloudClient:
         client = iCloudClient(mock_config)
         client._api = mock_pyicloud_api
 
-        result = client.handle_2fa("123456")
+        result = client.handle_2fa_validation("123456")
 
         assert result is False
 
@@ -137,7 +137,7 @@ class TestiCloudClient:
         client = iCloudClient(mock_config)
         client._api = mock_pyicloud_api
 
-        result = client.handle_2fa("123456")
+        result = client.handle_2fa_validation("123456")
 
         assert result is False
 
@@ -145,7 +145,7 @@ class TestiCloudClient:
         """Test 2FA handling without API connection."""
         client = iCloudClient(mock_config)
 
-        result = client.handle_2fa("123456")
+        result = client.handle_2fa_validation("123456")
 
         assert result is False
 

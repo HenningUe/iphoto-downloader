@@ -189,7 +189,7 @@ class TestiCloudInteractive:
             code = input("Enter 2FA code: ")
 
             if code:
-                result = client.handle_2fa(code)
+                result = client.handle_2fa_validation(code)
                 assert result, "2FA verification should succeed"
                 print("✅ 2FA verification successful!")
             else:
