@@ -324,7 +324,7 @@ class BaseConfig(ABC):
         icloud_client_typed: iCloudClient = icloud_client
         # Check personal albums if specified
         if self.personal_album_names_to_include:
-            existing_albs, missing_personal = icloud_client_typed.verify_albums_exist(
+            available_albums, _, missing_personal = icloud_client_typed.verify_albums_exist(
                 self.personal_album_names_to_include
             )
             if missing_personal:
@@ -332,18 +332,18 @@ class BaseConfig(ABC):
                     f"Personal: {name}" for name in missing_personal]
                 )
                 missing_albums.append(
-                    f"(Note: existing personal albums: {', '.join(existing_albs)})"
+                    f"(Note: existing personal albums: {', '.join(available_albums)})"
                 )
 
         # Check shared albums if specified
         if self.shared_album_names_to_include:
-            existing_albs, missing_shared = icloud_client_typed.verify_albums_exist(
+            available_albums, _, missing_shared = icloud_client_typed.verify_albums_exist(
                 self.shared_album_names_to_include
             )
             if missing_shared:
                 missing_albums.extend([f"Shared: {name}" for name in missing_shared])
                 missing_albums.append(
-                    f"(Note: existing shared albums: {', '.join(existing_albs)})"
+                    f"(Note: existing shared albums: {', '.join(available_albums)})"
                 )
 
         if missing_albums:

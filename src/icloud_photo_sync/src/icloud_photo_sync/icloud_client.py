@@ -3,7 +3,7 @@
 import time
 import typing as t
 from pathlib import Path
-from pyicloud.services.photos import AlbumContainer
+from pyicloud.services.photos import AlbumContainer, BasePhotoAlbum
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import PyiCloudFailedLoginException, PyiCloudAPIResponseException
 
@@ -354,11 +354,20 @@ class iCloudClient:
             self.logger.error("❌ Not authenticated or photos service unavailable")
             return
 
+        # Get all albums from iCloud
+        albums = self._api.photos.albums
+        albums_list = list(albums.values())
+
+        # shared albums
+        album_library = self._api.photos.albums['Library']
+        albums_shared: AlbumContainer = album_library.service.shared_streams
+        albums_shared_list = list(albums_shared.values())
+
         try:
             # Find the album by name
-            target_album = None
-            for album in self._api.photos.albums:
-                if album.title == album_name:
+            target_album: BasePhotoAlbum | None = None
+            for album in albums_list + albums_shared_list:
+                if album.name == album_name:
                     target_album = album
                     break
 
@@ -368,8 +377,8 @@ class iCloudClient:
 
             self.logger.info(f"📥 Fetching photos from album '{album_name}'...")
 
-            photos = target_album.photos  # type: ignore
-            total_count = len(photos)
+            photos = target_album  # type: ignore
+            total_count = len(target_album)
 
             self.logger.info(f"📊 Found {total_count} photos in album '{album_name}'")
 
@@ -411,6 +420,10 @@ class iCloudClient:
         Yields:
             Photo metadata dictionaries
         """
+        if not self._api or not self._api.photos:
+            self.logger.error("❌ Not authenticated or photos service unavailable")
+            return
+
         processed_photo_ids = set()  # Track to avoid duplicates
 
         # Include main library photos if requested
@@ -422,17 +435,18 @@ class iCloudClient:
                     yield photo_info
 
         # Include photos from specified albums
-        for album_name in album_names:
-            self.logger.info(f"📥 Including photos from album '{album_name}'")
-            for photo_info in self.list_photos_from_album(album_name):
-                if photo_info['id'] not in processed_photo_ids:
-                    processed_photo_ids.add(photo_info['id'])
-                    yield photo_info
-                else:
-                    self.logger.debug(f"⏭️ Skipping duplicate photo: {photo_info['filename']} "
-                                      f"(already processed from another album)")
+        if album_names:
+            for album_name in album_names:
+                self.logger.info(f"📥 Including photos from album '{album_name}'")
+                for photo_info in self.list_photos_from_album(album_name):
+                    if photo_info['id'] not in processed_photo_ids:
+                        processed_photo_ids.add(photo_info['id'])
+                        yield photo_info
+                    else:
+                        self.logger.debug(f"⏭️ Skipping duplicate photo: {photo_info['filename']} "
+                                          f"(already processed from another album)")
 
-    def verify_albums_exist(self, album_names: list[str]) -> tuple[list[str], list[str]]:
+    def verify_albums_exist(self, album_names: list[str]) -> tuple[list[str], list[str], list[str]]:
         """Verify that specified albums exist in iCloud.
 
         Args:
@@ -443,11 +457,20 @@ class iCloudClient:
         """
         if not self._api or not self._api.photos:
             self.logger.error("❌ Not authenticated or photos service unavailable")
-            return [], album_names
+            return [], [], album_names
+
+        # Get all albums from iCloud
+        albums = self._api.photos.albums
+        albums_list = list(albums.values())
+
+        # shared albums
+        album_library = self._api.photos.albums['Library']
+        albums_shared: AlbumContainer = album_library.service.shared_streams
+        albums_shared_list = list(albums_shared.values())
 
         try:
             # Get all available album names
-            available_albums = {album.title() for album in self._api.photos.albums}
+            available_albums = {album.name for album in albums_list + albums_shared_list}
 
             existing_albums = []
             missing_albums = []
@@ -461,11 +484,11 @@ class iCloudClient:
             if missing_albums:
                 self.logger.warning(f"⚠️ Missing albums: {', '.join(missing_albums)}")
 
-            return existing_albums, missing_albums
+            return list(available_albums), existing_albums, missing_albums
 
         except Exception as e:
             self.logger.error(f"❌ Error verifying albums: {e}")
-            return [], album_names
+            return [], [], album_names
 
     def get_filtered_albums(self, config) -> t.Iterator[dict[str, t.Any]]:
         """Get albums filtered by configuration settings.
