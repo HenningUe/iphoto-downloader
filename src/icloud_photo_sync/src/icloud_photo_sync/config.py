@@ -319,23 +319,32 @@ class BaseConfig(ABC):
         Raises:
             ValueError: If any specified albums don't exist
         """
+        from icloud_photo_sync.sync import iCloudClient
         missing_albums = []
-
+        icloud_client_typed: iCloudClient = icloud_client
         # Check personal albums if specified
         if self.personal_album_names_to_include:
-            _, missing_personal = icloud_client.verify_albums_exist(
+            existing_albs, missing_personal = icloud_client_typed.verify_albums_exist(
                 self.personal_album_names_to_include
             )
             if missing_personal:
-                missing_albums.extend([f"Personal: {name}" for name in missing_personal])
+                missing_albums.extend([
+                    f"Personal: {name}" for name in missing_personal]
+                )
+                missing_albums.append(
+                    f"(Note: existing personal albums: {', '.join(existing_albs)})"
+                )
 
         # Check shared albums if specified
         if self.shared_album_names_to_include:
-            _, missing_shared = icloud_client.verify_albums_exist(
+            existing_albs, missing_shared = icloud_client_typed.verify_albums_exist(
                 self.shared_album_names_to_include
             )
             if missing_shared:
                 missing_albums.extend([f"Shared: {name}" for name in missing_shared])
+                missing_albums.append(
+                    f"(Note: existing shared albums: {', '.join(existing_albs)})"
+                )
 
         if missing_albums:
             raise ValueError(

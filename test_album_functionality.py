@@ -9,7 +9,6 @@ in the TODO.md requirements:
 """
 
 import tempfile
-import os
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -31,6 +30,15 @@ class MockConfig:
         return 30  # INFO level
 
 
+class MockConfig2(MockConfig):
+    """Mock config for testing."""
+
+    def __init__(self, sync_directory, dry_run=False, icloud_username="", icloud_password=""):
+        super().__init__(sync_directory, dry_run)
+        self.icloud_username = icloud_username
+        self.icloud_password = icloud_password
+
+
 def test_album_sync_functionality():
     """Test that album-based sync creates proper subfolder structure."""
 
@@ -48,7 +56,7 @@ def test_album_sync_functionality():
         )
 
         # Create syncer with mocked iCloud client
-        syncer = PhotoSyncer(config)
+        syncer = PhotoSyncer(config)  # type: ignore
 
         # Mock the iCloud client
         mock_client = MagicMock(spec=iCloudClient)
@@ -121,13 +129,14 @@ def test_album_client_methods():
     print("🧪 Testing iCloudClient album methods...")
 
     # Create mock config
-    config = BaseConfig(
+    config = MockConfig2(
+        sync_directory=Path("/tmp"),
+        dry_run=True,
         icloud_username="test@example.com",
-        icloud_password="password",
-        sync_directory=Path("/tmp")
+        icloud_password="password"
     )
 
-    client = iCloudClient(config)
+    client = iCloudClient(config)  # type: ignore
 
     # Test list_albums when not authenticated
     albums = list(client.list_albums())

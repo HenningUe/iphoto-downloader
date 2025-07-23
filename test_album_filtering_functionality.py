@@ -86,8 +86,8 @@ def test_album_filtering_configuration():
             config.validate()
             assert False, "Should have raised validation error"
         except ValueError as e:
-            assert "At least one of INCLUDE_PERSONAL_ALBUMS or INCLUDE_SHARED_ALBUMS must be true" in str(
-                e)
+            assert (("At least one of INCLUDE_PERSONAL_ALBUMS or "
+                     "INCLUDE_SHARED_ALBUMS must be true") in str(e))
             print("✅ Validation correctly rejects when both album types are disabled")
 
 
@@ -244,8 +244,8 @@ def test_end_to_end_album_filtering():
 
         print("✅ End-to-end album filtering works correctly")
         print(f"   - Total photos processed: {stats['total_photos']}")
-        print(f"   - Photos from personal albums: ✅")
-        print(f"   - Shared albums excluded: ✅")
+        print("   - Photos from personal albums: ✅")
+        print("   - Shared albums excluded: ✅")
 
 
 if __name__ == "__main__":

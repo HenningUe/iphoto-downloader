@@ -3,6 +3,7 @@
 import time
 import typing as t
 from pathlib import Path
+from pyicloud.services.photos import AlbumContainer
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import PyiCloudFailedLoginException, PyiCloudAPIResponseException
 
@@ -310,17 +311,24 @@ class iCloudClient:
 
             # Get all albums from iCloud
             albums = self._api.photos.albums
+            albums_list = list(albums.values())
+
+            # shared albums
+            album_library = self._api.photos.albums['Library']
+            albums_shared: AlbumContainer = album_library.service.shared_streams
+            albums_shared_list = list(albums_shared.values())
 
             self.logger.info(f"📊 Found {len(albums)} albums in iCloud")
 
-            for album in albums:
+            for album in albums_list + albums_shared_list:
+                is_shared = getattr(album, 'list_type', '') == "sharedstream"
                 try:
                     # Extract album metadata
                     album_info = {
                         'id': getattr(album, 'id', None),
-                        'name': album.title,
-                        'photo_count': len(album.photos),
-                        'is_shared': getattr(album, 'isShared', False),
+                        'name': album.name,
+                        'photo_count': len(album.photos),  # type: ignore
+                        'is_shared': is_shared,
                         'album_obj': album  # Keep reference for accessing photos
                     }
 
@@ -360,7 +368,7 @@ class iCloudClient:
 
             self.logger.info(f"📥 Fetching photos from album '{album_name}'...")
 
-            photos = target_album.photos
+            photos = target_album.photos  # type: ignore
             total_count = len(photos)
 
             self.logger.info(f"📊 Found {total_count} photos in album '{album_name}'")
@@ -439,7 +447,7 @@ class iCloudClient:
 
         try:
             # Get all available album names
-            available_albums = {album.title for album in self._api.photos.albums}
+            available_albums = {album.title() for album in self._api.photos.albums}
 
             existing_albums = []
             missing_albums = []
