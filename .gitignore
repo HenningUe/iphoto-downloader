@@ -177,6 +177,7 @@ cython_debug/
 sync/
 downloads/
 photos/
+test_photos/
 
 # Database files
 *.db

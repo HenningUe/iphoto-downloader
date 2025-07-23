@@ -36,6 +36,8 @@ class TwoFAHandler(BaseHTTPRequestHandler):
             self._serve_main_page()
         elif parsed_path.path == '/status':
             self._serve_status()
+        elif parsed_path.path == '/success':
+            self._serve_success_page()
         elif parsed_path.path == '/styles.css':
             self._serve_css()
         else:
@@ -95,9 +97,8 @@ class TwoFAHandler(BaseHTTPRequestHandler):
                     if (data.state === 'authenticated' || data.state === 'failed') {
                         clearInterval(statusCheckInterval);
                         if (data.state === 'authenticated') {
-                            setTimeout(() => {
-                                window.close();
-                            }, 3000);
+                            // Redirect to success page immediately
+                            window.location.href = '/success';
                         }
                     }
                 })
@@ -355,13 +356,259 @@ button:hover {
         self.end_headers()
         self.wfile.write(css_content.encode())
 
+    def _serve_success_page(self):
+        """Serve the 2FA authentication success page."""
+        html_content = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iCloud Photo Sync - 2FA Authentication Successful</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .success-container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-icon {
+            font-size: 4em;
+            color: #28a745;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .success-title {
+            color: #28a745;
+            font-size: 2em;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .success-message {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .auto-close-info {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .close-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+
+        .close-button:hover {
+            background: #218838;
+        }
+
+        kbd {
+            background-color: #f8f9fa;
+            border: 1px solid #6c757d;
+            border-radius: 3px;
+            padding: 2px 4px;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+    </style>
+    <script>
+        let countdown = 10;
+        let countdownInterval;
+
+        function updateCountdown() {
+            const countdownEl = document.getElementById('countdown');
+            const autoCloseInfo = document.querySelector('.auto-close-info');
+            
+            if (countdownEl) {
+                countdownEl.textContent = countdown;
+                countdown--;
+
+                if (countdown < 0) {
+                    // Clear the interval
+                    clearInterval(countdownInterval);
+                    
+                    // Show completion message since auto-close rarely works
+                    showCompletionMessage();
+                }
+            }
+        }
+
+        function showCompletionMessage() {
+            const autoCloseInfo = document.querySelector('.auto-close-info');
+            autoCloseInfo.innerHTML = `
+                <p style="color: #28a745; font-weight: bold;">
+                    ✅ Authentication completed! Please close this browser window.
+                </p>
+            `;
+            
+            // Update the close button
+            const button = document.querySelector('.close-button');
+            button.innerHTML = '✅ Close This Window (Ctrl+W)';
+            button.onclick = function() {
+                showCloseInstructions();
+            };
+            
+            // Update page title to indicate completion
+            document.title = "✅ 2FA Complete - Please close this window";
+            
+            // Flash the browser icon/title to get user attention
+            flashTitle();
+        }
+
+        function closeWindow() {
+            // Try window.close() first (works if opened by script)
+            try {
+                window.close();
+                
+                // Check after a short delay if window is still open
+                setTimeout(function() {
+                    // If we're still here, window.close() didn't work
+                    showCloseInstructions();
+                }, 100);
+            } catch (e) {
+                showCloseInstructions();
+            }
+        }
+
+        function showCloseInstructions() {
+            // Show user-friendly message with close instructions
+            const button = document.querySelector('.close-button');
+            button.innerHTML = 'Please use Ctrl+W or click the X button';
+            button.style.background = '#6c757d';
+            button.style.cursor = 'default';
+            button.onclick = null;
+            
+            // Also show instruction in the info section
+            const info = document.querySelector('.info-section');
+            info.innerHTML = `
+                <p><strong style="color: #28a745;">
+                    Authentication completed successfully!
+                </strong></p>
+                <p><small>
+                    To close this window:<br>
+                    • Press <kbd>Ctrl+W</kbd> (Windows/Linux) or <kbd>Cmd+W</kbd> (Mac)<br>
+                    • Or click the ❌ button in your browser tab
+                </small></p>
+            `;
+            
+            // Update page title
+            document.title = "✅ 2FA Complete - Please close this window";
+            
+            // Flash the title
+            flashTitle();
+        }
+
+        function flashTitle() {
+            const originalTitle = document.title;
+            let flash = true;
+            const flashInterval = setInterval(function() {
+                document.title = flash ? "🔔 " + originalTitle : originalTitle;
+                flash = !flash;
+            }, 1000);
+            
+            // Stop flashing after 10 seconds
+            setTimeout(function() {
+                clearInterval(flashInterval);
+                document.title = originalTitle;
+            }, 10000);
+        }
+
+        window.onload = function() {
+            updateCountdown();
+            countdownInterval = setInterval(updateCountdown, 1000);
+        };
+
+        // Handle browser back button - if user navigates back, clean up
+        window.addEventListener('beforeunload', function() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="success-container">
+            <div class="success-icon">✅</div>
+            <h1 class="success-title">Authentication Successful!</h1>
+            <p class="success-message">
+                Your iCloud Photo Sync 2FA authentication has been completed successfully.
+                <br>
+                The sync process will now continue automatically.
+            </p>
+
+            <div class="auto-close-info">
+                <p>This window will automatically close in
+                   <span id="countdown">10</span> seconds.</p>
+                <p><small>If the window doesn't close automatically,
+                   please close it manually.</small></p>
+            </div>
+
+            <button onclick="closeWindow()" class="close-button">
+                Close Window Now
+            </button>
+
+            <div class="info-section" style="margin-top: 30px;">
+                <p><small>You can safely close this browser window.
+                   The sync process will continue in the background.</small></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+        """
+
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(html_content.encode())
+
     def _serve_status(self):
         """Serve the current 2FA status as JSON."""
         try:
             # Get status from the server instance
             server = self.server
             if hasattr(server, 'twofa_server'):
-                twofa_server = getattr(server, 'twofa_server')
+                twofa_server: TwoFAWebServer = getattr(server, 'twofa_server')
                 if twofa_server:
                     status_data = twofa_server.get_status()
                 else:
@@ -400,7 +647,7 @@ button:hover {
                 })
                 return
 
-            twofa_server = getattr(server, 'twofa_server')
+            twofa_server: TwoFAWebServer = getattr(server, 'twofa_server')
             if not twofa_server:
                 self._serve_json_response({
                     'success': False,
@@ -478,7 +725,7 @@ button:hover {
         try:
             server = self.server
             if hasattr(server, 'twofa_server'):
-                twofa_server = getattr(server, 'twofa_server')
+                twofa_server: TwoFAWebServer = getattr(server, 'twofa_server')
                 if twofa_server:
                     success = twofa_server.request_new_2fa()
                     self._serve_json_response({'success': success})
@@ -841,6 +1088,11 @@ class TwoFAWebServer:
                     self.set_state('failed', 'Invalid 2FA code. Please try again.')
                     self.logger.warning("2FA authentication failed - invalid code")
                 return result
+            else:
+                # No callback means we accept any valid format code for demo/testing
+                self.set_state('authenticated', 'Authentication successful!')
+                self.logger.info("2FA authentication successful (no callback)")
+                return True
 
             return True
         except Exception as e:

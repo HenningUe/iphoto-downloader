@@ -23,9 +23,8 @@ def main():
         print("5. Pushover - Store credentials in keyring")
         print("6. Pushover - Check stored credentials")
         print("7. Pushover - Delete stored credentials")
-        print("8. Exit")
 
-        choice = input("\nEnter your choice (1-8): ").strip()
+        choice = input("\nEnter your choice (1-7): ").strip()
 
         if choice == "1":
             icloud_store_credentials()
@@ -41,11 +40,10 @@ def main():
             pushover_check_credentials()
         elif choice == "7":
             pushover_delete_credentials()
-        elif choice == "8":
-            print("👋 Goodbye!")
-            break
         else:
             print("❌ Invalid choice. Please try again.")
+            continue
+        break
 
 
 def icloud_store_credentials():
