@@ -26,8 +26,57 @@ specified.
   - [x] Identify which photos already exist locally
   - [x] Check local deletion database for deleted photos
   - [x] Download only new photos
+  - [ ] Download of albums shall be possible.
+  - [ ] Photos should be placed in the corresponding subfolder of their album.
 - [x] Ensure **idempotent runs** (no duplicates)
 - [x] Add **dry-run mode** to show sync actions without modifying files
+
+#### 2.1.1 Album Filtering & Selection
+
+- [ ] Implement **personal album filtering**:
+  - [ ] Add `include_personal_albums` boolean configuration parameter
+  - [ ] Add `personal_album_names_to_include` comma-separated list parameter in
+        .env
+  - [ ] Based `personal_album_names_to_include` in .env a equally named variable
+        shall be used inside the python code, which takes the value from .env
+        and splits this into single string items, putting them into an list
+  - [ ] Implement logic to skip personal albums if
+        `include_personal_albums=false`
+  - [ ] Implement allow-list filtering for personal albums (empty list = include
+        all)
+  - [ ] If `personal_album_names_to_include` is filled, a check shall be
+        included, which breaks, if the any of the specified albumes does not
+        exist
+- [ ] Implement **shared album filtering**:
+  - [ ] Add `include_shared_albums` boolean configuration parameter
+  - [ ] Add `shared_album_names_to_include` comma-separated list parameter
+  - [ ] Based `shared_album_names_to_include` in .env a equally named variable
+        shall be used inside the python code, which takes the value from .env
+        and splits this into single string items, putting them into an list
+  - [ ] Implement logic to access shared albums via pyicloud API
+  - [ ] Implement allow-list filtering for shared albums (empty list = include
+        all)
+  - [ ] If `shared_album_names_to_include` is filled, a check shall be included,
+        which breaks, if the any of the specified albumes does not exist
+- [ ] Enhance **photo enumeration** to support album-based filtering:
+  - [ ] Modify photo listing to iterate through selected albums only
+  - [ ] Ensure photos from multiple albums are not duplicated
+  - [ ] Handle photos that exist in multiple selected albums
+
+#### 2.1.2 Enhanced Photo Tracking
+
+- [ ] Upgrade **SQLite database schema** for album-aware tracking:
+  - [ ] Add `source_album_name` column to photos table
+  - [ ] Create composite primary key using (photo_name, source_album_name)
+  - [ ] Add database migration logic for existing installations
+- [ ] Implement **album-aware photo identification**:
+  - [ ] Track photos by combination of filename and source album
+  - [ ] Handle same photo existing in multiple albums
+  - [ ] Update deletion tracking to include album context
+- [ ] Update **sync logic** for album-based tracking:
+  - [ ] Check database using (photo_name, album_name) combination
+  - [ ] Record downloads with source album information
+  - [ ] Ensure deletion tracking works per album
 
 ### 2.2 2FA Authentication System
 
@@ -88,6 +137,17 @@ specified.
   - [x] Persistently update tracker on each sync
 - [x] Integrate deletion tracker with sync logic
 
+#### 2.3.1 Album-Aware Deletion Tracking
+
+- [ ] Enhance **deletion tracking schema**:
+  - [ ] Update database to track deletions by (photo_name, source_album_name)
+  - [ ] Add migration for existing deletion records
+  - [ ] Ensure deletion tracking works independently per album
+- [ ] Update **deletion detection logic**:
+  - [ ] Check for locally deleted photos per album context
+  - [ ] Handle cases where same photo exists in multiple albums
+  - [ ] Prevent re-download of photos deleted from specific albums
+
 ---
 
 ## 5️⃣ 🧪 Tests
@@ -106,6 +166,18 @@ specified.
   - [ ] Test 2FA code validation via web interface
   - [ ] Test session storage and retrieval
   - [ ] Test error handling (port conflicts, API failures)
+- [ ] Add **album filtering tests**:
+  - [ ] Test personal album include/exclude logic
+  - [ ] Test shared album include/exclude logic
+  - [ ] Test album allow-list filtering (empty list = all albums)
+  - [ ] Test comma-separated album name parsing
+  - [ ] Test album-aware photo enumeration
+- [ ] Add **enhanced tracking tests**:
+  - [ ] Test album-aware photo identification
+  - [ ] Test (photo_name, album_name) composite tracking
+  - [ ] Test album-aware deletion tracking
+  - [ ] Test database migration for album-aware schema
+  - [ ] Test handling of photos in multiple albums
 - [ ] (Optional) Add **end-to-end test** using dummy or sandbox iCloud
 - [ ] Add all tests to CI/CD
 - [x] Achieve ≥ **80% test coverage** for core sync logic (✅ **85.21%**
@@ -145,6 +217,13 @@ specified.
 - [x] Support configurable local sync directory
 - [x] Add **Pushover configuration** (API token, user key)
 - [ ] Add **2FA web server configuration** (port range, bind address)
+- [ ] Add **album filtering configuration**:
+  - [ ] Add `include_personal_albums` boolean parameter to .env template
+  - [ ] Add `personal_album_names_to_include` comma-separated list parameter
+  - [ ] Add `include_shared_albums` boolean parameter to .env template
+  - [ ] Add `shared_album_names_to_include` comma-separated list parameter
+  - [ ] Update .env.example with album filtering examples
+  - [ ] Add configuration validation for album parameters
 - [ ] Ensure credentials are not bundled in builds
 - [x] Implement robust **logging** to console & file
 
@@ -160,6 +239,12 @@ specified.
   - [ ] How to run dry-run mode
   - [ ] How local deletion tracking works
   - [ ] **2FA troubleshooting guide**
+  - [ ] **Album filtering configuration guide**:
+    - [ ] How to configure personal album filtering
+    - [ ] How to configure shared album filtering
+    - [ ] How to use album allow-lists
+    - [ ] Examples of album filtering configurations
+    - [ ] How album-aware tracking works
 - [ ] Include usage examples & troubleshooting tips
 
 ---
@@ -171,11 +256,16 @@ specified.
   - [ ] **2FA web server** starts correctly
   - [ ] **Pushover notifications** are sent
   - [ ] **2FA web interface** works properly
+  - [ ] **Album filtering** works correctly (personal & shared)
+  - [ ] **Album allow-lists** are respected
+  - [ ] **Album-aware tracking** prevents duplicates correctly
   - [ ] No credentials leaked in binary
   - [ ] Handles credential failures gracefully
 - [ ] Test Linux executable:
   - [ ] All 2FA features work on Linux
+  - [ ] All album filtering features work on Linux
   - [ ] Cross-platform session storage works
+  - [ ] Cross-platform album-aware database works
 
 ---
 
@@ -194,6 +284,10 @@ specified.
 - ✔️ No re-downloads of locally deleted photos
 - ✔️ No accidental deletions on iCloud
 - ✔️ Idempotent sync runs
+- ✔️ **Personal album filtering** works (include/exclude, allow-lists)
+- ✔️ **Shared album filtering** works (include/exclude, allow-lists)
+- ✔️ **Album-aware photo tracking** prevents duplicates across albums
+- ✔️ **Enhanced database schema** tracks photos by (name, album) composite key
 - ✔️ **2FA notifications via Pushover work**
 - ✔️ **Local web server for 2FA works**
 - ✔️ **2FA sessions are stored securely**
@@ -202,6 +296,7 @@ specified.
 - ✔️ Clear logs for all sync operations
 - ✔️ Versioned releases available to users
 - ✔️ Users can easily install & configure
+- ✔️ **Album filtering configuration** is well documented
 
 ---
 

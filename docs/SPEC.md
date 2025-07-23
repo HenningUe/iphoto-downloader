@@ -20,10 +20,33 @@ automatically using **GitHub Actions**.
 
 1. **Photo Sync**
    - Sync photos from iCloud to a local directory.
+   - Settings shall be provided via an .env file inside repository
+   - There shall be a parallel .env-file named .env.example which works as
+     template. This shall not contain any secrets.
+   - It shall be possible to specify whether personal i-cloud-albums shall be
+     included at all. Parameter of type bool shall be 'include_personal_albums'
+   - It shall be possible to specify which personal albums shall be included via
+     an allow-list. If the allow-list is empty all are included. As the
+     allow-list is defined in the .env file the list-items shall be comma
+     separated. Parameter of shall be 'personal_album_names_to_include'
+   - It shall be possible to specify whether shared albums shall be included at
+     all. Parameter of type bool shall be 'include_shared_albums'
+   - It shall be possible to specify which shared albums shall be included via
+     an allow-list. If the allow-list is empty all are included. As the
+     allow-list is defined in the .env file the list-items shall be comma
+     separated. Parameter of shall be 'shared_album_names_to_include'
+   - For each album a separate folder shall be created underneath
+     'SYNC_DIRECTORY'. Photos should be placed in the corresponding subfolder of
+     their album.
+   - These settings shall be provided by the used inside the .env file
    - Only download photos that do not yet exist locally.
    - If a photo is deleted locally, it must **not** be re-downloaded on the next
      sync.
    - Locally deleted photos must **not** be removed from iCloud.
+   - To track the fotos (to avoid duplicated downloads) a sqlite data-base shall
+     be used
+   - The fotos in this database shall be identifed by their name and their
+     source album-name
    - shall run on windows and linux
    - credentials (iCloud and pushover) shall be storable via keyrind
    - if credentials are not yet stored on local PC at startup of the App they
