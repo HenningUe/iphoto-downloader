@@ -61,6 +61,17 @@ class PhotoSyncer:
                 if not self._handle_2fa():
                     return False
 
+            # Validate that specified albums exist (if any are specified)
+            if (self.config.personal_album_names_to_include or
+                    self.config.shared_album_names_to_include):
+                self.logger.info("🔍 Validating specified album names...")
+                try:
+                    self.config.validate_albums_exist(self.icloud_client)
+                    self.logger.info("✅ All specified albums found")
+                except ValueError as e:
+                    self.logger.error(f"❌ Album validation failed: {e}")
+                    return False
+
             # Get local files
             local_files = self._get_local_files()
             self.logger.info(f"📁 Found {len(local_files)} existing local files")
@@ -175,10 +186,10 @@ class PhotoSyncer:
             self.logger.warning(f"⚠️ Error sending 2FA success notification: {e}")
 
     def _get_local_files(self) -> set[str]:
-        """Get set of existing local filenames.
+        """Get set of existing local filenames with their relative paths.
 
         Returns:
-            Set of local image filenames
+            Set of local image file paths relative to sync directory
         """
         try:
             local_files = set()
@@ -192,8 +203,9 @@ class PhotoSyncer:
                     if (file_path.is_file() and
                         not file_path.name.startswith('.') and
                             file_path.suffix.lower() in image_extensions):
-                        # Use just the filename, not the full path
-                        local_files.add(file_path.name)
+                        # Use relative path from sync directory for album support
+                        relative_path = file_path.relative_to(self.config.sync_directory)
+                        local_files.add(str(relative_path))
 
             return local_files
 
@@ -234,18 +246,22 @@ class PhotoSyncer:
             self.logger.error(f"❌ Error tracking local deletions: {e}")
 
     def _sync_photos(self, local_files: set[str]) -> None:
-        """Sync photos from iCloud.
+        """Sync photos from iCloud with album support.
 
         Args:
-            local_files: Set of existing local filenames
+            local_files: Set of existing local file paths relative to sync directory
         """
         download_count = 0
 
-        for photo_info in self.icloud_client.list_photos():
+        # Get photos based on selected source (main library and/or albums)
+        photo_iterator = self._get_photo_iterator()
+
+        for photo_info in photo_iterator:
             try:
                 self.stats['total_photos'] += 1
                 filename = photo_info['filename']
                 photo_id = photo_info['id']
+                album_name = photo_info.get('album_name')
 
                 # Check if we've reached download limit
                 if (self.config.max_downloads > 0 and
@@ -259,21 +275,33 @@ class PhotoSyncer:
                     self.stats['deleted_skipped'] += 1
                     continue
 
+                # Create album subfolder path (use root if no album)
+                if album_name:
+                    album_folder = self._sanitize_album_name(album_name)
+                    relative_path = f"{album_folder}/{filename}"
+                else:
+                    # For backward compatibility - photos without album go to root
+                    album_folder = ""
+                    relative_path = filename
+
                 # Check if file already exists locally
-                if filename in local_files:
-                    self.logger.debug(f"⏭️ Photo already exists: {filename}")
+                if relative_path in local_files:
+                    self.logger.debug(f"⏭️ Photo already exists: {relative_path}")
                     self.stats['already_exists'] += 1
                     continue
 
-                # Download the photo
-                local_path = self.config.sync_directory / filename
+                # Create full local path
+                if album_folder:
+                    local_path = self.config.sync_directory / album_folder / filename
+                else:
+                    local_path = self.config.sync_directory / filename
 
                 # Create subdirectories if needed
                 local_path.parent.mkdir(parents=True, exist_ok=True)
 
                 if self.config.dry_run:
                     # In dry run mode, just log what would be downloaded
-                    self.logger.info(f"[DRY RUN] Would download: {filename}")
+                    self.logger.info(f"[DRY RUN] Would download: {relative_path}")
                     download_count += 1
                     self.stats['new_downloads'] += 1
                     # Use the photo size from metadata if available
@@ -289,10 +317,10 @@ class PhotoSyncer:
                         if local_path.exists():
                             self.stats['bytes_downloaded'] += local_path.stat().st_size
 
-                        self.logger.info(f"✅ Downloaded: {filename}")
+                        self.logger.info(f"✅ Downloaded: {relative_path}")
                     else:
                         self.stats['errors'] += 1
-                        self.logger.warning(f"⚠️ Failed to download: {filename}")
+                        self.logger.warning(f"⚠️ Failed to download: {relative_path}")
 
                 # Log progress every 50 photos
                 if self.stats['total_photos'] % 50 == 0:
@@ -303,6 +331,42 @@ class PhotoSyncer:
                 self.logger.error(
                     f"❌ Error processing photo {photo_info.get('filename', 'unknown')}: {e}")
                 continue
+
+    def _get_photo_iterator(self) -> t.Iterator[dict[str, t.Any]]:
+        """Get iterator for photos based on configuration.
+
+        Returns:
+            Iterator yielding photo information dictionaries
+        """
+        # Use album filtering based on configuration
+        return self.icloud_client.list_photos_from_filtered_albums(
+            self.config,
+            include_main_library=True
+        )
+
+    def _sanitize_album_name(self, album_name: str) -> str:
+        """Sanitize album name for use as folder name.
+
+        Args:
+            album_name: Original album name
+
+        Returns:
+            Sanitized folder name
+        """
+        # Remove or replace invalid characters for folder names
+        import re
+
+        # Replace invalid characters with underscores
+        sanitized = re.sub(r'[<>:"/\\|?*]', '_', album_name)
+
+        # Remove leading/trailing spaces and dots
+        sanitized = sanitized.strip(' .')
+
+        # Ensure we have a valid name
+        if not sanitized:
+            sanitized = 'Unknown_Album'
+
+        return sanitized
 
     def _log_progress(self) -> None:
         """Log current sync progress."""

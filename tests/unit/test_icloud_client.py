@@ -1,6 +1,6 @@
 """Unit tests for iCloud client module."""
 
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, MagicMock, patch, mock_open
 import pytest
 
 from icloud_photo_sync.icloud_client import iCloudClient
@@ -431,3 +431,258 @@ class TestiCloudClient:
 
         assert not old_file.exists()
         assert recent_file.exists()
+
+    def test_list_albums_success(self, mock_config):
+        """Test listing albums successfully."""
+        client = iCloudClient(mock_config)
+
+        # Mock API structure
+        mock_album1 = MagicMock()
+        mock_album1.title = "Family Trip"
+        mock_album1.id = "album1"
+        mock_album1.photos = []
+        mock_album1.isShared = False
+
+        mock_album2 = MagicMock()
+        mock_album2.title = "Shared Album"
+        mock_album2.id = "album2"
+        mock_album2.photos = []
+        mock_album2.isShared = True
+
+        mock_photos_service = MagicMock()
+        mock_photos_service.albums = [mock_album1, mock_album2]
+
+        client._api = MagicMock()
+        client._api.photos = mock_photos_service
+
+        albums = list(client.list_albums())
+
+        assert len(albums) == 2
+        assert albums[0]['name'] == "Family Trip"
+        assert albums[1]['name'] == "Shared Album"
+
+    def test_list_albums_no_api(self, mock_config):
+        """Test listing albums when not authenticated."""
+        client = iCloudClient(mock_config)
+
+        albums = list(client.list_albums())
+
+        assert albums == []
+
+    def test_list_photos_from_album_success(self, mock_config):
+        """Test listing photos from a specific album."""
+        client = iCloudClient(mock_config)
+
+        # Mock photo in album
+        mock_photo = MagicMock()
+        mock_photo.id = "photo1"
+        mock_photo.filename = "test.jpg"
+        mock_photo.size = 1024
+
+        # Mock album
+        mock_album = MagicMock()
+        mock_album.name = "Test Album"
+        mock_album.__iter__ = MagicMock(return_value=iter([mock_photo]))
+        mock_album.__len__ = MagicMock(return_value=1)
+
+        photos = client.list_photos_from_album(mock_album, "Test Album")
+
+        assert len(photos) == 1
+        assert photos[0]['id'] == "photo1"
+        assert photos[0]['filename'] == "test.jpg"
+        assert photos[0]['album_name'] == "Test Album"
+
+    def test_list_photos_from_albums_success(self, mock_config):
+        """Test listing photos from multiple albums."""
+        client = iCloudClient(mock_config)
+
+        # Mock albums
+        album_names = ["Album1", "Album2"]
+
+        # Mock API structure
+        mock_album1 = MagicMock()
+        mock_album1.name = "Album1"
+        mock_photo1 = MagicMock()
+        mock_photo1.id = "photo1"
+        mock_photo1.filename = "test1.jpg"
+        mock_photo1.size = 1024
+        mock_album1.__iter__ = MagicMock(return_value=iter([mock_photo1]))
+        mock_album1.__len__ = MagicMock(return_value=1)
+
+        mock_album2 = MagicMock()
+        mock_album2.name = "Album2"
+        mock_photo2 = MagicMock()
+        mock_photo2.id = "photo2"
+        mock_photo2.filename = "test2.jpg"
+        mock_photo2.size = 2048
+        mock_album2.__iter__ = MagicMock(return_value=iter([mock_photo2]))
+        mock_album2.__len__ = MagicMock(return_value=1)
+
+        mock_photos_service = MagicMock()
+        mock_photos_service.albums = [mock_album1, mock_album2]
+
+        client.api = MagicMock()
+        client.api.photos = mock_photos_service
+
+        photos = client.list_photos_from_albums(album_names)
+
+        assert len(photos) == 2
+        assert photos[0]['album_name'] == "Album1"
+        assert photos[1]['album_name'] == "Album2"
+
+    def test_verify_albums_exist_success(self, mock_config):
+        """Test verifying albums exist."""
+        client = iCloudClient(mock_config)
+
+        # Mock albums
+        mock_album1 = MagicMock()
+        mock_album1.name = "Existing Album"
+
+        mock_photos_service = MagicMock()
+        mock_photos_service.albums = [mock_album1]
+
+        client.api = MagicMock()
+        client.api.photos = mock_photos_service
+
+        missing = client.verify_albums_exist(["Existing Album", "Missing Album"])
+
+        assert missing == ["Missing Album"]
+
+    def test_get_filtered_albums_personal_only(self, mock_config):
+        """Test filtering to personal albums only."""
+        from unittest.mock import MagicMock
+
+        client = iCloudClient(mock_config)
+
+        # Mock config
+        mock_filter_config = MagicMock()
+        mock_filter_config.include_personal_albums = True
+        mock_filter_config.include_shared_albums = False
+        mock_filter_config.personal_album_names_to_include = []
+        mock_filter_config.shared_album_names_to_include = []
+
+        # Mock albums - mix of personal and shared
+        mock_personal = MagicMock()
+        mock_personal.title = "Personal Album"
+        mock_personal.id = "personal1"
+        mock_personal.photos = []
+        mock_personal.isShared = False
+
+        mock_shared = MagicMock()
+        mock_shared.title = "Shared Album"
+        mock_shared.id = "shared1"
+        mock_shared.photos = []
+        mock_shared.isShared = True
+
+        mock_photos_service = MagicMock()
+        mock_photos_service.albums = [mock_personal, mock_shared]
+
+        client._api = MagicMock()
+        client._api.photos = mock_photos_service
+
+        filtered_albums = list(client.get_filtered_albums(mock_filter_config))
+
+        assert len(filtered_albums) == 1
+        assert filtered_albums[0]['name'] == "Personal Album"
+        assert filtered_albums[0]['is_shared'] is False
+
+    def test_get_filtered_albums_with_allowlist(self, mock_config):
+        """Test filtering albums with allow-list."""
+        from unittest.mock import MagicMock
+
+        client = iCloudClient(mock_config)
+
+        # Mock config with allow-list
+        mock_filter_config = MagicMock()
+        mock_filter_config.include_personal_albums = True
+        mock_filter_config.include_shared_albums = True
+        mock_filter_config.personal_album_names_to_include = ["Allowed Personal"]
+        mock_filter_config.shared_album_names_to_include = ["Allowed Shared"]
+
+        # Mock albums
+        mock_allowed_personal = MagicMock()
+        mock_allowed_personal.title = "Allowed Personal"
+        mock_allowed_personal.id = "personal1"
+        mock_allowed_personal.photos = []
+        mock_allowed_personal.isShared = False
+
+        mock_denied_personal = MagicMock()
+        mock_denied_personal.title = "Denied Personal"
+        mock_denied_personal.id = "personal2"
+        mock_denied_personal.photos = []
+        mock_denied_personal.isShared = False
+
+        mock_allowed_shared = MagicMock()
+        mock_allowed_shared.title = "Allowed Shared"
+        mock_allowed_shared.id = "shared1"
+        mock_allowed_shared.photos = []
+        mock_allowed_shared.isShared = True
+
+        mock_photos_service = MagicMock()
+        mock_photos_service.albums = [
+            mock_allowed_personal, mock_denied_personal, mock_allowed_shared
+        ]
+
+        client._api = MagicMock()
+        client._api.photos = mock_photos_service
+
+        filtered_albums = list(client.get_filtered_albums(mock_filter_config))
+
+        assert len(filtered_albums) == 2
+        album_names = [album['name'] for album in filtered_albums]
+        assert "Allowed Personal" in album_names
+        assert "Allowed Shared" in album_names
+        assert "Denied Personal" not in album_names
+
+    def test_list_photos_from_filtered_albums(self, mock_config):
+        """Test listing photos from filtered albums."""
+        from unittest.mock import MagicMock
+
+        client = iCloudClient(mock_config)
+
+        # Mock config
+        mock_filter_config = MagicMock()
+        mock_filter_config.include_personal_albums = True
+        mock_filter_config.include_shared_albums = False
+        mock_filter_config.personal_album_names_to_include = []
+        mock_filter_config.shared_album_names_to_include = []
+
+        # Mock main library photos
+        mock_main_photo = MagicMock()
+        mock_main_photo.id = "main1"
+        mock_main_photo.filename = "main_photo.jpg"
+        mock_main_photo.size = 1024
+
+        # Mock album photos
+        mock_album_photo = MagicMock()
+        mock_album_photo.id = "album1"
+        mock_album_photo.filename = "album_photo.jpg"
+        mock_album_photo.size = 2048
+
+        # Mock album
+        mock_album = MagicMock()
+        mock_album.title = "Test Album"
+        mock_album.id = "album_id"
+        mock_album.photos = []
+        mock_album.isShared = False
+        mock_album.__iter__ = MagicMock(return_value=iter([mock_album_photo]))
+        mock_album.__len__ = MagicMock(return_value=1)
+
+        mock_photos_service = MagicMock()
+        mock_photos_service.albums = [mock_album]
+        mock_photos_service.all.__iter__ = MagicMock(return_value=iter([mock_main_photo]))
+        mock_photos_service.all.__len__ = MagicMock(return_value=1)
+
+        client._api = MagicMock()
+        client._api.photos = mock_photos_service
+
+        photos = list(client.list_photos_from_filtered_albums(
+            mock_filter_config, include_main_library=True
+        ))
+
+        # Should get photos from main library (without album_name) and from albums (with album_name)
+        assert len(photos) >= 1  # At least main library photo
+
+        # Check that main library photos have album_name=None
+        main_photos = [p for p in photos if p.get('album_name') is None]
+        assert len(main_photos) >= 1

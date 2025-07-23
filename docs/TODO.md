@@ -26,42 +26,42 @@ specified.
   - [x] Identify which photos already exist locally
   - [x] Check local deletion database for deleted photos
   - [x] Download only new photos
-  - [ ] Download of albums shall be possible.
-  - [ ] Photos should be placed in the corresponding subfolder of their album.
+  - [x] Download of albums shall be possible.
+  - [x] Photos should be placed in the corresponding subfolder of their album.
 - [x] Ensure **idempotent runs** (no duplicates)
 - [x] Add **dry-run mode** to show sync actions without modifying files
 
 #### 2.1.1 Album Filtering & Selection
 
-- [ ] Implement **personal album filtering**:
-  - [ ] Add `include_personal_albums` boolean configuration parameter
-  - [ ] Add `personal_album_names_to_include` comma-separated list parameter in
+- [x] Implement **personal album filtering**:
+  - [x] Add `include_personal_albums` boolean configuration parameter
+  - [x] Add `personal_album_names_to_include` comma-separated list parameter in
         .env
-  - [ ] Based `personal_album_names_to_include` in .env a equally named variable
+  - [x] Based `personal_album_names_to_include` in .env a equally named variable
         shall be used inside the python code, which takes the value from .env
         and splits this into single string items, putting them into an list
-  - [ ] Implement logic to skip personal albums if
+  - [x] Implement logic to skip personal albums if
         `include_personal_albums=false`
-  - [ ] Implement allow-list filtering for personal albums (empty list = include
+  - [x] Implement allow-list filtering for personal albums (empty list = include
         all)
-  - [ ] If `personal_album_names_to_include` is filled, a check shall be
+  - [x] If `personal_album_names_to_include` is filled, a check shall be
         included, which breaks, if the any of the specified albumes does not
         exist
-- [ ] Implement **shared album filtering**:
-  - [ ] Add `include_shared_albums` boolean configuration parameter
-  - [ ] Add `shared_album_names_to_include` comma-separated list parameter
-  - [ ] Based `shared_album_names_to_include` in .env a equally named variable
+- [x] Implement **shared album filtering**:
+  - [x] Add `include_shared_albums` boolean configuration parameter
+  - [x] Add `shared_album_names_to_include` comma-separated list parameter
+  - [x] Based `shared_album_names_to_include` in .env a equally named variable
         shall be used inside the python code, which takes the value from .env
         and splits this into single string items, putting them into an list
-  - [ ] Implement logic to access shared albums via pyicloud API
-  - [ ] Implement allow-list filtering for shared albums (empty list = include
+  - [x] Implement logic to access shared albums via pyicloud API
+  - [x] Implement allow-list filtering for shared albums (empty list = include
         all)
-  - [ ] If `shared_album_names_to_include` is filled, a check shall be included,
+  - [x] If `shared_album_names_to_include` is filled, a check shall be included,
         which breaks, if the any of the specified albumes does not exist
-- [ ] Enhance **photo enumeration** to support album-based filtering:
-  - [ ] Modify photo listing to iterate through selected albums only
-  - [ ] Ensure photos from multiple albums are not duplicated
-  - [ ] Handle photos that exist in multiple selected albums
+- [x] Enhance **photo enumeration** to support album-based filtering:
+  - [x] Modify photo listing to iterate through selected albums only
+  - [x] Ensure photos from multiple albums are not duplicated
+  - [x] Handle photos that exist in multiple selected albums
 
 #### 2.1.2 Enhanced Photo Tracking
 

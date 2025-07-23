@@ -28,7 +28,7 @@ class BaseConfig(ABC):
         # Load environment variables from .env file
         env_path = env_file or '.env'
         if Path(env_path).exists():
-            load_dotenv(env_path)
+            load_dotenv(env_path, override=True)
 
         # iCloud credentials - try multiple sources
         # Sync settings
@@ -43,6 +43,25 @@ class BaseConfig(ABC):
         # Pushover notification settings
         self.pushover_device: str | None = os.getenv('PUSHOVER_DEVICE', '')
         self.enable_pushover: bool = os.getenv('ENABLE_PUSHOVER', 'false').lower() == 'true'
+
+        # Album filtering settings
+        self.include_personal_albums: bool = (
+            os.getenv('INCLUDE_PERSONAL_ALBUMS', 'true').lower() == 'true'
+        )
+        self.include_shared_albums: bool = (
+            os.getenv('INCLUDE_SHARED_ALBUMS', 'true').lower() == 'true'
+        )
+
+        # Parse album name lists from comma-separated strings
+        personal_albums_str = os.getenv('PERSONAL_ALBUM_NAMES_TO_INCLUDE', '')
+        self.personal_album_names_to_include: list[str] = [
+            name.strip() for name in personal_albums_str.split(',') if name.strip()
+        ] if personal_albums_str else []
+
+        shared_albums_str = os.getenv('SHARED_ALBUM_NAMES_TO_INCLUDE', '')
+        self.shared_album_names_to_include: list[str] = [
+            name.strip() for name in shared_albums_str.split(',') if name.strip()
+        ] if shared_albums_str else []
 
     @property
     def icloud_username(self) -> str:
@@ -117,6 +136,12 @@ class BaseConfig(ABC):
                     errors.append("PUSHOVER_USER_KEY is required when ENABLE_PUSHOVER=true")
             except ValueError:
                 errors.append("PUSHOVER_USER_KEY is required when ENABLE_PUSHOVER=true")
+
+        # Validate album filtering settings
+        if not self.include_personal_albums and not self.include_shared_albums:
+            errors.append(
+                "At least one of INCLUDE_PERSONAL_ALBUMS or INCLUDE_SHARED_ALBUMS must be true"
+            )
 
         if errors:
             raise ValueError(f"Configuration errors: {', '.join(errors)}")
@@ -284,6 +309,38 @@ class BaseConfig(ABC):
             f"credential_store={credential_store}"
             f")"
         )
+
+    def validate_albums_exist(self, icloud_client) -> None:
+        """Validate that specified album names actually exist in iCloud.
+
+        Args:
+            icloud_client: Authenticated iCloudClient instance
+
+        Raises:
+            ValueError: If any specified albums don't exist
+        """
+        missing_albums = []
+
+        # Check personal albums if specified
+        if self.personal_album_names_to_include:
+            _, missing_personal = icloud_client.verify_albums_exist(
+                self.personal_album_names_to_include
+            )
+            if missing_personal:
+                missing_albums.extend([f"Personal: {name}" for name in missing_personal])
+
+        # Check shared albums if specified
+        if self.shared_album_names_to_include:
+            _, missing_shared = icloud_client.verify_albums_exist(
+                self.shared_album_names_to_include
+            )
+            if missing_shared:
+                missing_albums.extend([f"Shared: {name}" for name in missing_shared])
+
+        if missing_albums:
+            raise ValueError(
+                f"The following specified albums do not exist: {', '.join(missing_albums)}"
+            )
 
 
 class KeyringConfig(BaseConfig):

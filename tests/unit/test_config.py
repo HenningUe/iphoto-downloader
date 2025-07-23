@@ -23,7 +23,9 @@ def clean_env(monkeypatch):
     # Remove any existing iCloud related environment variables
     env_vars_to_clean = [
         'ICLOUD_USERNAME', 'ICLOUD_PASSWORD', 'SYNC_DIRECTORY',
-        'DRY_RUN', 'LOG_LEVEL', 'MAX_DOWNLOADS', 'MAX_FILE_SIZE_MB'
+        'DRY_RUN', 'LOG_LEVEL', 'MAX_DOWNLOADS', 'MAX_FILE_SIZE_MB',
+        'INCLUDE_PERSONAL_ALBUMS', 'INCLUDE_SHARED_ALBUMS',
+        'PERSONAL_ALBUM_NAMES_TO_INCLUDE', 'SHARED_ALBUM_NAMES_TO_INCLUDE'
     ]
 
     for var in env_vars_to_clean:
@@ -278,3 +280,119 @@ class TestConfigsWithEnvVars:
         config_str = str(config)
 
         assert "env-only" in config_str
+
+
+class TestAlbumFilteringConfig:
+    """Test album filtering configuration functionality."""
+
+    def test_default_album_settings(self, temp_dir, clean_env):
+        """Test default album filtering settings."""
+        env_file = temp_dir / ".env"
+        env_file.write_text("")
+
+        config = KeyringConfig(str(env_file))
+
+        assert config.include_personal_albums is True
+        assert config.include_shared_albums is True
+        assert config.personal_album_names_to_include == []
+        assert config.shared_album_names_to_include == []
+
+    def test_album_filtering_boolean_settings(self, temp_dir, clean_env):
+        """Test album filtering boolean configuration."""
+        env_file = temp_dir / ".env"
+        env_file.write_text(
+            "INCLUDE_PERSONAL_ALBUMS=false\n"
+            "INCLUDE_SHARED_ALBUMS=true\n"
+        )
+
+        config = KeyringConfig(str(env_file))
+
+        assert config.include_personal_albums is False
+        assert config.include_shared_albums is True
+
+    def test_album_names_parsing(self, temp_dir, clean_env):
+        """Test parsing of album name lists."""
+        env_file = temp_dir / ".env"
+        env_file.write_text(
+            "PERSONAL_ALBUM_NAMES_TO_INCLUDE=Album1,Album2,Album3\n"
+            "SHARED_ALBUM_NAMES_TO_INCLUDE=Shared1, Shared2 , Shared3\n"
+        )
+
+        config = KeyringConfig(str(env_file))
+
+        assert config.personal_album_names_to_include == ["Album1", "Album2", "Album3"]
+        assert config.shared_album_names_to_include == ["Shared1", "Shared2", "Shared3"]
+
+    def test_empty_album_names(self, temp_dir, clean_env):
+        """Test handling of empty album name lists."""
+        env_file = temp_dir / ".env"
+        env_file.write_text(
+            "PERSONAL_ALBUM_NAMES_TO_INCLUDE=\n"
+            "SHARED_ALBUM_NAMES_TO_INCLUDE=,,,\n"
+        )
+
+        config = KeyringConfig(str(env_file))
+
+        assert config.personal_album_names_to_include == []
+        assert config.shared_album_names_to_include == []
+
+    def test_album_validation_error_both_disabled(self, temp_dir, clean_env):
+        """Test validation error when both album types are disabled."""
+        env_file = temp_dir / ".env"
+        env_file.write_text(
+            "INCLUDE_PERSONAL_ALBUMS=false\n"
+            "INCLUDE_SHARED_ALBUMS=false\n"
+        )
+
+        config = KeyringConfig(str(env_file))
+
+        with pytest.raises(
+                ValueError,
+                match="At least one of INCLUDE_PERSONAL_ALBUMS or "
+                      "INCLUDE_SHARED_ALBUMS must be true"
+        ):
+            config.validate()
+
+    def test_validate_albums_exist_with_missing_albums(self, temp_dir, clean_env):
+        """Test album existence validation with missing albums."""
+        from unittest.mock import MagicMock
+
+        env_file = temp_dir / ".env"
+        env_file.write_text(
+            "PERSONAL_ALBUM_NAMES_TO_INCLUDE=Existing,Missing\n"
+            "SHARED_ALBUM_NAMES_TO_INCLUDE=SharedExisting,SharedMissing\n"
+        )
+
+        config = KeyringConfig(str(env_file))
+
+        # Mock icloud_client
+        mock_client = MagicMock()
+        mock_client.verify_albums_exist.side_effect = [
+            (["Existing"], ["Missing"]),  # Personal albums
+            (["SharedExisting"], ["SharedMissing"])  # Shared albums
+        ]
+
+        with pytest.raises(ValueError, match="The following specified albums do not exist"):
+            config.validate_albums_exist(mock_client)
+
+    def test_validate_albums_exist_all_found(self, temp_dir, clean_env):
+        """Test album existence validation when all albums are found."""
+        from unittest.mock import MagicMock
+
+        env_file = temp_dir / ".env"
+        env_file.write_text(
+            "PERSONAL_ALBUM_NAMES_TO_INCLUDE=Album1,Album2\n"
+            "SHARED_ALBUM_NAMES_TO_INCLUDE=Shared1,Shared2\n"
+        )
+
+        config = KeyringConfig(str(env_file))
+
+        # Mock icloud_client
+        mock_client = MagicMock()
+        mock_client.verify_albums_exist.side_effect = [
+            (["Album1", "Album2"], []),  # Personal albums - all found
+            (["Shared1", "Shared2"], [])  # Shared albums - all found
+        ]
+
+        # Should not raise an exception
+        config.validate_albums_exist(mock_client)

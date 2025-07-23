@@ -282,6 +282,7 @@ class iCloudClient:
                         'size': getattr(photo, 'size', 0),
                         'created': getattr(photo, 'created', None),
                         'modified': getattr(photo, 'modified', None),
+                        'album_name': 'All Photos',  # Default album for main library
                         'photo_obj': photo  # Keep reference for downloading
                     }
 
@@ -293,6 +294,251 @@ class iCloudClient:
 
         except Exception as e:
             self.logger.error(f"❌ Error fetching photos from iCloud: {e}")
+
+    def list_albums(self) -> t.Iterator[dict[str, t.Any]]:
+        """List all albums from iCloud Photos.
+
+        Yields:
+            Album metadata dictionaries
+        """
+        if not self._api or not self._api.photos:
+            self.logger.error("❌ Not authenticated or photos service unavailable")
+            return
+
+        try:
+            self.logger.info("📥 Fetching album list from iCloud...")
+
+            # Get all albums from iCloud
+            albums = self._api.photos.albums
+
+            self.logger.info(f"📊 Found {len(albums)} albums in iCloud")
+
+            for album in albums:
+                try:
+                    # Extract album metadata
+                    album_info = {
+                        'id': getattr(album, 'id', None),
+                        'name': album.title,
+                        'photo_count': len(album.photos),
+                        'is_shared': getattr(album, 'isShared', False),
+                        'album_obj': album  # Keep reference for accessing photos
+                    }
+
+                    yield album_info
+
+                except Exception as e:
+                    self.logger.warning(f"⚠️ Error processing album: {e}")
+                    continue
+
+        except Exception as e:
+            self.logger.error(f"❌ Error fetching albums from iCloud: {e}")
+
+    def list_photos_from_album(self, album_name: str) -> t.Iterator[dict[str, t.Any]]:
+        """List photos from a specific album.
+
+        Args:
+            album_name: Name of the album to list photos from
+
+        Yields:
+            Photo metadata dictionaries
+        """
+        if not self._api or not self._api.photos:
+            self.logger.error("❌ Not authenticated or photos service unavailable")
+            return
+
+        try:
+            # Find the album by name
+            target_album = None
+            for album in self._api.photos.albums:
+                if album.title == album_name:
+                    target_album = album
+                    break
+
+            if not target_album:
+                self.logger.error(f"❌ Album '{album_name}' not found")
+                return
+
+            self.logger.info(f"📥 Fetching photos from album '{album_name}'...")
+
+            photos = target_album.photos
+            total_count = len(photos)
+
+            self.logger.info(f"📊 Found {total_count} photos in album '{album_name}'")
+
+            for i, photo in enumerate(photos, 1):
+                if i % 50 == 0:  # Log progress every 50 photos for albums
+                    self.logger.info(f"📥 Processing photo {i}/{total_count} "
+                                     f"from album '{album_name}'")
+
+                try:
+                    # Extract photo metadata
+                    photo_info = {
+                        'id': photo.id,
+                        'filename': photo.filename,
+                        'size': getattr(photo, 'size', 0),
+                        'created': getattr(photo, 'created', None),
+                        'modified': getattr(photo, 'modified', None),
+                        'album_name': album_name,
+                        'photo_obj': photo  # Keep reference for downloading
+                    }
+
+                    yield photo_info
+
+                except Exception as e:
+                    self.logger.warning(f"⚠️ Error processing photo {i} "
+                                        f"from album '{album_name}': {e}")
+                    continue
+
+        except Exception as e:
+            self.logger.error(f"❌ Error fetching photos from album '{album_name}': {e}")
+
+    def list_photos_from_albums(self, album_names: list[str],
+                                include_main_library: bool = True) -> t.Iterator[dict[str, t.Any]]:
+        """List photos from multiple specified albums.
+
+        Args:
+            album_names: List of album names to include
+            include_main_library: Whether to include photos from main library
+
+        Yields:
+            Photo metadata dictionaries
+        """
+        processed_photo_ids = set()  # Track to avoid duplicates
+
+        # Include main library photos if requested
+        if include_main_library:
+            self.logger.info("📥 Including photos from main library")
+            for photo_info in self.list_photos():
+                if photo_info['id'] not in processed_photo_ids:
+                    processed_photo_ids.add(photo_info['id'])
+                    yield photo_info
+
+        # Include photos from specified albums
+        for album_name in album_names:
+            self.logger.info(f"📥 Including photos from album '{album_name}'")
+            for photo_info in self.list_photos_from_album(album_name):
+                if photo_info['id'] not in processed_photo_ids:
+                    processed_photo_ids.add(photo_info['id'])
+                    yield photo_info
+                else:
+                    self.logger.debug(f"⏭️ Skipping duplicate photo: {photo_info['filename']} "
+                                      f"(already processed from another album)")
+
+    def verify_albums_exist(self, album_names: list[str]) -> tuple[list[str], list[str]]:
+        """Verify that specified albums exist in iCloud.
+
+        Args:
+            album_names: List of album names to verify
+
+        Returns:
+            Tuple of (existing_albums, missing_albums)
+        """
+        if not self._api or not self._api.photos:
+            self.logger.error("❌ Not authenticated or photos service unavailable")
+            return [], album_names
+
+        try:
+            # Get all available album names
+            available_albums = {album.title for album in self._api.photos.albums}
+
+            existing_albums = []
+            missing_albums = []
+
+            for album_name in album_names:
+                if album_name in available_albums:
+                    existing_albums.append(album_name)
+                else:
+                    missing_albums.append(album_name)
+
+            if missing_albums:
+                self.logger.warning(f"⚠️ Missing albums: {', '.join(missing_albums)}")
+
+            return existing_albums, missing_albums
+
+        except Exception as e:
+            self.logger.error(f"❌ Error verifying albums: {e}")
+            return [], album_names
+
+    def get_filtered_albums(self, config) -> t.Iterator[dict[str, t.Any]]:
+        """Get albums filtered by configuration settings.
+
+        Args:
+            config: Configuration object with album filtering settings
+
+        Yields:
+            Album metadata dictionaries matching filter criteria
+        """
+        if not self._api or not self._api.photos:
+            self.logger.error("❌ Not authenticated or photos service unavailable")
+            return
+
+        try:
+            for album_info in self.list_albums():
+                is_shared = album_info.get('is_shared', False)
+                album_name = album_info['name']
+
+                # Filter by album type (personal vs shared)
+                if is_shared:
+                    if not config.include_shared_albums:
+                        continue
+                    # Check shared album allow-list
+                    if (config.shared_album_names_to_include and
+                            album_name not in config.shared_album_names_to_include):
+                        continue
+                else:
+                    if not config.include_personal_albums:
+                        continue
+                    # Check personal album allow-list
+                    if (config.personal_album_names_to_include and
+                            album_name not in config.personal_album_names_to_include):
+                        continue
+
+                yield album_info
+
+        except Exception as e:
+            self.logger.error(f"❌ Error filtering albums: {e}")
+
+    def list_photos_from_filtered_albums(
+            self,
+            config,
+            include_main_library: bool = True
+    ) -> t.Iterator[dict[str, t.Any]]:
+        """List photos from albums based on configuration filtering.
+
+        Args:
+            config: Configuration object with album filtering settings
+            include_main_library: Whether to include photos from main library
+
+        Yields:
+            Photo metadata dictionaries from filtered albums
+        """
+        processed_photo_ids = set()  # Track to avoid duplicates
+
+        # Include main library photos if requested
+        if include_main_library:
+            self.logger.info("📥 Including photos from main library")
+            for photo_info in self.list_photos():
+                if photo_info['id'] not in processed_photo_ids:
+                    processed_photo_ids.add(photo_info['id'])
+                    # Add main library designation
+                    photo_info['album_name'] = None  # Main library photos have no album
+                    yield photo_info
+
+        # Include photos from filtered albums
+        for album_info in self.get_filtered_albums(config):
+            album_name = album_info['name']
+            is_shared = album_info.get('is_shared', False)
+            album_type = "shared" if is_shared else "personal"
+
+            self.logger.info(f"📥 Including photos from {album_type} album '{album_name}'")
+
+            for photo_info in self.list_photos_from_album(album_name):
+                if photo_info['id'] not in processed_photo_ids:
+                    processed_photo_ids.add(photo_info['id'])
+                    yield photo_info
+                else:
+                    self.logger.debug(f"⏭️ Skipping duplicate photo: {photo_info['filename']} "
+                                      f"(already processed from another source)")
 
     def download_photo(self, photo_info: dict[str, t.Any], local_path: str) -> bool:
         """Download a photo to local storage.

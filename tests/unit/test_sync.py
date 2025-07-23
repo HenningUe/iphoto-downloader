@@ -167,7 +167,10 @@ class TestPhotoSyncer:
         local_files = syncer._get_local_files()
 
         # Should include image files but not text files
-        expected_files = {"test1.jpg", "test2.png", "test3.jpeg", "test5.jpg"}
+        # Files in subdirectories should include the relative path
+        import os
+        expected_subdirectory_file = f"subdir{os.sep}test5.jpg"
+        expected_files = {"test1.jpg", "test2.png", "test3.jpeg", expected_subdirectory_file}
         assert local_files == expected_files
 
     def test_track_local_deletions(self, syncer):
