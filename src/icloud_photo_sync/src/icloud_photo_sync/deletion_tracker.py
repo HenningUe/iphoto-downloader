@@ -30,48 +30,208 @@ class DeletionTracker:
         return get_logger()
 
     def _init_database(self) -> None:
-        """Initialize the SQLite database."""
+        """Initialize the SQLite database with album-aware schema."""
         try:
             with sqlite3.connect(self.db_path) as conn:
-                # Table for tracking deleted photos
-                conn.execute("""
-                    CREATE TABLE IF NOT EXISTS deleted_photos (
-                        photo_id TEXT PRIMARY KEY,
-                        filename TEXT NOT NULL,
-                        deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        file_size INTEGER,
-                        original_path TEXT
-                    )
-                """)
-                conn.execute("""
-                    CREATE INDEX IF NOT EXISTS idx_filename
-                    ON deleted_photos(filename)
-                """)
+                # Check current schema version
+                schema_version = self._get_schema_version(conn)
 
-                # Table for tracking downloaded photos
-                conn.execute("""
-                    CREATE TABLE IF NOT EXISTS downloaded_photos (
-                        photo_id TEXT PRIMARY KEY,
-                        filename TEXT NOT NULL,
-                        local_path TEXT NOT NULL,
-                        downloaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        file_size INTEGER,
-                        album_name TEXT
-                    )
-                """)
-                conn.execute("""
-                    CREATE INDEX IF NOT EXISTS idx_downloaded_path
-                    ON downloaded_photos(local_path)
-                """)
-                conn.execute("""
-                    CREATE INDEX IF NOT EXISTS idx_downloaded_filename
-                    ON downloaded_photos(filename)
-                """)
+                if schema_version == 0:
+                    # Initialize new database with album-aware schema
+                    self._create_album_aware_schema(conn)
+                elif schema_version == 1:
+                    # Migrate from legacy schema to album-aware schema
+                    self._migrate_to_album_aware_schema(conn)
 
+                # Ensure we're at the latest schema version
+                self._set_schema_version(conn, 2)
                 conn.commit()
+
             self.logger.debug(f"Successfully initialized deletion tracker database: {self.db_path}")
         except Exception as e:
             self.logger.error(f"Failed to initialize deletion tracker database: {e}")
+            raise
+
+    def _get_schema_version(self, conn) -> int:
+        """Get current database schema version.
+
+        Args:
+            conn: SQLite database connection
+
+        Returns:
+            Schema version number (0 for new database, 1 for legacy, 2 for album-aware)
+        """
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_version'"
+            )
+            if cursor.fetchone():
+                cursor.execute("SELECT version FROM schema_version LIMIT 1")
+                result = cursor.fetchone()
+                return result[0] if result else 0
+
+            # Check if we have legacy tables
+            cursor.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='downloaded_photos'"
+            )
+            if cursor.fetchone():
+                # Check if it's the old schema (no source_album_name column)
+                cursor.execute("PRAGMA table_info(downloaded_photos)")
+                columns = {row[1] for row in cursor.fetchall()}
+                if 'source_album_name' not in columns:
+                    return 1  # Legacy schema
+                else:
+                    return 2  # Already album-aware
+
+            return 0  # New database
+        except Exception as e:
+            self.logger.error(f"Error checking schema version: {e}")
+            return 0
+
+    def _set_schema_version(self, conn, version: int) -> None:
+        """Set database schema version.
+
+        Args:
+            conn: SQLite database connection
+            version: Schema version to set
+        """
+        try:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS schema_version (
+                    version INTEGER PRIMARY KEY
+                )
+            """)
+            conn.execute("DELETE FROM schema_version")
+            conn.execute("INSERT INTO schema_version (version) VALUES (?)", (version,))
+            self.logger.debug(f"Set schema version to {version}")
+        except Exception as e:
+            self.logger.error(f"Error setting schema version: {e}")
+
+    def _create_album_aware_schema(self, conn) -> None:
+        """Create new album-aware database schema.
+
+        Args:
+            conn: SQLite database connection
+        """
+        try:
+            # Table for tracking deleted photos (album-aware)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS deleted_photos (
+                    photo_name TEXT NOT NULL,
+                    source_album_name TEXT NOT NULL,
+                    photo_id TEXT,
+                    deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    file_size INTEGER,
+                    original_path TEXT,
+                    PRIMARY KEY (photo_name, source_album_name)
+                )
+            """)
+            conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_deleted_photo_name
+                ON deleted_photos(photo_name)
+            """)
+            conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_deleted_album_name
+                ON deleted_photos(source_album_name)
+            """)
+
+            # Table for tracking downloaded photos (album-aware)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS downloaded_photos (
+                    photo_name TEXT NOT NULL,
+                    source_album_name TEXT NOT NULL,
+                    photo_id TEXT,
+                    local_path TEXT NOT NULL,
+                    downloaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    file_size INTEGER,
+                    PRIMARY KEY (photo_name, source_album_name)
+                )
+            """)
+            conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_downloaded_path
+                ON downloaded_photos(local_path)
+            """)
+            conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_downloaded_photo_name
+                ON downloaded_photos(photo_name)
+            """)
+            conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_downloaded_album_name
+                ON downloaded_photos(source_album_name)
+            """)
+
+            self.logger.info("Created album-aware database schema")
+        except Exception as e:
+            self.logger.error(f"Error creating album-aware schema: {e}")
+            raise
+
+    def _migrate_to_album_aware_schema(self, conn) -> None:
+        """Migrate from legacy schema to album-aware schema.
+
+        Args:
+            conn: SQLite database connection
+        """
+        try:
+            self.logger.info("Migrating database to album-aware schema...")
+
+            # First, backup existing data
+            cursor = conn.cursor()
+
+            # Backup deleted_photos
+            cursor.execute("SELECT * FROM deleted_photos")
+            legacy_deleted = cursor.fetchall()
+
+            # Backup downloaded_photos
+            cursor.execute("SELECT * FROM downloaded_photos")
+            legacy_downloaded = cursor.fetchall()
+
+            # Drop old tables
+            conn.execute("DROP TABLE IF EXISTS deleted_photos")
+            conn.execute("DROP TABLE IF EXISTS downloaded_photos")
+
+            # Create new schema
+            self._create_album_aware_schema(conn)
+
+            # Migrate downloaded photos data
+            for row in legacy_downloaded:
+                photo_id, filename, local_path, downloaded_at, file_size, album_name = row
+                # Use album name from the record, or 'Unknown' if None
+                source_album = album_name if album_name else 'Unknown'
+
+                conn.execute("""
+                    INSERT OR IGNORE INTO downloaded_photos
+                    (photo_name, source_album_name, photo_id, local_path, downloaded_at, file_size)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (filename, source_album, photo_id, local_path, downloaded_at, file_size))
+
+            # Migrate deleted photos data
+            for row in legacy_deleted:
+                photo_id, filename, deleted_at, file_size, original_path = row
+                # Extract album from original_path if possible, otherwise use 'Unknown'
+                album_name = 'Unknown'
+                if original_path and '/' in original_path:
+                    # Try to extract album from path like "Album/photo.jpg"
+                    parts = Path(original_path).parts
+                    if len(parts) > 1:
+                        album_name = parts[0]
+
+                conn.execute("""
+                    INSERT OR IGNORE INTO deleted_photos
+                    (photo_name, source_album_name, photo_id, deleted_at, file_size, original_path)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (filename, album_name, photo_id, deleted_at, file_size, original_path))
+
+            migrated_downloaded = len(legacy_downloaded)
+            migrated_deleted = len(legacy_deleted)
+
+            self.logger.info(
+                f"Migration completed: {migrated_downloaded} downloaded photos, "
+                f"{migrated_deleted} deleted photos migrated to album-aware schema"
+            )
+
+        except Exception as e:
+            self.logger.error(f"Error migrating to album-aware schema: {e}")
             raise
 
     def create_backup(self, max_backups: int = 5) -> bool:
@@ -279,27 +439,41 @@ class DeletionTracker:
         photo_id: str,
         filename: str,
         file_size: int | None = None,
-        original_path: str | None = None
+        original_path: str | None = None,
+        album_name: str | None = None
     ) -> None:
-        """Record a photo as deleted.
+        """Record a photo as deleted with album-aware tracking.
 
         Args:
             photo_id: Unique photo identifier
             filename: Photo filename
             file_size: File size in bytes
             original_path: Original local file path
+            album_name: Album name where photo originated
         """
+        # Extract album from original_path if not provided
+        source_album = album_name
+        if not source_album and original_path:
+            # Try to extract album from path like "Album/photo.jpg"
+            parts = Path(original_path).parts
+            if len(parts) > 1:
+                source_album = parts[0]
+
+        # Use 'Unknown' if still no album
+        if not source_album:
+            source_album = 'Unknown'
+
         with sqlite3.connect(self.db_path) as conn:
             conn.execute("""
                 INSERT OR REPLACE INTO deleted_photos
-                (photo_id, filename, deleted_at, file_size, original_path)
-                VALUES (?, ?, ?, ?, ?)
-            """, (photo_id, filename, datetime.now(), file_size, original_path))
+                (photo_name, source_album_name, photo_id, deleted_at, file_size, original_path)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (filename, source_album, photo_id, datetime.now(), file_size, original_path))
             conn.commit()
-        self.logger.debug(f"📝 Recorded deleted photo: {filename}")
+        self.logger.debug(f"📝 Recorded deleted photo: {filename} from {source_album}")
 
     def is_deleted(self, photo_id: str) -> bool:
-        """Check if a photo is marked as deleted.
+        """Check if a photo is marked as deleted (legacy method for backward compatibility).
 
         Args:
             photo_id: Unique photo identifier
@@ -312,6 +486,46 @@ class DeletionTracker:
                 "SELECT 1 FROM deleted_photos WHERE photo_id = ? LIMIT 1",
                 (photo_id,)
             )
+            return cursor.fetchone() is not None
+
+    def is_photo_deleted(self, photo_name: str, album_name: str | None = None) -> bool:
+        """Check if a photo is marked as deleted (album-aware).
+
+        Args:
+            photo_name: Photo filename
+            album_name: Album name (uses 'Unknown' if None)
+
+        Returns:
+            True if photo is marked as deleted in the specified album, False otherwise
+        """
+        source_album = album_name if album_name else 'Unknown'
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute("""
+                SELECT 1 FROM deleted_photos
+                WHERE photo_name = ? AND source_album_name = ?
+                LIMIT 1
+            """, (photo_name, source_album))
+            return cursor.fetchone() is not None
+
+    def is_photo_downloaded(self, photo_name: str, album_name: str | None = None) -> bool:
+        """Check if a photo has already been downloaded from a specific album.
+
+        Args:
+            photo_name: Photo filename
+            album_name: Album name (uses 'Unknown' if None)
+
+        Returns:
+            True if photo is already downloaded from the specified album, False otherwise
+        """
+        source_album = album_name if album_name else 'Unknown'
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute("""
+                SELECT 1 FROM downloaded_photos
+                WHERE photo_name = ? AND source_album_name = ?
+                LIMIT 1
+            """, (photo_name, source_album))
             return cursor.fetchone() is not None
 
     def is_filename_deleted(self, filename: str) -> bool:
@@ -391,7 +605,7 @@ class DeletionTracker:
         file_size: int | None = None,
         album_name: str | None = None
     ) -> None:
-        """Record a photo as successfully downloaded.
+        """Record a photo as successfully downloaded with album-aware tracking.
 
         Args:
             photo_id: Unique photo identifier
@@ -401,37 +615,46 @@ class DeletionTracker:
             album_name: Album name where photo originated
         """
         try:
+            # Use 'Unknown' if no album name provided
+            source_album = album_name if album_name else 'Unknown'
+
             with sqlite3.connect(self.db_path) as conn:
                 conn.execute("""
                     INSERT OR REPLACE INTO downloaded_photos
-                    (photo_id, filename, local_path, downloaded_at, file_size, album_name)
+                    (photo_name, source_album_name, photo_id, local_path, downloaded_at, file_size)
                     VALUES (?, ?, ?, ?, ?, ?)
-                """, (photo_id, filename, local_path, datetime.now(), file_size, album_name))
+                """, (filename, source_album, photo_id, local_path, datetime.now(), file_size))
                 conn.commit()
-            self.logger.debug(f"📝 Recorded downloaded photo: {filename} -> {local_path}")
+            self.logger.debug(
+                f"📝 Recorded downloaded photo: {filename} from {source_album} -> {local_path}"
+            )
         except Exception as e:
             self.logger.error(f"❌ Failed to record downloaded photo {filename}: {e}")
 
     def get_downloaded_photos(self) -> dict[str, dict]:
-        """Get all downloaded photos with their metadata.
+        """Get all downloaded photos with their metadata (album-aware).
 
         Returns:
-            Dictionary mapping photo_id to photo metadata
+            Dictionary mapping (photo_name, album_name) tuple to photo metadata
         """
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.execute("""
-                    SELECT photo_id, filename, local_path, downloaded_at, file_size, album_name
+                    SELECT photo_name, source_album_name, photo_id, local_path,
+                           downloaded_at, file_size
                     FROM downloaded_photos
                 """)
                 result = {}
                 for row in cursor.fetchall():
-                    result[row[0]] = {
-                        'filename': row[1],
-                        'local_path': row[2],
-                        'downloaded_at': row[3],
-                        'file_size': row[4],
-                        'album_name': row[5]
+                    # Use composite key (photo_name, album_name)
+                    key = (row[0], row[1])
+                    result[key] = {
+                        'photo_name': row[0],
+                        'source_album_name': row[1],
+                        'photo_id': row[2],
+                        'local_path': row[3],
+                        'downloaded_at': row[4],
+                        'file_size': row[5]
                     }
                 return result
         except Exception as e:
@@ -451,9 +674,9 @@ class DeletionTracker:
         try:
             downloaded_photos = self.get_downloaded_photos()
 
-            for photo_id, metadata in downloaded_photos.items():
+            for (photo_name, album_name), metadata in downloaded_photos.items():
                 # Check if this photo is already marked as deleted
-                if self.is_deleted(photo_id):
+                if self.is_photo_deleted(photo_name, album_name):
                     continue
 
                 # Check if the file still exists locally
@@ -461,13 +684,12 @@ class DeletionTracker:
                 if not local_path.exists():
                     # Photo was deleted locally
                     deleted_photos.append({
-                        'photo_id': photo_id,
-                        'filename': metadata['filename'],
+                        'photo_id': metadata['photo_id'],
+                        'filename': photo_name,
                         'local_path': metadata['local_path'],
                         'file_size': metadata['file_size'],
-                        'album_name': metadata['album_name']
+                        'album_name': album_name
                     })
-                    self.logger.debug(f"🗑️ Detected local deletion: {metadata['local_path']}")
 
             return deleted_photos
 
@@ -487,7 +709,8 @@ class DeletionTracker:
                     photo_id=photo_data['photo_id'],
                     filename=photo_data['filename'],
                     file_size=photo_data.get('file_size'),
-                    original_path=photo_data['local_path']
+                    original_path=photo_data['local_path'],
+                    album_name=photo_data.get('album_name')
                 )
                 self.logger.info(f"🗑️ Marked as deleted: {photo_data['local_path']}")
             except Exception as e:

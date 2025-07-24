@@ -282,10 +282,18 @@ class PhotoSyncer:
                     self.logger.info(f"📊 Reached download limit ({self.config.max_downloads})")
                     break
 
-                # Check if photo was deleted locally
-                if self.deletion_tracker.is_deleted(photo_id):
-                    self.logger.debug(f"⏭️ Skipping deleted photo: {filename}")
+                # Check if photo was deleted locally (album-aware)
+                if self.deletion_tracker.is_photo_deleted(filename, album_name):
+                    self.logger.debug(f"⏭️ Skipping deleted photo: {filename} from {album_name}")
                     self.stats['deleted_skipped'] += 1
+                    continue
+
+                # Check if photo was already downloaded from this album (album-aware)
+                if self.deletion_tracker.is_photo_downloaded(filename, album_name):
+                    self.logger.debug(
+                        f"⏭️ Photo already downloaded from album: {filename} from {album_name}"
+                    )
+                    self.stats['already_exists'] += 1
                     continue
 
                 # Create album subfolder path (use root if no album)
@@ -297,9 +305,17 @@ class PhotoSyncer:
                     album_folder = ""
                     relative_path = filename
 
-                # Check if file already exists locally
+                # Check if file already exists locally (fallback safety check)
                 if relative_path in local_files:
-                    self.logger.debug(f"⏭️ Photo already exists: {relative_path}")
+                    self.logger.debug(f"⏭️ Photo file already exists locally: {relative_path}")
+                    # Record this as downloaded if not already tracked
+                    if not self.deletion_tracker.is_photo_downloaded(filename, album_name):
+                        self.deletion_tracker.add_downloaded_photo(
+                            photo_id=photo_id,
+                            filename=filename,
+                            local_path=relative_path,
+                            album_name=album_name
+                        )
                     self.stats['already_exists'] += 1
                     continue
 

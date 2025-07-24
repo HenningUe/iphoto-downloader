@@ -65,18 +65,18 @@ specified.
 
 #### 2.1.2 Enhanced Photo Tracking
 
-- [ ] Upgrade **SQLite database schema** for album-aware tracking:
-  - [ ] Add `source_album_name` column to photos table
-  - [ ] Create composite primary key using (photo_name, source_album_name)
-  - [ ] Add database migration logic for existing installations
-- [ ] Implement **album-aware photo identification**:
-  - [ ] Track photos by combination of filename and source album
-  - [ ] Handle same photo existing in multiple albums
-  - [ ] Update deletion tracking to include album context
-- [ ] Update **sync logic** for album-based tracking:
-  - [ ] Check database using (photo_name, album_name) combination
-  - [ ] Record downloads with source album information
-  - [ ] Ensure deletion tracking works per album
+- [x] Upgrade **SQLite database schema** for album-aware tracking:
+  - [x] Add `source_album_name` column to photos table
+  - [x] Create composite primary key using (photo_name, source_album_name)
+  - [x] Add database migration logic for existing installations
+- [x] Implement **album-aware photo identification**:
+  - [x] Track photos by combination of filename and source album
+  - [x] Handle same photo existing in multiple albums
+  - [x] Update deletion tracking to include album context
+- [x] Update **sync logic** for album-based tracking:
+  - [x] Check database using (photo_name, album_name) combination
+  - [x] Record downloads with source album information
+  - [x] Ensure deletion tracking works per album
 
 #### 2.1.3 Continuous Execution Mode
 
