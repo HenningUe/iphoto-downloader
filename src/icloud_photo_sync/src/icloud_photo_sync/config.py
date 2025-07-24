@@ -19,16 +19,14 @@ class BaseConfig(ABC):
     ICLOUD_KEYRING_SERVICE_NAME = "icloud-photo-sync"
     PUSHOVER_KEYRING_SERVICE_NAME = "pushover-photo-sync"
 
-    def __init__(self, env_file: str | None = None) -> None:
+    def __init__(self, env_file_path: Path) -> None:
         """Initialize configuration.
 
         Args:
             env_file: Path to .env file. If None, uses default .env
         """
         # Load environment variables from .env file
-        env_path = env_file or '.env'
-        if Path(env_path).exists():
-            load_dotenv(env_path, override=True)
+        load_dotenv(str(env_file_path), override=True)
 
         # iCloud credentials - try multiple sources
         # Sync settings
@@ -356,10 +354,61 @@ class KeyringConfig(BaseConfig):
     """Configuration class that uses keyring for storing sensitive data."""
 
 
+def get_settings_env_file_path() -> Path:
+    """Get the path to the settings .env file.
+
+    First searches for .env in current directory, then falls back to
+    settings.ini in system user settings directory.
+
+    Returns:
+        Path to the configuration file (.env or settings.ini)
+    """
+    settings_ini_file_p_options: list[Path] = []
+
+    # First try current directory's .env file
+    settings_ini_file_p = Path('.env')
+    settings_ini_file_p_options.append(settings_ini_file_p)
+
+    # Fall back to system user settings directory
+    if os.name == 'nt':
+        # Windows
+        # Use LOCALAPPDATA for Windows user settings
+        localappdata = os.getenv('LOCALAPPDATA', os.path.expanduser('~\\AppData\\Local'))
+        user_settings_base = Path(localappdata)
+    elif os.name == 'posix':
+        # Unix-like systems (Linux, macOS)
+        # Use XDG_CONFIG_HOME or ~/.config for Unix systems
+        xdg_config = os.getenv('XDG_CONFIG_HOME')
+        if xdg_config:
+            user_settings_base = Path(xdg_config)
+        else:
+            user_settings_base = Path.home() / '.config'
+    else:
+        raise EnvironmentError(f"Unsupported OS: {os.name}")
+    # Create the foto_pool subdirectory path
+    foto_pool_settings_dir = user_settings_base / 'foto_pool'
+    settings_ini_file_p = foto_pool_settings_dir / 'settings.ini'
+    settings_ini_file_p_options.append(settings_ini_file_p)
+
+    settings_ini_file_p = None
+    for loop_file_p in settings_ini_file_p_options:
+        if loop_file_p.is_dir():
+            raise EnvironmentError(f"Expected file but found directory: {loop_file_p}")
+        if loop_file_p.exists():
+            settings_ini_file_p = loop_file_p
+            break
+    if not settings_ini_file_p:
+        msg = ("Warning: No configuration file found. Options are: "
+               f"{', '.join(map(str, settings_ini_file_p_options))}")
+        raise EnvironmentError(msg)
+    return settings_ini_file_p
+
+
 def get_config() -> BaseConfig:
     """Factory function to create appropriate config instance.
 
     Returns:
         KeyringConfig if keyring is available, EnvOnlyConfig otherwise
     """
-    return KeyringConfig()
+    settings_file_p = get_settings_env_file_path()
+    return KeyringConfig(settings_file_p)

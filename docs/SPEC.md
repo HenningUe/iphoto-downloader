@@ -21,6 +21,10 @@ automatically using **GitHub Actions**.
 1. **Photo Sync**
    - Sync photos from iCloud to a local directory.
    - Settings shall be provided via an .env file inside repository
+   - If the local ".env" file is not available in the current directory and the
+     app shall search in the respective system user settings directory (for
+     example "LOCALUSERDATA" on Windows systems) for a file named “settings.ini”
+     inside a subfolder named "foto_pool".
    - There shall be a parallel .env-file named .env.example which works as
      template. This shall not contain any secrets.
    - It shall be possible to specify whether personal i-cloud-albums shall be
@@ -125,6 +129,14 @@ automatically using **GitHub Actions**.
      re-downloading.
    - Use a local lightweight database (e.g., SQLite or a JSON file) for
      tracking.
+   - A safety-copy of the local database shall be maintained. Before the start
+     of a synchronization run, the safety copy shall be created
+   - If the database is corrupted, i.e. can not be opened anymore, it shall be
+     restored from the safety-copy.
+   - If the local database is not available, but a safety-copy it shall be
+     restored from the safety-copy.
+   - If the local database and the safety-copy are not availabe a new database
+     shall be created.
 
 4. **Idempotent Runs**
    - Running the tool multiple times must not create duplicate files or

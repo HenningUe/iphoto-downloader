@@ -219,31 +219,44 @@ class PhotoSyncer:
         Args:
             local_files: Set of current local filenames
         """
-        try:
-            self.logger.debug("🔍 Checking for locally deleted files")
+        self.logger.debug("🔍 Checking for locally deleted files")
 
-            # Get previously tracked deleted photos
-            deleted_photos = self.deletion_tracker.get_deleted_photos()
+        # Detect photos that were downloaded but are now missing locally
+        deleted_photos = self.deletion_tracker.detect_locally_deleted_photos(
+            self.config.sync_directory
+        )
 
-            # Check if any deleted photos now exist locally (were restored)
-            for photo_id in deleted_photos:
-                # Check if this photo is back in local files
-                if self.deletion_tracker.is_filename_deleted(photo_id):
-                    # Get the filename associated with this photo
-                    for filename in local_files:
-                        if filename == photo_id or filename.startswith(photo_id):
-                            # Photo was restored, remove from deletion tracker
-                            self.deletion_tracker.remove_deleted_photo(photo_id)
-                            self.logger.info(f"� Restored deleted photo: {filename}")
-                            break
+        if deleted_photos:
+            self.logger.info(f"🗑️ Found {len(deleted_photos)} locally deleted photos")
+            # Mark them as deleted to prevent re-downloading
+            self.deletion_tracker.mark_photos_as_deleted(deleted_photos)
+        else:
+            self.logger.debug("✅ No locally deleted photos detected")
 
-            # Get deletion tracker stats
-            stats = self.deletion_tracker.get_stats()
-            if stats['total_deleted'] > 0:
-                self.logger.info(f"📝 Deletion tracker has {stats['total_deleted']} deleted photos")
+        # Get previously tracked deleted photos
+        deleted_photo_ids = self.deletion_tracker.get_deleted_photos()
 
-        except Exception as e:
-            self.logger.error(f"❌ Error tracking local deletions: {e}")
+        # Check if any deleted photos now exist locally (were restored)
+        restored_count = 0
+        for photo_id in deleted_photo_ids:
+            # Check if this photo is back in local files
+            downloaded_photos = self.deletion_tracker.get_downloaded_photos()
+            if photo_id in downloaded_photos:
+                metadata = downloaded_photos[photo_id]
+                local_path = self.config.sync_directory / metadata['local_path']
+                if local_path.exists():
+                    # Photo was restored, remove from deletion tracker
+                    self.deletion_tracker.remove_deleted_photo(photo_id)
+                    self.logger.info(f"🔄 Restored deleted photo: {metadata['local_path']}")
+                    restored_count += 1
+
+        if restored_count > 0:
+            self.logger.info(f"🔄 Found {restored_count} restored photos")
+
+        # Get deletion tracker stats
+        stats = self.deletion_tracker.get_stats()
+        if stats['total_deleted'] > 0:
+            self.logger.info(f"📝 Deletion tracker has {stats['total_deleted']} deleted photos")
 
     def _sync_photos(self, local_files: set[str]) -> None:
         """Sync photos from iCloud with album support.
@@ -304,6 +317,9 @@ class PhotoSyncer:
                     # Use the photo size from metadata if available
                     if 'size' in photo_info:
                         self.stats['bytes_downloaded'] += photo_info['size']
+
+                    # In dry run, we don't actually record downloads to avoid
+                    # polluting the tracking database with hypothetical data
                 else:
                     # Actually download the photo
                     if self.icloud_client.download_photo(photo_info, str(local_path)):
@@ -311,8 +327,19 @@ class PhotoSyncer:
                         self.stats['new_downloads'] += 1
 
                         # Update file size stats
+                        file_size = None
                         if local_path.exists():
-                            self.stats['bytes_downloaded'] += local_path.stat().st_size
+                            file_size = local_path.stat().st_size
+                            self.stats['bytes_downloaded'] += file_size
+
+                        # Record the successful download in the tracker
+                        self.deletion_tracker.add_downloaded_photo(
+                            photo_id=photo_id,
+                            filename=filename,
+                            local_path=relative_path,
+                            file_size=file_size,
+                            album_name=album_name
+                        )
 
                         self.logger.info(f"✅ Downloaded: {relative_path}")
                     else:

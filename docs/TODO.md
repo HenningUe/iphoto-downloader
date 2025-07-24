@@ -137,7 +137,27 @@ specified.
   - [x] Persistently update tracker on each sync
 - [x] Integrate deletion tracker with sync logic
 
-#### 2.3.1 Album-Aware Deletion Tracking
+#### 2.3.1 Database Safety & Recovery
+
+- [ ] Implement **database safety copy mechanism**:
+  - [ ] Create safety copy of local database before each synchronization run
+  - [ ] Store safety copy in designated backup location
+  - [ ] Implement automatic backup rotation (keep recent backups)
+- [ ] Implement **database corruption detection**:
+  - [ ] Check database integrity at startup
+  - [ ] Detect when database cannot be opened
+  - [ ] Implement database corruption recovery logic
+- [ ] Implement **database recovery procedures**:
+  - [ ] Restore from safety copy when database is corrupted
+  - [ ] Restore from safety copy when local database is missing
+  - [ ] Create new database when both local and safety copy are unavailable
+  - [ ] Log all database recovery operations
+- [ ] Add **backup management**:
+  - [ ] Cleanup old safety copies to prevent disk space issues
+  - [ ] Verify safety copy integrity before using for recovery
+  - [ ] Add configuration for backup retention policy
+
+#### 2.3.2 Album-Aware Deletion Tracking
 
 - [ ] Enhance **deletion tracking schema**:
   - [ ] Update database to track deletions by (photo_name, source_album_name)

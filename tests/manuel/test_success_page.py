@@ -25,7 +25,7 @@ def test_success_page():
     print(f"✅ Web server started at: {server.get_url()}")
     print(f"🌐 Success page available at: {server.get_url()}/success")
     print("📋 Available routes:")
-    print("  - / (main 2FA page)")
+    print("  - /(main 2FA page)")
     print("  - /success (authentication success page)")
     print("  - /status (JSON status endpoint)")
     print("  - /styles.css (CSS styles)")

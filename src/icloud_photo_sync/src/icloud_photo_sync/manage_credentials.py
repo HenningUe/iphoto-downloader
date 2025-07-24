@@ -76,21 +76,17 @@ def icloud_check_credentials():
     print("-" * 30)
 
     # Create a new config instance to test credential retrieval
-    try:
-        config = get_config()
+    config = get_config()
 
-        if isinstance(config, KeyringConfig) and config.icloud_has_stored_credentials():
-            print("✅ iCloud Credentials are stored in keyring")
-            if config.icloud_username and config.icloud_password:
-                print(f"📧 Username: {config.icloud_username}")
-                print("🔑 Password: *** (hidden)")
-            else:
-                print("⚠️ Credentials found in keyring but couldn't retrieve them")
+    if isinstance(config, KeyringConfig) and config.icloud_has_stored_credentials():
+        print("✅ iCloud Credentials are stored in keyring")
+        if config.icloud_username and config.icloud_password:
+            print(f"📧 Username: {config.icloud_username}")
+            print("🔑 Password: *** (hidden)")
         else:
-            print("❌ No credentials found in keyring")
-
-    except Exception as e:
-        print(f"❌ Error checking credentials: {e}")
+            print("⚠️ Credentials found in keyring but couldn't retrieve them")
+    else:
+        print("❌ No credentials found in keyring")
 
 
 def icloud_delete_credentials():
@@ -160,21 +156,17 @@ def pushover_check_credentials():
     print("-" * 30)
 
     # Create a new config instance to test credential retrieval
-    try:
-        config = get_config()
+    config = get_config()
 
-        if isinstance(config, KeyringConfig) and config.pushover_has_stored_credentials():
-            print("✅ Pushover Credentials are stored in keyring")
-            if config.pushover_user_key and config.pushover_api_token:
-                print(f"📧 User Key: {config.pushover_user_key}")
-                print(f"🔑 API Token: {config.pushover_api_token}")
-            else:
-                print("⚠️ Credentials found in keyring but couldn't retrieve them")
+    if isinstance(config, KeyringConfig) and config.pushover_has_stored_credentials():
+        print("✅ Pushover Credentials are stored in keyring")
+        if config.pushover_user_key and config.pushover_api_token:
+            print(f"📧 User Key: {config.pushover_user_key}")
+            print(f"🔑 API Token: {config.pushover_api_token}")
         else:
-            print("❌ No credentials found in keyring")
-
-    except Exception as e:
-        print(f"❌ Error checking credentials: {e}")
+            print("⚠️ Credentials found in keyring but couldn't retrieve them")
+    else:
+        print("❌ No credentials found in keyring")
 
 
 def pushover_delete_credentials():
@@ -209,7 +201,7 @@ def _create_temp_config():
     os.environ['ENABLE_PUSHOVER'] = 'true'
 
     try:
-        config = KeyringConfig()
+        config = get_config()
         return config
     finally:
         # Restore original environment

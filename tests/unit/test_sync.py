@@ -175,22 +175,40 @@ class TestPhotoSyncer:
 
     def test_track_local_deletions(self, syncer):
         """Test tracking local deletions."""
+        # Mock detected locally deleted photos (empty for this test)
+        syncer.deletion_tracker.detect_locally_deleted_photos.return_value = []
+
         # Mock existing deleted photos
         syncer.deletion_tracker.get_deleted_photos.return_value = {
             "test1.jpg", "test2.jpg", "test3.jpg"
         }
 
-        local_files = {"test1.jpg", "test2.jpg"}
+        # Mock downloaded photos with metadata
+        mock_downloaded_photos = {
+            "test1.jpg": {
+                'filename': 'test1.jpg',
+                'local_path': 'test1.jpg',
+                'downloaded_at': '2024-01-01',
+                'file_size': 1024,
+                'album_name': None
+            }
+        }
+        syncer.deletion_tracker.get_downloaded_photos.return_value = mock_downloaded_photos
 
-        # Mock the filename lookup to return True for deleted photos
-        def mock_is_filename_deleted(filename):
-            return filename in ["test1.jpg", "test3.jpg"]
+        # Mock sync directory
+        syncer.config.sync_directory = Path("/mock/sync/dir")
 
-        syncer.deletion_tracker.is_filename_deleted.side_effect = mock_is_filename_deleted
+        # Mock file existence check for restored photo
+        def mock_exists():
+            return True  # Simulate that test1.jpg was restored locally
 
-        syncer._track_local_deletions(local_files)
+        mock_path = Mock()
+        mock_path.exists.return_value = True
 
-        # Should remove test1.jpg from deleted photos since it exists locally
+        with patch('pathlib.Path.__truediv__', return_value=mock_path):
+            syncer._track_local_deletions({"test1.jpg", "test2.jpg"})
+
+        # Should remove test1.jpg from deleted photos since it exists locally again
         syncer.deletion_tracker.remove_deleted_photo.assert_called_with("test1.jpg")
 
     def test_sync_photos_with_new_photos(self, syncer):
