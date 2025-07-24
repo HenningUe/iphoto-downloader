@@ -291,10 +291,7 @@ class PhotoSyncer:
                     continue
 
                 # Create full local path
-                if album_folder:
-                    local_path = self.config.sync_directory / album_folder / filename
-                else:
-                    local_path = self.config.sync_directory / filename
+                local_path = self.config.sync_directory / relative_path
 
                 # Create subdirectories if needed
                 local_path.parent.mkdir(parents=True, exist_ok=True)
@@ -341,7 +338,6 @@ class PhotoSyncer:
         # Use album filtering based on configuration
         return self.icloud_client.list_photos_from_filtered_albums(
             self.config,
-            include_main_library=True
         )
 
     def _sanitize_album_name(self, album_name: str) -> str:

@@ -124,22 +124,18 @@ class iCloudClient:
         Returns:
             True if request was successful, False otherwise
         """
-        try:
-            if self._api and hasattr(self._api, 'send_verification_code'):
-                # Try to get trusted devices and send to first one
-                if hasattr(self._api, 'trusted_devices') and self._api.trusted_devices:
-                    device = self._api.trusted_devices[0]
-                    self._api.send_verification_code(device)
-                    self.logger.info("📱 New 2FA code requested from Apple")
-                    return True
-                else:
-                    self.logger.warning("⚠️ No trusted devices found for 2FA")
-                    return False
+        if self._api and hasattr(self._api, 'send_verification_code'):
+            # Try to get trusted devices and send to first one
+            if hasattr(self._api, 'trusted_devices') and self._api.trusted_devices:
+                device = self._api.trusted_devices[0]
+                self._api.send_verification_code(device)
+                self.logger.info("📱 New 2FA code requested from Apple")
+                return True
             else:
-                self.logger.warning("⚠️ Cannot request new 2FA code - not supported")
+                self.logger.warning("⚠️ No trusted devices found for 2FA")
                 return False
-        except Exception as e:
-            self.logger.error(f"❌ Error requesting new 2FA code: {e}")
+        else:
+            self.logger.warning("⚠️ Cannot request new 2FA code - not supported")
             return False
 
     def requires_2fa(self) -> bool:
@@ -174,16 +170,12 @@ class iCloudClient:
         if not self._api:
             return False
 
-        try:
-            result = self._api.validate_2fa_code(code)
-            if result:
-                self.logger.info("✅ 2FA verification successful")
-            else:
-                self.logger.error("❌ 2FA verification failed")
-            return result
-        except Exception as e:
-            self.logger.error(f"❌ Error during 2FA verification: {e}")
-            return False
+        result = self._api.validate_2fa_code(code)
+        if result:
+            self.logger.info("✅ 2FA verification successful")
+        else:
+            self.logger.error("❌ 2FA verification failed")
+        return result
 
     def trust_session(self) -> bool:
         """Request to trust the current session to avoid future 2FA.
@@ -194,19 +186,15 @@ class iCloudClient:
         if not self._api:
             return False
 
-        try:
-            if hasattr(self._api, 'trust_session'):
-                result = self._api.trust_session()
-                if result:
-                    self.logger.info("✅ Session trusted successfully")
-                else:
-                    self.logger.warning("⚠️ Failed to trust session")
-                return result
+        if hasattr(self._api, 'trust_session'):
+            result = self._api.trust_session()
+            if result:
+                self.logger.info("✅ Session trusted successfully")
             else:
-                self.logger.warning("⚠️ Session trusting not supported by this version of pyicloud")
-                return False
-        except Exception as e:
-            self.logger.error(f"❌ Error trusting session: {e}")
+                self.logger.warning("⚠️ Failed to trust session")
+            return result
+        else:
+            self.logger.warning("⚠️ Session trusting not supported by this version of pyicloud")
             return False
 
     def cleanup_expired_sessions(self, max_age_days: int = 30) -> None:
@@ -215,42 +203,38 @@ class iCloudClient:
         Args:
             max_age_days: Maximum age in days for session files (default: 30)
         """
-        try:
-            if not self.session_dir.exists():
-                return
+        if not self.session_dir.exists():
+            return
 
-            current_time = time.time()
-            cutoff_time = current_time - (max_age_days * 24 * 60 * 60)  # Convert days to seconds
+        current_time = time.time()
+        cutoff_time = current_time - (max_age_days * 24 * 60 * 60)  # Convert days to seconds
 
-            cleaned_count = 0
-            total_size = 0
+        cleaned_count = 0
+        total_size = 0
 
-            # Clean up session files (cookies, cache, etc.)
-            for session_file in self.session_dir.iterdir():
-                if session_file.is_file():
-                    try:
-                        file_mtime = session_file.stat().st_mtime
-                        if file_mtime < cutoff_time:
-                            file_size = session_file.stat().st_size
-                            session_file.unlink()
-                            cleaned_count += 1
-                            total_size += file_size
-                            self.logger.debug(f"Removed expired session file: {session_file.name}")
-                    except (OSError, FileNotFoundError) as e:
-                        self.logger.warning(
-                            f"Failed to remove session file {session_file.name}: {e}"
-                        )
+        # Clean up session files (cookies, cache, etc.)
+        for session_file in self.session_dir.iterdir():
+            if session_file.is_file():
+                try:
+                    file_mtime = session_file.stat().st_mtime
+                    if file_mtime < cutoff_time:
+                        file_size = session_file.stat().st_size
+                        session_file.unlink()
+                        cleaned_count += 1
+                        total_size += file_size
+                        self.logger.debug(f"Removed expired session file: {session_file.name}")
+                except (OSError, FileNotFoundError) as e:
+                    self.logger.warning(
+                        f"Failed to remove session file {session_file.name}: {e}"
+                    )
 
-            if cleaned_count > 0:
-                self.logger.info(
-                    f"🧹 Cleaned up {cleaned_count} expired session files "
-                    f"({total_size / 1024:.1f} KB freed)"
-                )
-            else:
-                self.logger.debug("No expired session files found to clean up")
-
-        except Exception as e:
-            self.logger.error(f"❌ Error during session cleanup: {e}")
+        if cleaned_count > 0:
+            self.logger.info(
+                f"🧹 Cleaned up {cleaned_count} expired session files "
+                f"({total_size / 1024:.1f} KB freed)"
+            )
+        else:
+            self.logger.debug("No expired session files found to clean up")
 
     def list_photos(self) -> t.Iterator[dict[str, t.Any]]:
         """List all photos from iCloud.
@@ -262,39 +246,35 @@ class iCloudClient:
             self.logger.error("❌ Not authenticated or photos service unavailable")
             return
 
-        try:
-            self.logger.info("📥 Fetching photo list from iCloud...")
+        self.logger.info("📥 Fetching photo list from iCloud...")
 
-            # Get all photos from iCloud
-            photos = self._api.photos.all
-            total_count = len(photos)
+        # Get all photos from iCloud
+        photos = self._api.photos.all
+        total_count = len(photos)
 
-            self.logger.info(f"📊 Found {total_count} photos in iCloud")
+        self.logger.info(f"📊 Found {total_count} photos in iCloud")
 
-            for i, photo in enumerate(photos, 1):
-                if i % 100 == 0:  # Log progress every 100 photos
-                    self.logger.info(f"📥 Processing photo {i}/{total_count}")
+        for i, photo in enumerate(photos, 1):
+            if i % 100 == 0:  # Log progress every 100 photos
+                self.logger.info(f"📥 Processing photo {i}/{total_count}")
 
-                try:
-                    # Extract photo metadata
-                    photo_info = {
-                        'id': photo.id,
-                        'filename': photo.filename,
-                        'size': getattr(photo, 'size', 0),
-                        'created': getattr(photo, 'created', None),
-                        'modified': getattr(photo, 'modified', None),
-                        'album_name': 'All Photos',  # Default album for main library
-                        'photo_obj': photo  # Keep reference for downloading
-                    }
+            try:
+                # Extract photo metadata
+                photo_info = {
+                    'id': photo.id,
+                    'filename': photo.filename,
+                    'size': getattr(photo, 'size', 0),
+                    'created': getattr(photo, 'created', None),
+                    'modified': getattr(photo, 'modified', None),
+                    'album_name': 'All Photos',  # Default album for main library
+                    'photo_obj': photo  # Keep reference for downloading
+                }
 
-                    yield photo_info
+                yield photo_info
 
-                except Exception as e:
-                    self.logger.warning(f"⚠️ Error processing photo {i}: {e}")
-                    continue
-
-        except Exception as e:
-            self.logger.error(f"❌ Error fetching photos from iCloud: {e}")
+            except Exception as e:
+                self.logger.warning(f"⚠️ Error processing photo {i}: {e}")
+                continue
 
     def list_albums(self) -> t.Iterator[dict[str, t.Any]]:
         """List all albums from iCloud Photos.
@@ -306,42 +286,37 @@ class iCloudClient:
             self.logger.error("❌ Not authenticated or photos service unavailable")
             return
 
-        try:
-            self.logger.info("📥 Fetching album list from iCloud...")
+        self.logger.info("📥 Fetching album list from iCloud...")
 
-            # Get all albums from iCloud
-            albums = self._api.photos.albums
-            albums_list = list(albums.values())
+        # Get all albums from iCloud
+        albums = self._api.photos.albums
+        albums_list = list(albums.values())
+        self.logger.info(f"📊 Found {len(albums_list)} personal albums in iCloud")
 
-            # shared albums
-            album_library = self._api.photos.albums['Library']
-            albums_shared: AlbumContainer = album_library.service.shared_streams
-            albums_shared_list = list(albums_shared.values())
+        # shared albums
+        album_library = self._api.photos.albums['Library']
+        albums_shared: AlbumContainer = album_library.service.shared_streams
+        albums_shared_list = list(albums_shared.values())
+        self.logger.info(f"📊 Found {len(albums_shared_list)} shared albums in iCloud")
 
-            self.logger.info(f"📊 Found {len(albums)} albums in iCloud")
+        for album in albums_list + albums_shared_list:
+            is_shared = getattr(album, 'list_type', '') == "sharedstream"
+            # Extract album metadata
+            album_info = {
+                'id': getattr(album, 'id', None),
+                'name': album.name,
+                'photo_count': len(album),  # type: ignore
+                'is_shared': is_shared,
+                'album_obj': album  # Keep reference for accessing photos
+            }
 
-            for album in albums_list + albums_shared_list:
-                is_shared = getattr(album, 'list_type', '') == "sharedstream"
-                try:
-                    # Extract album metadata
-                    album_info = {
-                        'id': getattr(album, 'id', None),
-                        'name': album.name,
-                        'photo_count': len(album.photos),  # type: ignore
-                        'is_shared': is_shared,
-                        'album_obj': album  # Keep reference for accessing photos
-                    }
+            yield album_info
 
-                    yield album_info
-
-                except Exception as e:
-                    self.logger.warning(f"⚠️ Error processing album: {e}")
-                    continue
-
-        except Exception as e:
-            self.logger.error(f"❌ Error fetching albums from iCloud: {e}")
-
-    def list_photos_from_album(self, album_name: str) -> t.Iterator[dict[str, t.Any]]:
+    def list_photos_from_album(
+        self,
+        album_name: str,
+        is_shared: bool | None = None,
+    ) -> t.Iterator[dict[str, t.Any]]:
         """List photos from a specific album.
 
         Args:
@@ -354,60 +329,62 @@ class iCloudClient:
             self.logger.error("❌ Not authenticated or photos service unavailable")
             return
 
-        # Get all albums from iCloud
-        albums = self._api.photos.albums
-        albums_list = list(albums.values())
+        all_albums = []
 
-        # shared albums
-        album_library = self._api.photos.albums['Library']
-        albums_shared: AlbumContainer = album_library.service.shared_streams
-        albums_shared_list = list(albums_shared.values())
+        if is_shared is None or is_shared is False:
+            # Get all albums from iCloud
+            albums = self._api.photos.albums
+            albums_list = list(albums.values())
+            all_albums.extend(albums_list)
 
-        try:
-            # Find the album by name
-            target_album: BasePhotoAlbum | None = None
-            for album in albums_list + albums_shared_list:
-                if album.name == album_name:
-                    target_album = album
-                    break
+        if is_shared is None or is_shared is True:
+            # Get all shared albums from iCloud
+            album_library = self._api.photos.albums['Library']
+            albums_shared: AlbumContainer = album_library.service.shared_streams
+            albums_shared_list = list(albums_shared.values())
+            all_albums.extend(albums_shared_list)
 
-            if not target_album:
-                self.logger.error(f"❌ Album '{album_name}' not found")
-                return
+        # Find the album by name
+        target_album: BasePhotoAlbum | None = None
+        for album in all_albums:
+            if album.name == album_name:
+                target_album = album
+                break
 
-            self.logger.info(f"📥 Fetching photos from album '{album_name}'...")
+        if not target_album:
+            self.logger.error(f"❌ Album '{album_name}' not found")
+            return
 
-            photos = target_album  # type: ignore
-            total_count = len(target_album)
+        self.logger.info(f"📥 Fetching photos from album '{album_name}'...")
 
-            self.logger.info(f"📊 Found {total_count} photos in album '{album_name}'")
+        photos = target_album  # type: ignore
+        total_count = len(target_album)
 
-            for i, photo in enumerate(photos, 1):
-                if i % 50 == 0:  # Log progress every 50 photos for albums
-                    self.logger.info(f"📥 Processing photo {i}/{total_count} "
-                                     f"from album '{album_name}'")
+        self.logger.info(f"📊 Found {total_count} photos in album '{album_name}'")
 
-                try:
-                    # Extract photo metadata
-                    photo_info = {
-                        'id': photo.id,
-                        'filename': photo.filename,
-                        'size': getattr(photo, 'size', 0),
-                        'created': getattr(photo, 'created', None),
-                        'modified': getattr(photo, 'modified', None),
-                        'album_name': album_name,
-                        'photo_obj': photo  # Keep reference for downloading
-                    }
+        for i, photo in enumerate(photos, 1):
+            if i % 50 == 0:  # Log progress every 50 photos for albums
+                self.logger.info(f"📥 Processing photo {i}/{total_count} "
+                                 f"from album '{album_name}'")
 
-                    yield photo_info
+            try:
+                # Extract photo metadata
+                photo_info = {
+                    'id': photo.id,
+                    'filename': photo.filename,
+                    'size': getattr(photo, 'size', 0),
+                    'created': getattr(photo, 'created', None),
+                    'modified': getattr(photo, 'modified', None),
+                    'album_name': album_name,
+                    'photo_obj': photo  # Keep reference for downloading
+                }
 
-                except Exception as e:
-                    self.logger.warning(f"⚠️ Error processing photo {i} "
-                                        f"from album '{album_name}': {e}")
-                    continue
+                yield photo_info
 
-        except Exception as e:
-            self.logger.error(f"❌ Error fetching photos from album '{album_name}': {e}")
+            except Exception as e:
+                self.logger.warning(f"⚠️ Error processing photo {i} "
+                                    f"from album '{album_name}': {e}")
+                continue
 
     def list_photos_from_albums(self, album_names: list[str],
                                 include_main_library: bool = True) -> t.Iterator[dict[str, t.Any]]:
@@ -468,29 +445,24 @@ class iCloudClient:
         albums_shared: AlbumContainer = album_library.service.shared_streams
         albums_shared_list = list(albums_shared.values())
 
-        try:
-            # Get all available album names
-            available_albums = {album.name for album in albums_list + albums_shared_list}
+        # Get all available album names
+        available_albums = {album.name for album in albums_list + albums_shared_list}
 
-            existing_albums = []
-            missing_albums = []
+        existing_albums = []
+        missing_albums = []
 
-            for album_name in album_names:
-                if album_name in available_albums:
-                    existing_albums.append(album_name)
-                else:
-                    missing_albums.append(album_name)
+        for album_name in album_names:
+            if album_name in available_albums:
+                existing_albums.append(album_name)
+            else:
+                missing_albums.append(album_name)
 
-            if missing_albums:
-                self.logger.warning(f"⚠️ Missing albums: {', '.join(missing_albums)}")
+        if missing_albums:
+            self.logger.warning(f"⚠️ Missing albums: {', '.join(missing_albums)}")
 
-            return list(available_albums), existing_albums, missing_albums
+        return list(available_albums), existing_albums, missing_albums
 
-        except Exception as e:
-            self.logger.error(f"❌ Error verifying albums: {e}")
-            return [], [], album_names
-
-    def get_filtered_albums(self, config) -> t.Iterator[dict[str, t.Any]]:
+    def get_filtered_albums(self, config: BaseConfig) -> t.Iterator[dict[str, t.Any]]:
         """Get albums filtered by configuration settings.
 
         Args:
@@ -503,36 +475,31 @@ class iCloudClient:
             self.logger.error("❌ Not authenticated or photos service unavailable")
             return
 
-        try:
-            for album_info in self.list_albums():
-                is_shared = album_info.get('is_shared', False)
-                album_name = album_info['name']
+        for album_info in self.list_albums():
+            is_shared = album_info.get('is_shared', False)
+            album_name = album_info['name']
 
-                # Filter by album type (personal vs shared)
-                if is_shared:
-                    if not config.include_shared_albums:
-                        continue
-                    # Check shared album allow-list
-                    if (config.shared_album_names_to_include and
-                            album_name not in config.shared_album_names_to_include):
-                        continue
-                else:
-                    if not config.include_personal_albums:
-                        continue
-                    # Check personal album allow-list
-                    if (config.personal_album_names_to_include and
-                            album_name not in config.personal_album_names_to_include):
-                        continue
+            # Filter by album type (personal vs shared)
+            if is_shared:
+                if not config.include_shared_albums:
+                    continue
+                # Check shared album allow-list
+                if (config.shared_album_names_to_include and
+                        album_name not in config.shared_album_names_to_include):
+                    continue
+            else:
+                if not config.include_personal_albums:
+                    continue
+                # Check personal album allow-list
+                if (config.personal_album_names_to_include and
+                        album_name not in config.personal_album_names_to_include):
+                    continue
 
-                yield album_info
-
-        except Exception as e:
-            self.logger.error(f"❌ Error filtering albums: {e}")
+            yield album_info
 
     def list_photos_from_filtered_albums(
             self,
-            config,
-            include_main_library: bool = True
+            config: BaseConfig
     ) -> t.Iterator[dict[str, t.Any]]:
         """List photos from albums based on configuration filtering.
 
@@ -545,16 +512,6 @@ class iCloudClient:
         """
         processed_photo_ids = set()  # Track to avoid duplicates
 
-        # Include main library photos if requested
-        if include_main_library:
-            self.logger.info("📥 Including photos from main library")
-            for photo_info in self.list_photos():
-                if photo_info['id'] not in processed_photo_ids:
-                    processed_photo_ids.add(photo_info['id'])
-                    # Add main library designation
-                    photo_info['album_name'] = None  # Main library photos have no album
-                    yield photo_info
-
         # Include photos from filtered albums
         for album_info in self.get_filtered_albums(config):
             album_name = album_info['name']
@@ -563,7 +520,7 @@ class iCloudClient:
 
             self.logger.info(f"📥 Including photos from {album_type} album '{album_name}'")
 
-            for photo_info in self.list_photos_from_album(album_name):
+            for photo_info in self.list_photos_from_album(album_name, is_shared=is_shared):
                 if photo_info['id'] not in processed_photo_ids:
                     processed_photo_ids.add(photo_info['id'])
                     yield photo_info
@@ -642,37 +599,33 @@ def cleanup_sessions(max_age_days: int = 30, session_dir: t.Optional[Path] = Non
     if session_dir is None:
         session_dir = Path.home() / "icloud_photo_sync" / "sessions"
 
-    try:
-        if not session_dir.exists():
-            logger.debug("Session directory does not exist, nothing to clean")
-            return
+    if not session_dir.exists():
+        logger.debug("Session directory does not exist, nothing to clean")
+        return
 
-        current_time = time.time()
-        cutoff_time = current_time - (max_age_days * 24 * 60 * 60)
+    current_time = time.time()
+    cutoff_time = current_time - (max_age_days * 24 * 60 * 60)
 
-        cleaned_count = 0
-        total_size = 0
+    cleaned_count = 0
+    total_size = 0
 
-        for session_file in session_dir.iterdir():
-            if session_file.is_file():
-                try:
-                    file_mtime = session_file.stat().st_mtime
-                    if file_mtime < cutoff_time:
-                        file_size = session_file.stat().st_size
-                        session_file.unlink()
-                        cleaned_count += 1
-                        total_size += file_size
-                        logger.debug(f"Removed expired session file: {session_file.name}")
-                except (OSError, FileNotFoundError) as e:
-                    logger.warning(f"Failed to remove session file {session_file.name}: {e}")
+    for session_file in session_dir.iterdir():
+        if session_file.is_file():
+            try:
+                file_mtime = session_file.stat().st_mtime
+                if file_mtime < cutoff_time:
+                    file_size = session_file.stat().st_size
+                    session_file.unlink()
+                    cleaned_count += 1
+                    total_size += file_size
+                    logger.debug(f"Removed expired session file: {session_file.name}")
+            except (OSError, FileNotFoundError) as e:
+                logger.warning(f"Failed to remove session file {session_file.name}: {e}")
 
-        if cleaned_count > 0:
-            logger.info(
-                f"🧹 Cleaned up {cleaned_count} expired session files "
-                f"({total_size / 1024:.1f} KB freed)"
-            )
-        else:
-            logger.debug("No expired session files found to clean up")
-
-    except Exception as e:
-        logger.error(f"❌ Error during session cleanup: {e}")
+    if cleaned_count > 0:
+        logger.info(
+            f"🧹 Cleaned up {cleaned_count} expired session files "
+            f"({total_size / 1024:.1f} KB freed)"
+        )
+    else:
+        logger.debug("No expired session files found to clean up")
