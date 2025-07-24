@@ -66,6 +66,9 @@ class BaseConfig(ABC):
         self.sync_interval_minutes = float(os.getenv('SYNC_INTERVAL_MINUTES', '2'))
         self.maintenance_interval_hours = float(os.getenv('MAINTENANCE_INTERVAL_HOURS', '1'))
 
+        # Database path configuration
+        self.database_parent_directory = os.getenv('DATABASE_PARENT_DIRECTORY', '_data')
+
     @property
     def icloud_username(self) -> str:
         """Get iCloud username from credential store."""
@@ -101,6 +104,31 @@ class BaseConfig(ABC):
         if not v and self.enable_pushover:
             raise ValueError("pushover_api_token is required (store in keyring)")
         return v or ""
+
+    @property
+    def database_path(self) -> Path:
+        """Get the full database path with environment variable expansion."""
+        # Expand environment variables in the database parent directory
+        expanded_path = os.path.expandvars(self.database_parent_directory)
+
+        # Cross-platform environment variable mapping
+        if '%LOCALAPPDATA%' in expanded_path and os.name != 'nt':
+            # Map Windows %LOCALAPPDATA% to Linux equivalent
+            home = os.path.expanduser('~')
+            expanded_path = expanded_path.replace('%LOCALAPPDATA%', f"{home}/.local/share")
+
+        database_dir = Path(expanded_path)
+
+        # Handle relative vs absolute paths
+        if not database_dir.is_absolute():
+            # Relative paths are relative to the sync directory
+            database_dir = self.sync_directory / database_dir
+
+        # Ensure database directory exists
+        database_dir.mkdir(parents=True, exist_ok=True)
+
+        # Return full path to the database file
+        return database_dir / "deletion_tracker.db"
 
     def validate(self) -> None:
         """Validate configuration settings."""
@@ -161,6 +189,16 @@ class BaseConfig(ABC):
         if self.maintenance_interval_hours * 60 <= self.sync_interval_minutes:
             errors.append("MAINTENANCE_INTERVAL_HOURS * 60 must be bigger than "
                           "SYNC_INTERVAL_MINUTES")
+
+        # Validate database path configuration
+        try:
+            database_path = self.database_path
+            # Test if the directory is accessible and writable
+            database_path.parent.mkdir(parents=True, exist_ok=True)
+            if not os.access(database_path.parent, os.W_OK):
+                errors.append(f"Database directory is not writable: {database_path.parent}")
+        except (OSError, PermissionError, ValueError) as e:
+            errors.append(f"Invalid database path configuration: {e}")
 
         if errors:
             raise ValueError(f"Configuration errors: {', '.join(errors)}")

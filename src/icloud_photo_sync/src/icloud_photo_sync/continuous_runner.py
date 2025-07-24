@@ -206,7 +206,7 @@ class ContinuousRunner:
 
                 # Create deletion tracker for maintenance operations
                 deletion_tracker = DeletionTracker(
-                    str(self.config.sync_directory / "deletion_tracker.db")
+                    str(self.config.database_path)
                 )
 
                 try:

@@ -24,7 +24,7 @@ class PhotoSyncer:
         self.config.ensure_sync_directory()
 
         self.deletion_tracker = DeletionTracker(
-            str(config.sync_directory / "deletion_tracker.db")
+            str(self.config.database_path)
         )
         self.stats = {
             'total_photos': 0,

@@ -185,14 +185,33 @@ specified.
 
 #### 2.3.2 Album-Aware Deletion Tracking
 
-- [ ] Enhance **deletion tracking schema**:
-  - [ ] Update database to track deletions by (photo_name, source_album_name)
-  - [ ] Add migration for existing deletion records
-  - [ ] Ensure deletion tracking works independently per album
-- [ ] Update **deletion detection logic**:
-  - [ ] Check for locally deleted photos per album context
-  - [ ] Handle cases where same photo exists in multiple albums
-  - [ ] Prevent re-download of photos deleted from specific albums
+- [x] Enhance **deletion tracking schema**:
+  - [x] Update database to track deletions by (photo_name, source_album_name)
+  - [x] Add migration for existing deletion records
+  - [x] Ensure deletion tracking works independently per album
+- [x] Update **deletion detection logic**:
+  - [x] Check for locally deleted photos per album context
+  - [x] Handle cases where same photo exists in multiple albums
+  - [x] Prevent re-download of photos deleted from specific albums
+
+#### 2.3.3 Database Path Configuration
+
+- [x] Implement **configurable database location**:
+  - [x] Add database parent directory setting in configuration file
+  - [x] Support both relative and absolute paths
+  - [x] Relative paths should be relative to photo download directory
+  - [x] Set default database location to "_data" subfolder (e.g.,
+        "test_photos/_data")
+- [x] Add **environment variable support**:
+  - [x] Support environment variables in database path configuration
+  - [x] Implement cross-platform "%LOCALAPPDATA%" environment variable support
+  - [x] Map "%LOCALAPPDATA%" to appropriate Linux user settings directory
+  - [x] Add path expansion and validation for environment variables
+- [x] Update **database initialization logic**:
+  - [x] Modify DeletionTracker to accept configurable database path
+  - [x] Ensure database directory creation with proper permissions
+  - [x] Update backup and recovery mechanisms for configurable paths
+  - [x] Add configuration validation for database path settings
 
 ---
 
@@ -224,6 +243,13 @@ specified.
   - [ ] Test album-aware deletion tracking
   - [ ] Test database migration for album-aware schema
   - [ ] Test handling of photos in multiple albums
+- [ ] Add **database path configuration tests**:
+  - [ ] Test custom database path configuration
+  - [ ] Test environment variable expansion (%LOCALAPPDATA%, $HOME)
+  - [ ] Test relative vs absolute path handling
+  - [ ] Test cross-platform path compatibility
+  - [ ] Test database creation in custom paths
+  - [ ] Test error handling for invalid/inaccessible paths
 - [ ] (Optional) Add **end-to-end test** using dummy or sandbox iCloud
 - [ ] Add all tests to CI/CD
 - [x] Achieve ≥ **80% test coverage** for core sync logic (✅ **85.21%**
@@ -270,6 +296,13 @@ specified.
   - [ ] Add `shared_album_names_to_include` comma-separated list parameter
   - [ ] Update .env.example with album filtering examples
   - [ ] Add configuration validation for album parameters
+- [x] Add **database path configuration**:
+  - [x] Add database location parameter to .env template
+  - [x] Support relative and absolute paths in database configuration
+  - [x] Document environment variable usage (e.g.,
+        %LOCALAPPDATA%/foto_pool/deletion_tracker)
+  - [x] Add cross-platform environment variable mapping documentation
+  - [x] Set default database path to "_data" in configuration examples
 - [ ] Ensure credentials are not bundled in builds
 - [x] Implement robust **logging** to console & file
 
@@ -280,6 +313,9 @@ specified.
 - [ ] Write **user guide**:
   - [ ] How to install (Windows & Linux)
   - [ ] How to configure sync dir & credentials
+  - [ ] How to configure **database location**
+  - [ ] How to use environment variables in database path
+  - [ ] Cross-platform database path configuration examples
   - [ ] How to configure **Pushover notifications**
   - [ ] How **2FA web interface** works
   - [ ] How to run dry-run mode
@@ -305,6 +341,8 @@ specified.
   - [ ] **Album filtering** works correctly (personal & shared)
   - [ ] **Album allow-lists** are respected
   - [ ] **Album-aware tracking** prevents duplicates correctly
+  - [ ] **Database path configuration** works with relative/absolute paths
+  - [ ] **Environment variables** in database paths work cross-platform
   - [ ] No credentials leaked in binary
   - [ ] Handles credential failures gracefully
 - [ ] Test Linux executable:
@@ -312,6 +350,7 @@ specified.
   - [ ] All album filtering features work on Linux
   - [ ] Cross-platform session storage works
   - [ ] Cross-platform album-aware database works
+  - [ ] Cross-platform database path configuration works correctly
 
 ---
 

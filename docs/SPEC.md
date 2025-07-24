@@ -153,6 +153,18 @@ automatically using **GitHub Actions**.
      restored from the backup-copy.
    - If the local database and the backup-copy are not availabe a new database
      shall be created.
+   - The database's parent directory location shall be specifiable in the
+     settings-file. It shall be possible to provide relative and absolute path.
+     If a relative path is provided it shall refer to the folder to which the
+     photos are downloaded
+   - The database's default value shall be "_data", i.e. inside the photos
+     folder, e.g. "test_photos/_data".
+   - It shall be possible to provide environment-variables, e.g.
+     "%LOCALAPPDATA%/foto_pool/deletion_tracker"
+   - The environment variable "%LOCALAPPDATA%" shall be usable in windows and
+     linux environments. In linux environments, this shall be replaced by a
+     appropriate directory path, where user settings are stored on linux
+     systems.
 
 4. **Idempotent Runs**
    - Running the tool multiple times must not create duplicate files or
