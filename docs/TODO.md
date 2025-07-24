@@ -78,6 +78,25 @@ specified.
   - [ ] Record downloads with source album information
   - [ ] Ensure deletion tracking works per album
 
+#### 2.1.3 Continuous Execution Mode
+
+- [ ] Implement **execution mode configuration**:
+  - [ ] Add `execution_mode` parameter to settings file (single/continuous)
+  - [ ] Set default execution mode to "single" if not specified
+  - [ ] Add configuration validation for execution mode parameter
+- [ ] Implement **single execution mode**:
+  - [ ] Start synchronization and stop after completion
+  - [ ] Ensure proper cleanup and resource release after sync
+- [ ] Implement **continuous execution mode**:
+  - [ ] Run synchronization in a loop with controlled intervals
+  - [ ] Wait 2 minutes after successful sync completion before next run
+  - [ ] Handle graceful shutdown on interruption (Ctrl+C, SIGTERM)
+- [ ] Implement **hourly database maintenance** in continuous mode:
+  - [ ] Perform database integrity check every hour
+  - [ ] Create database backups every hour (see chapter Local Deletion Tracking)
+  - [ ] Schedule maintenance independently from sync cycles
+  - [ ] Log all maintenance activities
+
 ### 2.2 2FA Authentication System
 
 #### 2.2.1 📱 Pushover Notification Integration
@@ -121,11 +140,11 @@ specified.
 - [x] Implement **session timeout** mechanisms
 - [x] Add **rate limiting** for 2FA attempts
 - [x] Ensure no sensitive data in logs
-- [ ] Add **global exception handling** in main entry-point function:
-  - [ ] Implement global try-except block around main function
-  - [ ] Send Pushover notification for unhandled exceptions
-  - [ ] Include relevant error details in notification (without sensitive data)
-  - [ ] Ensure graceful application shutdown on critical errors
+- [x] Add **global exception handling** in main entry-point function:
+  - [x] Implement global try-except block around main function
+  - [x] Send Pushover notification for unhandled exceptions
+  - [x] Include relevant error details in notification (without sensitive data)
+  - [x] Ensure graceful application shutdown on critical errors
 
 #### 2.2.6 📝 2FA Logging
 

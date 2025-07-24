@@ -11,7 +11,7 @@ from dataclasses import dataclass
 logger = logging.getLogger(__name__)
 
 
-PUSOVER_PRIORITY = {
+PUSHOVER_PRIORITY = {
     "low": -1,
     "normal": 0,
     "high": 1,
@@ -70,7 +70,7 @@ class PushoverService:
                 "user": self.config.user_key,
                 "title": title,
                 "message": message,
-                "priority": PUSOVER_PRIORITY["high"],
+                "priority": PUSHOVER_PRIORITY["high"],
                 "url": web_server_url,
                 "url_title": "Enter 2FA Code"
             }
@@ -126,7 +126,7 @@ class PushoverService:
                 "user": self.config.user_key,
                 "title": title,
                 "message": message,
-                "priority": PUSOVER_PRIORITY["low"],
+                "priority": PUSHOVER_PRIORITY["low"],
             }
 
             if self.config.device:
@@ -160,6 +160,71 @@ class PushoverService:
             return False
         except Exception as e:
             logger.error(f"Unexpected error sending Pushover notification: {e}")
+            return False
+
+    def send_error_notification(
+        self, error_message: str, error_type: str = "Application Error"
+    ) -> bool:
+        """
+        Send a notification when an unhandled exception occurs.
+
+        Args:
+            error_message: The error message to include (without sensitive data)
+            error_type: Type of error (default: "Application Error")
+
+        Returns:
+            True if notification was sent successfully, False otherwise
+        """
+        try:
+            title = f"iCloud Photo Sync - {error_type}"
+
+            # Truncate error message if too long for Pushover
+            max_message_length = 1000
+            if len(error_message) > max_message_length:
+                error_message = error_message[:max_message_length - 3] + "..."
+
+            message = (f"An unexpected error occurred:\n\n{error_message}\n\n"
+                       "Please check the application logs for more details.")
+
+            payload = {
+                "token": self.config.api_token,
+                "user": self.config.user_key,
+                "title": title,
+                "message": message,
+                "priority": PUSHOVER_PRIORITY["high"],  # High priority for errors
+            }
+
+            if self.config.device:
+                payload["device"] = self.config.device
+
+            logger.info("Sending error notification via Pushover")
+
+            response = requests.post(
+                self.PUSHOVER_API_URL,
+                data=payload,
+                timeout=10
+            )
+
+            if response.status_code == 200:
+                response_data = response.json()
+                if response_data.get("status") == 1:
+                    logger.info("Error notification sent successfully via Pushover")
+                    return True
+                else:
+                    logger.error(
+                        f"Pushover API error: {response_data.get('errors', 'Unknown error')}")
+                    return False
+            else:
+                logger.error(
+                    f"Pushover API request failed with status {response.status_code}: "
+                    f"{response.text}")
+                return False
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Network error sending error notification: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Unexpected error sending error notification: {e}")
             return False
 
     def test_connection(self) -> bool:

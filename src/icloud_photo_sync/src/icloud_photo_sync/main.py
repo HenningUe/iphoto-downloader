@@ -2,10 +2,84 @@
 
 import sys
 
-from icloud_photo_sync.config import get_config
+from auth2fa.pushover_service import PushoverService
+from icloud_photo_sync.config import get_config, BaseConfig
 from icloud_photo_sync.sync import PhotoSyncer
 from icloud_photo_sync.logger import setup_logging, get_logger
 from icloud_photo_sync import manage_credentials
+
+
+def send_error_notification(
+    config: BaseConfig, error_message: str, error_type: str = "Application Error"
+) -> None:
+    """
+    Send an error notification via Pushover if configured.
+
+    Args:
+        config: Application configuration
+        error_message: Error message to send (sensitive data already filtered)
+        error_type: Type of error for the notification title
+    """
+    try:
+        if not config.enable_pushover:
+            return
+
+        pushover_config = config.get_pushover_config()
+        if not pushover_config:
+            return
+
+        pushover_service = PushoverService(pushover_config)
+        pushover_service.send_error_notification(error_message, error_type)
+
+    except Exception as e:
+        # Don't let error notification failures crash the application
+        # Just log it if we have a logger available
+        try:
+            logger = get_logger()
+            logger.error(f"Failed to send error notification: {e}")
+        except Exception:
+            # If even logging fails, just ignore it to prevent recursive errors
+            pass
+
+
+def sanitize_error_message(error: Exception) -> str:
+    """
+    Sanitize error message by removing potentially sensitive information.
+
+    Args:
+        error: The exception to sanitize
+
+    Returns:
+        Sanitized error message safe for notifications
+    """
+    error_str = str(error)
+    error_type = type(error).__name__
+
+    # Remove common sensitive patterns
+    sensitive_patterns = [
+        # Passwords, tokens, keys
+        r'password[=:]\s*[^\s]+',
+        r'token[=:]\s*[^\s]+',
+        r'key[=:]\s*[^\s]+',
+        r'secret[=:]\s*[^\s]+',
+        # File paths that might contain usernames
+        r'[cC]:\\[uU]sers\\[^\\]+',
+        r'/[hH]ome/[^/]+',
+        # Email addresses and usernames in URLs
+        r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}',
+    ]
+
+    import re
+    sanitized = error_str
+    for pattern in sensitive_patterns:
+        sanitized = re.sub(pattern, '[REDACTED]', sanitized, flags=re.IGNORECASE)
+
+    # Limit message length and add error type
+    max_length = 500
+    if len(sanitized) > max_length:
+        sanitized = sanitized[:max_length - 3] + "..."
+
+    return f"{error_type}: {sanitized}"
 
 
 def main() -> None:
@@ -13,26 +87,22 @@ def main() -> None:
     print("🌟 iCloud Photo Sync Tool v0.1.0")
     print("==================================")
 
+    config = None
     logger = None
 
-    config = get_config()
-
-    if not config.icloud_has_stored_credentials():
-        print("🔑 iCloud credentials not found in keyring.")
-        manage_credentials.icloud_store_credentials()
-
-    if config.enable_pushover and not config.pushover_has_stored_credentials():
-        print("🔑 Pushover credentials not found in keyring.")
-        manage_credentials.pushover_store_credentials()
-
     try:
+        config = get_config()
+
+        if not config.icloud_has_stored_credentials():
+            print("🔑 iCloud credentials not found in keyring.")
+            manage_credentials.icloud_store_credentials()
+
+        if config.enable_pushover and not config.pushover_has_stored_credentials():
+            print("🔑 Pushover credentials not found in keyring.")
+            manage_credentials.pushover_store_credentials()
+
         config.validate()
-    except ValueError as e:
-        print(f"❌ Configuration error: {e}")
-        print("💡 Please check your .env file and ensure all required settings are configured.")
-        sys.exit(1)
 
-    try:
         # Set up logging with config
         setup_logging(config.get_log_level())
         logger = get_logger()
@@ -40,7 +110,6 @@ def main() -> None:
         logger.info("Starting iCloud Photo Sync Tool")
         logger.info(f"Configuration: {config}")
 
-        # Initialize and run syncer
         syncer = PhotoSyncer(config)
         try:
             success = syncer.sync()
@@ -53,15 +122,32 @@ def main() -> None:
                 print("\n❌ Sync failed!")
                 sys.exit(1)
         finally:
-            # Ensure proper cleanup of database connections
             syncer.cleanup()
+
     except KeyboardInterrupt:
-        print("\n🛑 Sync interrupted by user")
+        # Handle global keyboard interrupt
+        print("\n🛑 Application interrupted by user")
         sys.exit(130)
     except Exception as e:
-        print(f"❌ Unexpected error: {e}")
+        # Global exception handler - catch any unhandled exceptions
+        error_message = f"Critical application error: {e}"
+        print(f"❌ {error_message}")
+
+        # Log the error if possible
         if logger:
-            logger.error(f"Application failed with unexpected error: {e}")
+            logger.critical(f"Unhandled exception in main: {e}", exc_info=True)
+
+        # Send error notification via Pushover if configured
+        if config:
+            try:
+                sanitized_message = sanitize_error_message(e)
+                send_error_notification(config, sanitized_message, "Critical Error")
+            except Exception as notification_error:
+                # Don't let notification failures prevent proper error handling
+                if logger:
+                    logger.error(f"Failed to send error notification: {notification_error}")
+
+        # Ensure graceful application shutdown
         sys.exit(1)
 
 

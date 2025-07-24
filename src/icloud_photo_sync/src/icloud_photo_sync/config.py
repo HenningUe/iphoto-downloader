@@ -40,7 +40,7 @@ class BaseConfig(ABC):
 
         # Pushover notification settings
         self.pushover_device: str | None = os.getenv('PUSHOVER_DEVICE', '')
-        self.enable_pushover: bool = os.getenv('ENABLE_PUSHOVER', 'false').lower() == 'true'
+        self.enable_pushover: bool = os.getenv('ENABLE_PUSHOVER', 'true').lower() == 'true'
 
         # Album filtering settings
         self.include_personal_albums: bool = (
