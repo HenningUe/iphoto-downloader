@@ -441,3 +441,21 @@ class PhotoSyncer:
         )
 
         return stats
+
+    def cleanup(self) -> None:
+        """Clean up resources and close database connections.
+
+        This method should be called when the syncer is no longer needed,
+        especially important on Windows to prevent file handle leaks.
+        """
+        try:
+            if hasattr(self, 'deletion_tracker') and self.deletion_tracker:
+                self.deletion_tracker.close()
+                self.logger.debug("✅ Deletion tracker database connections closed")
+        except Exception as e:
+            # Log but don't raise - cleanup should be best effort
+            self.logger.warning(f"⚠️ Error during cleanup: {e}")
+
+    def __del__(self):
+        """Destructor to ensure cleanup happens even if not called explicitly."""
+        self.cleanup()

@@ -121,6 +121,11 @@ specified.
 - [x] Implement **session timeout** mechanisms
 - [x] Add **rate limiting** for 2FA attempts
 - [x] Ensure no sensitive data in logs
+- [ ] Add **global exception handling** in main entry-point function:
+  - [ ] Implement global try-except block around main function
+  - [ ] Send Pushover notification for unhandled exceptions
+  - [ ] Include relevant error details in notification (without sensitive data)
+  - [ ] Ensure graceful application shutdown on critical errors
 
 #### 2.2.6 📝 2FA Logging
 
@@ -139,23 +144,23 @@ specified.
 
 #### 2.3.1 Database Safety & Recovery
 
-- [ ] Implement **database safety copy mechanism**:
-  - [ ] Create safety copy of local database before each synchronization run
-  - [ ] Store safety copy in designated backup location
-  - [ ] Implement automatic backup rotation (keep recent backups)
-- [ ] Implement **database corruption detection**:
-  - [ ] Check database integrity at startup
-  - [ ] Detect when database cannot be opened
-  - [ ] Implement database corruption recovery logic
-- [ ] Implement **database recovery procedures**:
-  - [ ] Restore from safety copy when database is corrupted
-  - [ ] Restore from safety copy when local database is missing
-  - [ ] Create new database when both local and safety copy are unavailable
-  - [ ] Log all database recovery operations
-- [ ] Add **backup management**:
-  - [ ] Cleanup old safety copies to prevent disk space issues
-  - [ ] Verify safety copy integrity before using for recovery
-  - [ ] Add configuration for backup retention policy
+- [x] Implement **database safety copy mechanism**:
+  - [x] Create safety copy of local database before each synchronization run
+  - [x] Store safety copy in designated backup location
+  - [x] Implement automatic backup rotation (keep recent backups)
+- [x] Implement **database corruption detection**:
+  - [x] Check database integrity at startup
+  - [x] Detect when database cannot be opened
+  - [x] Implement database corruption recovery logic
+- [x] Implement **database recovery procedures**:
+  - [x] Restore from safety copy when database is corrupted
+  - [x] Restore from safety copy when local database is missing
+  - [x] Create new database when both local and safety copy are unavailable
+  - [x] Log all database recovery operations
+- [x] Add **backup management**:
+  - [x] Cleanup old safety copies to prevent disk space issues
+  - [x] Verify safety copy integrity before using for recovery
+  - [x] Add configuration for backup retention policy
 
 #### 2.3.2 Album-Aware Deletion Tracking
 

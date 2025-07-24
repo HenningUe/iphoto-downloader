@@ -1,6 +1,8 @@
 """Local deletion tracking using SQLite database."""
 
 import sqlite3
+import shutil
+import glob
 from pathlib import Path
 from datetime import datetime
 
@@ -11,13 +13,16 @@ class DeletionTracker:
     """Tracks locally deleted photos to prevent re-downloading."""
 
     def __init__(self, db_path: str = "deletion_tracker.db") -> None:
-        """Initialize deletion tracker.
+        """Initialize deletion tracker with database safety checks.
 
         Args:
             db_path: Path to SQLite database file
         """
         self.db_path = Path(db_path)
-        self._init_database()
+
+        # Ensure database safety before any operations
+        if not self.ensure_database_safety():
+            raise RuntimeError("Failed to ensure database safety")
 
     @property
     def logger(self):
@@ -68,6 +73,206 @@ class DeletionTracker:
         except Exception as e:
             self.logger.error(f"Failed to initialize deletion tracker database: {e}")
             raise
+
+    def create_backup(self, max_backups: int = 5) -> bool:
+        """Create a backup copy of the database before sync operations.
+
+        Args:
+            max_backups: Maximum number of backup files to keep
+
+        Returns:
+            True if backup was created successfully, False otherwise
+        """
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_path = self.db_path.with_suffix(f".backup_{timestamp}.db")
+
+            # Create backup directory if it doesn't exist
+            backup_path.parent.mkdir(parents=True, exist_ok=True)
+
+            # Copy the database file
+            shutil.copy2(self.db_path, backup_path)
+
+            # Clean up old backups
+            self._cleanup_old_backups(max_backups)
+
+            self.logger.info(f"Database backup created: {backup_path}")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"Failed to create database backup: {e}")
+            return False
+
+    def _cleanup_old_backups(self, max_backups: int):
+        """Remove old backup files, keeping only the most recent ones."""
+        try:
+            backup_pattern = str(self.db_path.with_suffix(".backup_*.db"))
+            backup_files = sorted(glob.glob(backup_pattern), reverse=True)
+
+            # Remove excess backups
+            for backup_file in backup_files[max_backups:]:
+                Path(backup_file).unlink()
+                self.logger.info(f"Removed old backup: {backup_file}")
+
+        except Exception as e:
+            self.logger.error(f"Failed to cleanup old backups: {e}")
+
+    def check_database_integrity(self) -> bool:
+        """Check if the database is not corrupted.
+
+        Returns:
+            True if database is intact, False if corrupted
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("PRAGMA integrity_check")
+                result = cursor.fetchone()
+
+                if result and result[0] == "ok":
+                    self.logger.debug("Database integrity check passed")
+                    return True
+                else:
+                    self.logger.error(f"Database integrity check failed: {result}")
+                    return False
+
+        except Exception as e:
+            self.logger.error(f"Database integrity check failed with exception: {e}")
+            return False
+
+    def recover_from_backup(self) -> bool:
+        """Attempt to recover database from the most recent backup.
+
+        Returns:
+            True if recovery was successful, False otherwise
+        """
+        try:
+            backup_pattern = str(self.db_path.with_suffix(".backup_*.db"))
+            backup_files = sorted(glob.glob(backup_pattern), reverse=True)
+
+            if not backup_files:
+                self.logger.error("No backup files found for recovery")
+                return False
+
+            latest_backup = backup_files[0]
+
+            # Test backup integrity before restoring
+            backup_path = Path(latest_backup)
+            test_conn = None
+            try:
+                test_conn = sqlite3.connect(backup_path)
+                cursor = test_conn.cursor()
+                cursor.execute("PRAGMA integrity_check")
+                result = cursor.fetchone()
+
+                if not result or result[0] != "ok":
+                    self.logger.error(f"Backup file is also corrupted: {latest_backup}")
+                    return False
+
+            except Exception as e:
+                self.logger.error(f"Cannot validate backup file {latest_backup}: {e}")
+                return False
+            finally:
+                if test_conn:
+                    test_conn.close()
+
+            # Create a backup of the corrupted database
+            if self.db_path.exists():
+                try:
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    corrupted_backup = self.db_path.with_suffix(f".corrupted_{timestamp}.db")
+
+                    # Force close connections and wait for Windows file handles
+                    import gc
+                    gc.collect()
+                    import time
+                    time.sleep(0.1)
+
+                    shutil.move(self.db_path, corrupted_backup)
+                    self.logger.info(f"Moved corrupted database to: {corrupted_backup}")
+                except Exception as move_error:
+                    self.logger.warning(f"Could not move corrupted database: {move_error}")
+                    # Try to delete instead
+                    try:
+                        self.db_path.unlink()
+                        self.logger.info("Deleted corrupted database file")
+                    except Exception as delete_error:
+                        self.logger.error(f"Could not delete corrupted database: {delete_error}")
+                        return False
+
+            # Restore from backup
+            shutil.copy2(latest_backup, self.db_path)
+            self.logger.info(f"Database recovered from backup: {latest_backup}")
+
+            # Verify the restored database
+            if self.check_database_integrity():
+                return True
+            else:
+                self.logger.error("Restored database failed integrity check")
+                return False
+
+        except Exception as e:
+            self.logger.error(f"Database recovery failed: {e}")
+            return False
+
+    def ensure_database_safety(self) -> bool:
+        """Ensure database is ready for operations with safety checks.
+
+        Returns:
+            True if database is safe to use, False otherwise
+        """
+        # Check if database exists
+        if not self.db_path.exists():
+            self.logger.info("Database does not exist, will be created")
+            self._init_database()
+            # Create initial backup after database creation
+            self.create_backup()
+            return True
+
+        # Check database integrity
+        if not self.check_database_integrity():
+            self.logger.warning("Database corruption detected, attempting recovery")
+
+            # Force close any open connections before recovery
+            import gc
+            gc.collect()
+
+            if self.recover_from_backup():
+                self.logger.info("Database successfully recovered from backup")
+                return True
+            else:
+                self.logger.error("Database recovery failed, creating new database")
+                # Move corrupted database and create new one
+                try:
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    corrupted_backup = self.db_path.with_suffix(f".corrupted_{timestamp}.db")
+
+                    # Force close connections and wait a bit for Windows file handles
+                    gc.collect()
+                    import time
+                    time.sleep(0.1)
+
+                    shutil.move(self.db_path, corrupted_backup)
+                    self._init_database()
+                    # Create backup after recreating database
+                    self.create_backup()
+                    return True
+                except Exception as e:
+                    self.logger.error(f"Failed to move corrupted database: {e}")
+                    # As last resort, just recreate the database
+                    try:
+                        self.db_path.unlink(missing_ok=True)
+                        self._init_database()
+                        # Create backup after recreating database as last resort
+                        self.create_backup()
+                        return True
+                    except Exception as e2:
+                        self.logger.error(f"Failed to recreate database: {e2}")
+                        return False
+
+        # Create backup before operations
+        self.create_backup()
+        return True
 
     def add_deleted_photo(
         self,

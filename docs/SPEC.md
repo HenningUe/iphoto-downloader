@@ -42,7 +42,8 @@ automatically using **GitHub Actions**.
    - For each album a separate folder shall be created underneath
      'SYNC_DIRECTORY'. Photos should be placed in the corresponding subfolder of
      their album.
-   - These settings shall be provided by the used inside the .env file
+   - These settings shall be provided by the used inside the settings-file (e.g.
+     .env)
    - Only download photos that do not yet exist locally.
    - If a photo is deleted locally, it must **not** be re-downloaded on the next
      sync.
@@ -58,7 +59,20 @@ automatically using **GitHub Actions**.
    - credentials shall be stored for icloud and for pushover
    - A separate app shall be provided, which allows credential management. That
      means user must be able to store, delete and check credentials
-
+   - The app shall be either executed in single execution mode (i.e. start
+     synchronization and stop after synchronization run is completed) or run
+     continuously.
+   - If the app runs continuously it shall wait 2 minutes after the completion
+     if the lass successfully completed synchronization run and before the
+     execution of the next synchronization run.
+   - If the app runs continuously the database integrity check and creation of
+     backups shall be done every hour (see chapter **Local Deletion Tracking**)
+   - The app execution mode (single or continuous) shall be defined in the
+     settings file. If nothing is provided the default shall be single
+     execution.
+   - The main entry-point function shall have a global try-except blocks
+     handling flattly the whole function code block and send a pushover
+     notification whenever a unhandled exception occurs
 2. **2FA authenticaion**
 
 2.1. Separate package 2FA authentication
@@ -129,13 +143,13 @@ automatically using **GitHub Actions**.
      re-downloading.
    - Use a local lightweight database (e.g., SQLite or a JSON file) for
      tracking.
-   - A safety-copy of the local database shall be maintained. Before the start
-     of a synchronization run, the safety copy shall be created
+   - A backup-copy of the local database shall be maintained. Before the start
+     of a synchronization run, the backup copy shall be created
    - If the database is corrupted, i.e. can not be opened anymore, it shall be
-     restored from the safety-copy.
-   - If the local database is not available, but a safety-copy it shall be
-     restored from the safety-copy.
-   - If the local database and the safety-copy are not availabe a new database
+     restored from the backup-copy.
+   - If the local database is not available, but a backup-copy it shall be
+     restored from the backup-copy.
+   - If the local database and the backup-copy are not availabe a new database
      shall be created.
 
 4. **Idempotent Runs**

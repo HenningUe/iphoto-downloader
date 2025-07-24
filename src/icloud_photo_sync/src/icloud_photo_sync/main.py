@@ -42,15 +42,19 @@ def main() -> None:
 
         # Initialize and run syncer
         syncer = PhotoSyncer(config)
-        success = syncer.sync()
+        try:
+            success = syncer.sync()
 
-        if success:
-            logger.info("✅ Sync completed successfully")
-            print("\n✅ Sync completed successfully!")
-        else:
-            logger.error("❌ Sync failed")
-            print("\n❌ Sync failed!")
-            sys.exit(1)
+            if success:
+                logger.info("✅ Sync completed successfully")
+                print("\n✅ Sync completed successfully!")
+            else:
+                logger.error("❌ Sync failed")
+                print("\n❌ Sync failed!")
+                sys.exit(1)
+        finally:
+            # Ensure proper cleanup of database connections
+            syncer.cleanup()
     except KeyboardInterrupt:
         print("\n🛑 Sync interrupted by user")
         sys.exit(130)
