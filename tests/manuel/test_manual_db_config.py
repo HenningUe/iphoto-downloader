@@ -33,7 +33,7 @@ ENABLE_PUSHOVER=false
 
     print(f"   Database path: {db_path}")
     print(f"   Parent directory name: {db_path.parent.name}")
-    print(f"   Default path correct: {db_path.parent.name == '_data'}")
+    print(f"   Default path correct: {db_path.parent.name == '.data'}")
 
 finally:
     os.chdir(original_cwd)

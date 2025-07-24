@@ -124,7 +124,7 @@ class DeletionTracker:
                     deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     file_size INTEGER,
                     original_path TEXT,
-                    PRIMARY KEY (photo_name, source_album_name)
+                    PRIMARY KEY (photo_id, source_album_name)
                 )
             """)
             conn.execute("""
@@ -145,7 +145,7 @@ class DeletionTracker:
                     local_path TEXT NOT NULL,
                     downloaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     file_size INTEGER,
-                    PRIMARY KEY (photo_name, source_album_name)
+                    PRIMARY KEY (photo_id, source_album_name)
                 )
             """)
             conn.execute("""

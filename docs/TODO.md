@@ -200,8 +200,8 @@ specified.
   - [x] Add database parent directory setting in configuration file
   - [x] Support both relative and absolute paths
   - [x] Relative paths should be relative to photo download directory
-  - [x] Set default database location to "_data" subfolder (e.g.,
-        "test_photos/_data")
+  - [x] Set default database location to ".data" subfolder (e.g.,
+        "test_photos/.data")
 - [x] Add **environment variable support**:
   - [x] Support environment variables in database path configuration
   - [x] Implement cross-platform "%LOCALAPPDATA%" environment variable support
@@ -302,7 +302,7 @@ specified.
   - [x] Document environment variable usage (e.g.,
         %LOCALAPPDATA%/foto_pool/deletion_tracker)
   - [x] Add cross-platform environment variable mapping documentation
-  - [x] Set default database path to "_data" in configuration examples
+  - [x] Set default database path to ".data" in configuration examples
 - [ ] Ensure credentials are not bundled in builds
 - [x] Implement robust **logging** to console & file
 

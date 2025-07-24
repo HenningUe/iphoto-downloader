@@ -65,9 +65,9 @@ ENABLE_PUSHOVER=false
             config = BaseConfig(test_env_file)
             database_path = config.database_path
 
-            # Should default to _data subdirectory - check by looking at parent directory name
-            # The parent directory should be named _data
-            self.assertEqual(database_path.parent.name, "_data")
+            # Should default to .data subdirectory - check by looking at parent directory name
+            # The parent directory should be named .data
+            self.assertEqual(database_path.parent.name, ".data")
             self.assertTrue(str(database_path).endswith("deletion_tracker.db"))
 
             # Database directory should be created

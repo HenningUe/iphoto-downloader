@@ -67,7 +67,7 @@ class BaseConfig(ABC):
         self.maintenance_interval_hours = float(os.getenv('MAINTENANCE_INTERVAL_HOURS', '1'))
 
         # Database path configuration
-        self.database_parent_directory = os.getenv('DATABASE_PARENT_DIRECTORY', '_data')
+        self.database_parent_directory = os.getenv('DATABASE_PARENT_DIRECTORY', '.data')
 
     @property
     def icloud_username(self) -> str:

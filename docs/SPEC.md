@@ -157,8 +157,8 @@ automatically using **GitHub Actions**.
      settings-file. It shall be possible to provide relative and absolute path.
      If a relative path is provided it shall refer to the folder to which the
      photos are downloaded
-   - The database's default value shall be "_data", i.e. inside the photos
-     folder, e.g. "test_photos/_data".
+   - The database's default value shall be ".data", i.e. inside the photos
+     folder, e.g. "test_photos/.data".
    - It shall be possible to provide environment-variables, e.g.
      "%LOCALAPPDATA%/foto_pool/deletion_tracker"
    - The environment variable "%LOCALAPPDATA%" shall be usable in windows and
