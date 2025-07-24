@@ -80,22 +80,24 @@ specified.
 
 #### 2.1.3 Continuous Execution Mode
 
-- [ ] Implement **execution mode configuration**:
-  - [ ] Add `execution_mode` parameter to settings file (single/continuous)
-  - [ ] Set default execution mode to "single" if not specified
-  - [ ] Add configuration validation for execution mode parameter
-- [ ] Implement **single execution mode**:
-  - [ ] Start synchronization and stop after completion
-  - [ ] Ensure proper cleanup and resource release after sync
-- [ ] Implement **continuous execution mode**:
-  - [ ] Run synchronization in a loop with controlled intervals
-  - [ ] Wait 2 minutes after successful sync completion before next run
-  - [ ] Handle graceful shutdown on interruption (Ctrl+C, SIGTERM)
-- [ ] Implement **hourly database maintenance** in continuous mode:
-  - [ ] Perform database integrity check every hour
-  - [ ] Create database backups every hour (see chapter Local Deletion Tracking)
-  - [ ] Schedule maintenance independently from sync cycles
-  - [ ] Log all maintenance activities
+- [x] Implement **execution mode configuration**:
+  - [x] Add `execution_mode` parameter to settings file (single/continuous)
+  - [x] Set default execution mode to "single" if not specified
+  - [x] Add configuration validation for execution mode parameter
+- [x] Implement **single execution mode**:
+  - [x] Start synchronization and stop after completion
+  - [x] Ensure proper cleanup and resource release after sync
+- [x] Implement **continuous execution mode**:
+  - [x] Run synchronization in a loop with controlled intervals
+  - [x] Wait 2 minutes after successful sync completion before next run
+  - [x] Handle graceful shutdown on interruption (Ctrl+C, SIGTERM)
+- [x] Implement **hourly database maintenance** in continuous mode:
+  - [x] Perform database integrity check every hour
+  - [x] Create database backups every hour (see chapter Local Deletion Tracking)
+  - [x] Schedule maintenance independently from sync cycles
+  - [x] Log all maintenance activities
+  - [x] Pause synchronization during database integrity check and backup to
+        avoid conflicts
 
 ### 2.2 2FA Authentication System
 

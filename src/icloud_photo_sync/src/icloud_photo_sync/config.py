@@ -61,6 +61,11 @@ class BaseConfig(ABC):
             name.strip() for name in shared_albums_str.split(',') if name.strip()
         ] if shared_albums_str else []
 
+        # Execution mode settings
+        self.execution_mode = os.getenv('EXECUTION_MODE', 'single').lower()
+        self.sync_interval_minutes = float(os.getenv('SYNC_INTERVAL_MINUTES', '2'))
+        self.maintenance_interval_hours = float(os.getenv('MAINTENANCE_INTERVAL_HOURS', '1'))
+
     @property
     def icloud_username(self) -> str:
         """Get iCloud username from credential store."""
@@ -140,6 +145,22 @@ class BaseConfig(ABC):
             errors.append(
                 "At least one of INCLUDE_PERSONAL_ALBUMS or INCLUDE_SHARED_ALBUMS must be true"
             )
+
+        # Validate execution mode settings
+        if self.execution_mode not in ['single', 'continuous']:
+            errors.append(
+                f"Invalid EXECUTION_MODE: {self.execution_mode}. Must be 'single' or 'continuous'"
+            )
+
+        if self.sync_interval_minutes <= 0:
+            errors.append("SYNC_INTERVAL_MINUTES must be bigger than 0 minutes")
+
+        if self.maintenance_interval_hours <= 0:
+            errors.append("MAINTENANCE_INTERVAL_HOURS must be bigger than 0 hours")
+
+        if self.maintenance_interval_hours * 60 <= self.sync_interval_minutes:
+            errors.append("MAINTENANCE_INTERVAL_HOURS * 60 must be bigger than "
+                          "SYNC_INTERVAL_MINUTES")
 
         if errors:
             raise ValueError(f"Configuration errors: {', '.join(errors)}")

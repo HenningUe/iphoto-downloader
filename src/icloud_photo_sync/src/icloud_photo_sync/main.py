@@ -4,7 +4,7 @@ import sys
 
 from auth2fa.pushover_service import PushoverService
 from icloud_photo_sync.config import get_config, BaseConfig
-from icloud_photo_sync.sync import PhotoSyncer
+from icloud_photo_sync.continuous_runner import run_execution_mode
 from icloud_photo_sync.logger import setup_logging, get_logger
 from icloud_photo_sync import manage_credentials
 
@@ -109,20 +109,18 @@ def main() -> None:
 
         logger.info("Starting iCloud Photo Sync Tool")
         logger.info(f"Configuration: {config}")
+        logger.info(f"Execution mode: {config.execution_mode}")
 
-        syncer = PhotoSyncer(config)
-        try:
-            success = syncer.sync()
+        # Run in the configured execution mode
+        success = run_execution_mode(config)
 
-            if success:
-                logger.info("✅ Sync completed successfully")
-                print("\n✅ Sync completed successfully!")
-            else:
-                logger.error("❌ Sync failed")
-                print("\n❌ Sync failed!")
-                sys.exit(1)
-        finally:
-            syncer.cleanup()
+        if success:
+            logger.info("✅ Application completed successfully")
+            print("\n✅ Application completed successfully!")
+        else:
+            logger.error("❌ Application failed")
+            print("\n❌ Application failed!")
+            sys.exit(1)
 
     except KeyboardInterrupt:
         # Handle global keyboard interrupt

@@ -67,6 +67,8 @@ automatically using **GitHub Actions**.
      execution of the next synchronization run.
    - If the app runs continuously the database integrity check and creation of
      backups shall be done every hour (see chapter **Local Deletion Tracking**)
+   - If the database integrity check and backup is done, the synchronisation
+     shall be paused to avoid any conflicts.
    - The app execution mode (single or continuous) shall be defined in the
      settings file. If nothing is provided the default shall be single
      execution.
