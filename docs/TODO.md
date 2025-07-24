@@ -225,31 +225,31 @@ specified.
 - [x] Write **integration tests** with mocked `pyicloud`:
   - [x] Simulate new photos, already downloaded photos, deleted photos
   - [x] Simulate API errors & retry logic
-- [ ] Add **2FA system tests**:
-  - [ ] Test Pushover notification sending
-  - [ ] Test local web server startup/shutdown
-  - [ ] Test 2FA code validation via web interface
-  - [ ] Test session storage and retrieval
-  - [ ] Test error handling (port conflicts, API failures)
-- [ ] Add **album filtering tests**:
-  - [ ] Test personal album include/exclude logic
-  - [ ] Test shared album include/exclude logic
-  - [ ] Test album allow-list filtering (empty list = all albums)
-  - [ ] Test comma-separated album name parsing
-  - [ ] Test album-aware photo enumeration
-- [ ] Add **enhanced tracking tests**:
-  - [ ] Test album-aware photo identification
-  - [ ] Test (photo_name, album_name) composite tracking
-  - [ ] Test album-aware deletion tracking
-  - [ ] Test database migration for album-aware schema
-  - [ ] Test handling of photos in multiple albums
-- [ ] Add **database path configuration tests**:
-  - [ ] Test custom database path configuration
-  - [ ] Test environment variable expansion (%LOCALAPPDATA%, $HOME)
-  - [ ] Test relative vs absolute path handling
-  - [ ] Test cross-platform path compatibility
-  - [ ] Test database creation in custom paths
-  - [ ] Test error handling for invalid/inaccessible paths
+- [x] Add **2FA system tests**:
+  - [x] Test Pushover notification sending
+  - [x] Test local web server startup/shutdown
+  - [x] Test 2FA code validation via web interface
+  - [x] Test session storage and retrieval
+  - [x] Test error handling (port conflicts, API failures)
+- [x] Add **album filtering tests**:
+  - [x] Test personal album include/exclude logic
+  - [x] Test shared album include/exclude logic
+  - [x] Test album allow-list filtering (empty list = all albums)
+  - [x] Test comma-separated album name parsing
+  - [x] Test album-aware photo enumeration
+- [x] Add **enhanced tracking tests**:
+  - [x] Test album-aware photo identification
+  - [x] Test (photo_name, album_name) composite tracking
+  - [x] Test album-aware deletion tracking
+  - [x] Test database migration for album-aware schema
+  - [x] Test handling of photos in multiple albums
+- [x] Add **database path configuration tests**:
+  - [x] Test custom database path configuration
+  - [x] Test environment variable expansion (%LOCALAPPDATA%, $HOME)
+  - [x] Test relative vs absolute path handling
+  - [x] Test cross-platform path compatibility
+  - [x] Test database creation in custom paths
+  - [x] Test error handling for invalid/inaccessible paths
 - [ ] (Optional) Add **end-to-end test** using dummy or sandbox iCloud
 - [ ] Add all tests to CI/CD
 - [x] Achieve ≥ **80% test coverage** for core sync logic (✅ **85.21%**
