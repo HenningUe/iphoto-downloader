@@ -75,9 +75,17 @@ automatically using **GitHub Actions**.
    - The main entry-point function shall have a global try-except blocks
      handling flattly the whole function code block and send a pushover
      notification whenever a unhandled exception occurs
-2. **2FA authenticaion**
 
-2.1. Separate package 2FA authentication
+2. **Consideration of delivery artifacts**
+
+- It should be possible to define two operating modes in the settings: “In development” and “Delivered.” - When the “Delivered” operating mode is activated, the system should check whether the settings folder (see sectoin **Photo Sync**) exists and whether the files README.md, settings.ini.template, and settings.ini are located there. If any of these files are missing, they should be copied there and the program should be terminated. In addition, the user should be informed that the files have been copied and where exactly, what the files are for, and that they should run this program again after adjusting settings.ini.
+- If the files are present, the program should perform its normal function.
+- In “Delivered” mode, READMD.md and settings.ini.template should be copied to the settings folder each time the program is started (but not settings.ini).
+
+
+3. **2FA authenticaion**
+
+3.1. Separate package 2FA authentication
 
 - 2FA authentication shall be handled as a separate package
 - The separate 2FA authentication package shall be placed in folder
@@ -86,42 +94,42 @@ automatically using **GitHub Actions**.
   own dependency list
 - This package shall not depend on any code of the main icloud_photo_sync app
 
-2.5. 2FA Trigger and Notification
+3.2. 2FA Trigger and Notification
 
 - If 2FA authentication is required, the user shall be notified immediately via
   a Pushover notification.
 
-2.6. Notification Content
+3.3. Notification Content
 
 - The Pushover notification shall include an HTTP link to a local address (e.g.,
   `http://<local-ip-address-of-pc>:<port>`), which directs the user to the local
   web interface.
 
-2.7. Local Webserver
+3.4. Local Webserver
 
 - A local webserver shall be started automatically when a 2FA authentication is
   required.
 
-2.8. 2FA Session Handling
+3.5. 2FA Session Handling
 
 - The user shall be able to enter the 2FA key directly in the web interface
   provided by the local webserver.
 - The webserver shall provide an interface that enables the user to trigger a
   new 2FA request via a button.
 
-2.9. Folder structure
+3.6. Folder structure
 
 - All files related to the authentication topic shall be placed inside a python
   sub-package
 
-2.10. HTTP Site Security
+3.7. HTTP Site Security
 
 - The HTTP site does not need to be secured (i.e., no HTTPS), as the server runs
   only on the local machine within a private network.
 - The server shall bind only to `<local-ip-address-of-pc>` or prevent external
   access.
 
-2.11. Session Storage
+3.8. Session Storage
 
 - Each 2FA session shall be stored locally in the system’s default user
   directory (e.g., `%USERPROFILE%` on Windows or `$HOME` on Linux/macOS).
@@ -130,17 +138,17 @@ automatically using **GitHub Actions**.
 - Stored session data shall include only necessary information and follow
   security best practices (e.g., appropriate file permissions).
 
-2.12. Error handling
+3.9. Error handling
 
 - The system shall handle errors gracefully if the local server cannot start
   (e.g., due to the port being in use).
 
-2.13. Logging
+3.10. Logging
 
 - 2FA requests and sessions may be logged for debugging or audit purposes. Logs
   shall not include sensitive user information.
 
-3. **Local Deletion Tracking**
+4. **Local Deletion Tracking**
    - Persistently track which files have been deleted locally to avoid
      re-downloading.
    - Use a local lightweight database (e.g., SQLite or a JSON file) for
@@ -166,7 +174,7 @@ automatically using **GitHub Actions**.
      appropriate directory path, where user settings are stored on linux
      systems.
 
-4. **Idempotent Runs**
+5. **Idempotent Runs**
    - Running the tool multiple times must not create duplicate files or
      unintended deletions.
 
@@ -174,32 +182,33 @@ automatically using **GitHub Actions**.
 
 ### 2️⃣ Non-Functional Requirements
 
-5. **Programming Language**
+6. **Programming Language**
    - Python.
 
-6. **iCloud API Integration**
+7. **iCloud API Integration**
    - Use the `pyicloud` package:
      [https://pypi.org/project/pyicloud/](https://pypi.org/project/pyicloud/)
 
-7. **Package Management**
+8. **Package Management**
    - Use `uv` for managing dependencies:
      [https://docs.astral.sh/uv/](https://docs.astral.sh/uv/)
    - Maintain all dependencies in `pyproject.toml`.
 
-8. **Repository Structure**
+9. **Repository Structure**
    - Mono-repo structure as per the guide:
      [https://github.com/JasperHG90/uv-monorepo](https://github.com/JasperHG90/uv-monorepo)
 
-9. **Version Control**
+10. **Version Control**
    - Git repository, hosted on GitHub.
 
-10. **Executable Packaging**
+11. **Executable Packaging**
 
-- Build a standalone Windows .exe and a Linux executable using PyInstaller.
+- Build a standalone (single file) Windows .exe and a Linux executable using PyInstaller.
+- The first time the file is executed, it shall check, if setting file exists at any of the exepected locations. If not the .env.example shall be created.
 - The Linux build must be statically linked if possible, or provide clear
   runtime requirements.
 
-11. **CI/CD Pipeline**
+12. **CI/CD Pipeline**
 
 - Use GitHub Actions for building, testing, packaging, and releasing the
   executables for both Windows and Linux.
@@ -218,7 +227,7 @@ automatically using **GitHub Actions**.
 
 ---
 
-## ✅ 4️⃣ Testing Requirements
+## ✅ 5️⃣ Testing Requirements
 
 **Purpose:** Ensure high reliability, protect iCloud data integrity, and verify
 that local deletion tracking works as specified.
@@ -263,7 +272,7 @@ that local deletion tracking works as specified.
 
 ---
 
-## ✅ 5️⃣ Deliverables
+## ✅ 6️⃣ Deliverables
 
 - 📁 Mono-repo hosted on GitHub.
 - ✅ `pyproject.toml` with dependencies.
@@ -284,7 +293,7 @@ that local deletion tracking works as specified.
 
 ---
 
-## ✅ 6️⃣ Acceptance Criteria
+## ✅ 7️⃣ Acceptance Criteria
 
 - ✔️ No re-download of locally deleted photos.
 - ✔️ No accidental deletions from iCloud.
