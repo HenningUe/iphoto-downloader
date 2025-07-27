@@ -113,7 +113,7 @@ specified.
   - [x] Implement graceful program termination after file copying
 - [x] Implement **automatic file management in "Delivered" mode**:
   - [x] Copy README.md to settings folder on every startup (overwrite existing)
-  - [x] Copy settings.ini.template to settings folder on every startup (overwrite existing)
+  - [x] Copy .env.example to settings folder on every startup (overwrite existing). Change target file name depending on the context. I.e. either ".env" or "settings.ini".
   - [x] Preserve existing settings.ini file (never overwrite)
   - [x] Add file copy operation logging and error handling
 - [x] Integrate **delivery mode with packaging**:
@@ -292,12 +292,118 @@ specified.
 
 ## 6️⃣ 🐧🪟 Cross-Platform Build
 
-- [ ] Write **PyInstaller spec** for Windows `.exe`
-- [ ] Write **PyInstaller spec** for Linux executable (consider static linking
-      if possible)
-- [ ] Test builds locally on Windows and Linux
-- [ ] Ensure **2FA web server** works in packaged builds
-- [ ] Test **Pushover notifications** in packaged builds
+### 6.1 PyInstaller Configuration
+
+- [x] Write **PyInstaller spec** for cross-platform builds:
+  - [x] Create `icloud_photo_sync.spec` with proper data files inclusion
+  - [x] Include repository `README.md` and `.env.example` as embedded resources
+  - [x] Configure hiddenimports for keyring backends (Windows, macOS, Linux)
+  - [x] Set up proper pathex and binaries configuration
+  - [x] Ensure delivery artifacts resources are accessible in executable
+
+### 6.2 Build Scripts and Commands
+
+- [x] Create **Windows build script**:
+  - [x] Add PowerShell script (`build_windows.ps1`) for Windows `.exe` generation
+  - [x] Include dependency installation via `uv sync`
+  - [x] Add PyInstaller execution with spec file
+  - [x] Include post-build verification steps
+  - [x] Add clean build option and output size reporting
+- [x] Create **Linux build script**:
+  - [x] Add shell script (`build_linux.sh`) for Linux executable generation
+  - [x] Configure static linking options where possible
+  - [x] Include dependency installation via `uv sync`
+  - [x] Add PyInstaller execution with spec file
+  - [x] Include system dependency checks and recommendations
+- [x] Create **cross-platform test script**:
+  - [x] Add Python script (`test_build.py`) for executable verification
+  - [x] Include startup tests, dependency checks, and resource validation
+  - [x] Test delivered mode behavior and settings folder creation
+  - [x] Support both quick tests and comprehensive test suite
+
+### 6.3 Resource Management in Builds
+
+- [x] Implement **delivery artifacts integration**:
+  - [x] Ensure repository `README.md` is embedded in executable
+  - [x] Ensure repository `.env.example` is embedded as template source
+  - [x] Configure path resolution for PyInstaller frozen mode vs development
+  - [x] Test resource access in both development and packaged modes
+- [ ] Validate **resource extraction**:
+  - [ ] Test README.md extraction to settings folder in "Delivered" mode
+  - [ ] Test settings.ini.template creation from embedded .env.example
+  - [ ] Verify file permissions and accessibility after extraction
+
+### 6.4 Cross-Platform Testing
+
+- [ ] Test **Windows builds**:
+  - [x] Create automated testing tools (`test_build.py`)
+  - [ ] Verify `.exe` runs on Windows 10/11
+  - [ ] Test delivery artifacts creation on first run
+  - [ ] Verify settings folder detection (%USERPROFILE%\\AppData\\Local\\FotoPool)
+  - [ ] Test file copying and user notifications
+- [ ] Test **Linux builds**:
+  - [x] Create automated testing tools (`test_build.py`)
+  - [ ] Verify executable runs on Ubuntu/Debian
+  - [ ] Test delivery artifacts creation on first run
+  - [ ] Verify settings folder detection (~/.local/share/foto-pool)
+  - [ ] Test file copying and user notifications
+- [ ] Test **cross-platform compatibility**:
+  - [x] Create comprehensive test framework
+  - [ ] Verify same behavior across platforms
+  - [ ] Test environment variable expansion (Windows vs Linux)
+  - [ ] Validate path separators and file permissions
+
+### 6.5 Feature Testing in Packaged Builds
+
+- [ ] Test **2FA system in executables**:
+  - [ ] Verify local web server startup in packaged builds
+  - [ ] Test port conflict handling in executables
+  - [ ] Validate session storage and retrieval
+  - [ ] Ensure web interface accessibility (localhost binding)
+- [ ] Test **Pushover notifications in executables**:
+  - [ ] Verify API calls work from packaged builds
+  - [ ] Test notification delivery for 2FA triggers
+  - [ ] Validate error notifications for unhandled exceptions
+  - [ ] Test device-specific notification targeting
+- [ ] Test **keyring integration in executables**:
+  - [ ] Verify Windows Credential Manager access
+  - [ ] Verify Linux Secret Service integration
+  - [ ] Test credential storage and retrieval
+  - [ ] Validate fallback to environment variables
+
+### 6.6 Build Optimization and Performance
+
+- [x] Create **build documentation**:
+  - [x] Add comprehensive BUILD.md with instructions and troubleshooting
+  - [x] Document build script options and customization
+  - [x] Include distribution packaging examples
+- [ ] Optimize **executable size**:
+  - [ ] Exclude unnecessary dependencies from builds
+  - [ ] Use UPX compression where appropriate
+  - [ ] Test startup performance of compressed executables
+- [ ] Optimize **startup time**:
+  - [ ] Profile executable startup sequence
+  - [ ] Minimize import overhead in frozen builds
+  - [ ] Test cold start vs warm start performance
+- [ ] Validate **resource usage**:
+  - [ ] Monitor memory usage in packaged builds
+  - [ ] Test long-running continuous mode resource consumption
+  - [ ] Verify proper cleanup on application exit
+
+### 6.7 Build System Status
+
+✅ **Completed Infrastructure:**
+- PyInstaller spec file with resource embedding
+- Windows PowerShell build script with options
+- Linux bash build script with dependency checks
+- Cross-platform test framework for verification
+- Comprehensive build documentation and troubleshooting guide
+
+🔄 **Ready for Testing:**
+- Manual build testing on Windows and Linux systems
+- Delivery artifacts verification in packaged executables
+- 2FA and Pushover functionality validation in builds
+- Performance profiling and optimization
 
 ---
 
