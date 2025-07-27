@@ -1,6 +1,7 @@
 """Configuration management for iCloud Photo Sync Tool."""
 
 import os
+import sys
 import logging
 from pathlib import Path
 from abc import ABC
@@ -69,6 +70,9 @@ class BaseConfig(ABC):
         # Database path configuration
         self.database_parent_directory = os.getenv('DATABASE_PARENT_DIRECTORY', '.data')
 
+        # Operating mode configuration for delivery artifacts management
+        self.operating_mode = self._get_operating_mode()
+
     @property
     def icloud_username(self) -> str:
         """Get iCloud username from credential store."""
@@ -129,6 +133,44 @@ class BaseConfig(ABC):
 
         # Return full path to the database file
         return database_dir / "deletion_tracker.db"
+
+    def _get_operating_mode(self) -> str:
+        """Get and validate operating mode configuration.
+        
+        Returns:
+            Operating mode: "InDevelopment" or "Delivered"
+        """
+        # Check if running from PyInstaller executable
+        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+            # Running from PyInstaller executable - default to 'Delivered'
+            default_mode = 'Delivered'
+        else:
+            # Running from source - default to 'InDevelopment'
+            default_mode = 'InDevelopment'
+            
+        mode = os.getenv('OPERATING_MODE', default_mode)
+        
+        # Validate operating mode
+        valid_modes = ['InDevelopment', 'Delivered']
+        if mode not in valid_modes:
+            mode = default_mode  # Use appropriate default
+            
+        return mode
+
+    def get_settings_folder_path(self) -> Path:
+        """Get the settings folder path for 'Delivered' mode.
+        
+        Returns:
+            Path to the settings folder based on the operating system
+        """
+        if os.name == 'nt':  # Windows
+            # Use %USERPROFILE%/icloud_photo_sync_settings
+            base_path = Path(os.path.expanduser('~'))
+        else:  # Linux/Unix
+            # Use ~/.config/icloud_photo_sync
+            base_path = Path(os.path.expanduser('~/.config'))
+            
+        return base_path / 'icloud_photo_sync_settings'
 
     def validate(self) -> None:
         """Validate configuration settings."""
@@ -463,11 +505,15 @@ def get_settings_env_file_path() -> Path:
     return settings_ini_file_p
 
 
-def get_config() -> BaseConfig:
+def get_config(env_file_path: Path | None = None) -> BaseConfig:
     """Factory function to create appropriate config instance.
 
+    Args:
+        env_file_path: Optional path to .env file. If None, uses default discovery
+
     Returns:
-        KeyringConfig if keyring is available, EnvOnlyConfig otherwise
+        KeyringConfig instance
     """
-    settings_file_p = get_settings_env_file_path()
-    return KeyringConfig(settings_file_p)
+    if env_file_path is None:
+        env_file_path = get_settings_env_file_path()
+    return KeyringConfig(env_file_path)

@@ -5,6 +5,7 @@ import sys
 from auth2fa.pushover_service import PushoverService
 from icloud_photo_sync.config import get_config, BaseConfig
 from icloud_photo_sync.continuous_runner import run_execution_mode
+from icloud_photo_sync.delivery_artifacts import DeliveryArtifactsManager
 from icloud_photo_sync.logger import setup_logging, get_logger
 from icloud_photo_sync import manage_credentials
 
@@ -91,7 +92,22 @@ def main() -> None:
     logger = None
 
     try:
+        # Get initial config to determine operating mode
         config = get_config()
+        
+        # Handle delivery artifacts for 'Delivered' mode
+        delivery_manager = DeliveryArtifactsManager(config)
+        should_continue = delivery_manager.handle_delivered_mode_startup()
+        
+        if not should_continue:
+            # First-time setup completed, user needs to configure settings
+            print("\n🎯 Setup complete! Please run the application again after configuring settings.")
+            sys.exit(0)
+        
+        # Re-load config with correct .env file path for delivered mode
+        if config.operating_mode == 'Delivered':
+            env_file_path = delivery_manager.get_env_file_path()
+            config = get_config(env_file_path)
 
         if not config.icloud_has_stored_credentials():
             print("🔑 iCloud credentials not found in keyring.")
@@ -110,6 +126,7 @@ def main() -> None:
         logger.info("Starting iCloud Photo Sync Tool")
         logger.info(f"Configuration: {config}")
         logger.info(f"Execution mode: {config.execution_mode}")
+        logger.info(f"Operating mode: {config.operating_mode}")
 
         # Run in the configured execution mode
         success = run_execution_mode(config)

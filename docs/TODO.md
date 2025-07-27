@@ -99,6 +99,28 @@ specified.
   - [x] Pause synchronization during database integrity check and backup to
         avoid conflicts
 
+#### 2.1.4 Delivery Artifacts Management
+
+- [x] Implement **operating mode detection**:
+  - [x] Add configuration parameter for operating mode ("InDevelopment"/"Delivered")
+  - [x] Implement mode validation and default value assignment
+  - [x] Add mode-specific behavior switching in main application logic
+- [x] Implement **"Delivered" mode functionality**:
+  - [x] Add settings folder path detection based on user directory structure
+  - [x] Implement required files existence check (README.md, settings.ini.template, settings.ini)
+  - [x] Create file copying mechanism for missing delivery artifacts
+  - [x] Add user notification system for copied files with detailed location info
+  - [x] Implement graceful program termination after file copying
+- [x] Implement **automatic file management in "Delivered" mode**:
+  - [x] Copy README.md to settings folder on every startup (overwrite existing)
+  - [x] Copy settings.ini.template to settings folder on every startup (overwrite existing)
+  - [x] Preserve existing settings.ini file (never overwrite)
+  - [x] Add file copy operation logging and error handling
+- [x] Integrate **delivery mode with packaging**:
+  - [x] Ensure PyInstaller executable defaults to "Delivered" mode
+  - [x] Include required template files in executable build
+  - [x] Test delivery artifacts deployment in packaged builds
+
 ### 2.2 2FA Authentication System
 
 #### 2.2.1 📱 Pushover Notification Integration
@@ -250,6 +272,17 @@ specified.
   - [x] Test cross-platform path compatibility
   - [x] Test database creation in custom paths
   - [x] Test error handling for invalid/inaccessible paths
+- [x] Add **delivery artifacts tests**:
+  - [x] Test operating mode detection and validation
+  - [x] Test "InDevelopment" vs "Delivered" mode behavior
+  - [x] Test settings folder detection across platforms
+  - [x] Test required files existence checking
+  - [x] Test file copying mechanism for missing artifacts
+  - [x] Test user notification system for copied files
+  - [x] Test graceful program termination after file operations
+  - [x] Test automatic file updates in "Delivered" mode (README.md, settings.ini.template)
+  - [x] Test settings.ini preservation in "Delivered" mode
+  - [x] Test executable default mode behavior (should be "Delivered")
 - [ ] (Optional) Add **end-to-end test** using dummy or sandbox iCloud
 - [ ] Add all tests to CI/CD
 - [x] Achieve ≥ **80% test coverage** for core sync logic (✅ **85.21%**
@@ -289,6 +322,16 @@ specified.
 - [x] Support configurable local sync directory
 - [x] Add **Pushover configuration** (API token, user key)
 - [ ] Add **2FA web server configuration** (port range, bind address)
+- [x] Add **delivery artifacts configuration**:
+  - [x] Add operating mode configuration ("InDevelopment" vs "Delivered")
+  - [x] Set default operating mode to "InDevelopment" for development environment
+  - [x] Implement settings folder detection for "Delivered" mode
+  - [x] Implement required files check (README.md, settings.ini.template, settings.ini)
+  - [x] Add file copying mechanism for missing delivery artifacts
+  - [x] Implement program termination with user notification when files are missing
+  - [x] Add automatic copying of README.md and settings.ini.template on each "Delivered" mode startup
+  - [x] Ensure settings.ini is never overwritten in "Delivered" mode
+  - [x] Set "Delivered" mode as default for executable packages (PyInstaller)
 - [ ] Add **album filtering configuration**:
   - [ ] Add `include_personal_albums` boolean parameter to .env template
   - [ ] Add `personal_album_names_to_include` comma-separated list parameter
@@ -343,6 +386,14 @@ specified.
   - [ ] **Album-aware tracking** prevents duplicates correctly
   - [ ] **Database path configuration** works with relative/absolute paths
   - [ ] **Environment variables** in database paths work cross-platform
+  - [x] **Delivery artifacts management** works correctly:
+    - [x] Executable defaults to "Delivered" mode
+    - [x] Settings folder is created/detected correctly
+    - [x] Required files (README.md, settings.ini.template, settings.ini) are copied when missing
+    - [x] User receives clear notification about copied files and their purpose
+    - [x] Program terminates gracefully after copying files with instruction to adjust settings.ini
+    - [x] README.md and settings.ini.template are updated on each startup
+    - [x] Existing settings.ini is preserved and never overwritten
   - [ ] No credentials leaked in binary
   - [ ] Handles credential failures gracefully
 - [ ] Test Linux executable:
@@ -351,6 +402,10 @@ specified.
   - [ ] Cross-platform session storage works
   - [ ] Cross-platform album-aware database works
   - [ ] Cross-platform database path configuration works correctly
+  - [x] **Delivery artifacts management** works on Linux:
+    - [x] Cross-platform settings folder detection works
+    - [x] File copying works with appropriate permissions
+    - [x] User notifications work correctly on Linux terminal
 
 ---
 
@@ -382,6 +437,13 @@ specified.
 - ✔️ Versioned releases available to users
 - ✔️ Users can easily install & configure
 - ✔️ **Album filtering configuration** is well documented
+- ✔️ **Delivery artifacts management** works correctly:
+  - ✔️ Operating modes ("InDevelopment"/"Delivered") are properly implemented
+  - ✔️ Executable packages default to "Delivered" mode
+  - ✔️ Required files are automatically deployed in "Delivered" mode
+  - ✔️ User receives clear guidance for first-time setup
+  - ✔️ Template files are kept up-to-date automatically
+  - ✔️ User settings are preserved across updates
 
 ---
 

@@ -23,7 +23,7 @@ automatically using **GitHub Actions**.
    - Settings shall be provided via an .env file inside repository
    - If the local ".env" file is not available in the current directory and the
      app shall search in the respective system user settings directory (for
-     example "LOCALUSERDATA" on Windows systems) for a file named “settings.ini”
+     example "LOCALUSERDATA" on Windows systems) for a file named "settings.ini"
      inside a subfolder named "foto_pool".
    - There shall be a parallel .env-file named .env.example which works as
      template. This shall not contain any secrets.
@@ -78,9 +78,11 @@ automatically using **GitHub Actions**.
 
 2. **Consideration of delivery artifacts**
 
-- It should be possible to define two operating modes in the settings: “In development” and “Delivered.” - When the “Delivered” operating mode is activated, the system should check whether the settings folder (see sectoin **Photo Sync**) exists and whether the files README.md, settings.ini.template, and settings.ini are located there. If any of these files are missing, they should be copied there and the program should be terminated. In addition, the user should be informed that the files have been copied and where exactly, what the files are for, and that they should run this program again after adjusting settings.ini.
+- It should be possible to define two operating modes in the settings: "InDevelopment" and "Delivered" - When the "Delivered" operating mode is activated, the system should check whether the settings folder (see section **Photo Sync**) exists and whether the files README.md, settings.ini.template, and settings.ini are located there. If any of these files are missing, they should be copied there and the program should be terminated. In addition, the user should be informed that the files have been copied and where exactly, what the files are for, and that they should run this program again after adjusting settings.ini.
 - If the files are present, the program should perform its normal function.
-- In “Delivered” mode, READMD.md and settings.ini.template should be copied to the settings folder each time the program is started (but not settings.ini).
+- In "Delivered" mode, READMD.md and settings.ini.template should be copied to the settings folder each time the program is started (but not settings.ini).
+- READMD.md and .env.example (as source for settings.ini.template ) from the repository are to be used. I.e. when the executable is created these files must be included in the executable as additional resources. The content of the created READM.md and shall **not** be included in a python file as strings to avoid duplicated sources.
+- The default mode for operation in development environment shall be "InDevelopment" 
 
 
 3. **2FA authenticaion**
@@ -204,7 +206,8 @@ automatically using **GitHub Actions**.
 11. **Executable Packaging**
 
 - Build a standalone (single file) Windows .exe and a Linux executable using PyInstaller.
-- The first time the file is executed, it shall check, if setting file exists at any of the exepected locations. If not the .env.example shall be created.
+- When the executable is used the modus "Delivered" (decribed in chapter **Consideration of delivery artifacts**) shall be the default one.
+- Both files "READMD.md" and ".env.example" must be included in the executable as additional resources to be available later on for copying, see chapter **Consideration of delivery artifacts**
 - The Linux build must be statically linked if possible, or provide clear
   runtime requirements.
 
