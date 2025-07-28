@@ -99,7 +99,22 @@ specified.
   - [x] Pause synchronization during database integrity check and backup to
         avoid conflicts
 
-#### 2.1.4 Delivery Artifacts Management
+#### 2.1.4 Multi-Instance Control
+
+- [ ] Implement **instance management configuration**:
+  - [ ] Add `allow_multi_instance` boolean parameter to settings file
+  - [ ] Set default value for `allow_multi_instance` to false if not specified
+  - [ ] Add configuration validation for multi-instance parameter
+- [ ] Implement **single instance enforcement**:
+  - [ ] Detect if another instance of the application is already running
+  - [ ] Display clear message when another instance is detected
+  - [ ] Abort application immediately if multi-instance is disabled
+- [ ] Implement **multi-instance support**:
+  - [ ] Allow multiple instances when `allow_multi_instance=true`
+  - [ ] Ensure proper resource isolation between instances
+  - [ ] Handle concurrent database access appropriately
+
+#### 2.1.5 Delivery Artifacts Management
 
 - [x] Implement **operating mode detection**:
   - [x] Add configuration parameter for operating mode ("InDevelopment"/"Delivered")
@@ -283,6 +298,15 @@ specified.
   - [x] Test automatic file updates in "Delivered" mode (README.md, settings.ini.template)
   - [x] Test settings.ini preservation in "Delivered" mode
   - [x] Test executable default mode behavior (should be "Delivered")
+- [ ] Add **multi-instance control tests**:
+  - [ ] Test allow_multi_instance configuration parameter validation
+  - [ ] Test single instance enforcement when allow_multi_instance=false
+  - [ ] Test instance detection mechanism
+  - [ ] Test clear error message display for blocked instances
+  - [ ] Test immediate abort behavior for blocked instances
+  - [ ] Test multi-instance support when allow_multi_instance=true
+  - [ ] Test resource isolation between multiple instances
+  - [ ] Test concurrent database access handling
 - [ ] (Optional) Add **end-to-end test** using dummy or sandbox iCloud
 - [ ] Add all tests to CI/CD
 - [x] Achieve ≥ **80% test coverage** for core sync logic (✅ **85.21%**
@@ -337,10 +361,6 @@ specified.
   - [x] Ensure repository `.env.example` is embedded as template source
   - [x] Configure path resolution for PyInstaller frozen mode vs development
   - [x] Test resource access in both development and packaged modes
-- [ ] Validate **resource extraction**:
-  - [ ] Test README.md extraction to settings folder in "Delivered" mode
-  - [ ] Test settings.ini.template creation from embedded .env.example
-  - [ ] Verify file permissions and accessibility after extraction
 
 ### 6.4 Cross-Platform Testing
 
@@ -449,13 +469,6 @@ specified.
   - [x] Add automatic copying of README.md and settings.ini.template on each "Delivered" mode startup
   - [x] Ensure settings.ini is never overwritten in "Delivered" mode
   - [x] Set "Delivered" mode as default for executable packages (PyInstaller)
-- [ ] Add **album filtering configuration**:
-  - [ ] Add `include_personal_albums` boolean parameter to .env template
-  - [ ] Add `personal_album_names_to_include` comma-separated list parameter
-  - [ ] Add `include_shared_albums` boolean parameter to .env template
-  - [ ] Add `shared_album_names_to_include` comma-separated list parameter
-  - [ ] Update .env.example with album filtering examples
-  - [ ] Add configuration validation for album parameters
 - [x] Add **database path configuration**:
   - [x] Add database location parameter to .env template
   - [x] Support relative and absolute paths in database configuration
@@ -503,6 +516,12 @@ specified.
   - [ ] **Album-aware tracking** prevents duplicates correctly
   - [ ] **Database path configuration** works with relative/absolute paths
   - [ ] **Environment variables** in database paths work cross-platform
+  - [ ] **Multi-instance control** works correctly:
+    - [ ] Default behavior prevents multiple instances (allow_multi_instance=false)
+    - [ ] Clear message displayed when second instance is started
+    - [ ] Second instance aborts immediately when multi-instance disabled
+    - [ ] Multiple instances work when allow_multi_instance=true
+    - [ ] Configuration parameter is properly validated
   - [x] **Delivery artifacts management** works correctly:
     - [x] Executable defaults to "Delivered" mode
     - [x] Settings folder is created/detected correctly
@@ -525,6 +544,12 @@ specified.
   - [ ] Cross-platform session storage works
   - [ ] Cross-platform album-aware database works
   - [ ] Cross-platform database path configuration works correctly
+  - [ ] **Multi-instance control** works correctly on Linux:
+    - [ ] Default behavior prevents multiple instances (allow_multi_instance=false)
+    - [ ] Clear message displayed when second instance is started
+    - [ ] Second instance aborts immediately when multi-instance disabled
+    - [ ] Multiple instances work when allow_multi_instance=true
+    - [ ] Configuration parameter is properly validated
   - [x] **Delivery artifacts management** works on Linux:
     - [x] Cross-platform settings folder detection works
     - [x] File copying works with appropriate permissions

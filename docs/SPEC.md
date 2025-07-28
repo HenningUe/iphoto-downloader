@@ -59,6 +59,8 @@ automatically using **GitHub Actions**.
    - credentials shall be stored for icloud and for pushover
    - A separate app shall be provided, which allows credential management. That
      means user must be able to store, delete and check credentials
+
+2. **Operation modes**
    - The app shall be either executed in single execution mode (i.e. start
      synchronization and stop after synchronization run is completed) or run
      continuously.
@@ -72,22 +74,27 @@ automatically using **GitHub Actions**.
    - The app execution mode (single or continuous) shall be defined in the
      settings file. If nothing is provided the default shall be single
      execution.
+  
+   - The app shall run allow multiple instances or run as single instance only.
+   - If only one instance is allowed, a message shall be printed, that another instance is already running and abort immediately
+   - It shall be configurable in the settings if multi-instances are allowed. The related settings key shall be "allow_multi_instance". The default value shall be false.
+
+3. **Global exception handling**
    - The main entry-point function shall have a global try-except blocks
      handling flattly the whole function code block and send a pushover
      notification whenever a unhandled exception occurs
 
-2. **Consideration of delivery artifacts**
+4. **Consideration of delivery artifacts**
+    - It should be possible to define two operating modes in the settings: "InDevelopment" and "Delivered" - When the "Delivered" operating mode is activated, the system should check whether the settings folder (see section **Photo Sync**) exists and whether the files README.md, settings.ini.template, and settings.ini are located there. If any of these files are missing, they should be copied there and the program should be terminated. In addition, the user should be informed that the files have been copied and where exactly, what the files are for, and that they should run this program again after adjusting settings.ini.
+    - If the files are present, the program should perform its normal function.
+    - In "Delivered" mode, READMD.md and settings.ini.template should be copied to the settings folder each time the program is started (but not settings.ini).
+    - READMD.md and .env.example (as source for settings.ini.template ) from the repository are to be used. I.e. when the executable is created these files must be included in the executable as additional resources. The content of the created READM.md and shall **not** be included in a python file as strings to avoid duplicated sources.
+    - The default mode for operation in development environment shall be "InDevelopment" 
 
-- It should be possible to define two operating modes in the settings: "InDevelopment" and "Delivered" - When the "Delivered" operating mode is activated, the system should check whether the settings folder (see section **Photo Sync**) exists and whether the files README.md, settings.ini.template, and settings.ini are located there. If any of these files are missing, they should be copied there and the program should be terminated. In addition, the user should be informed that the files have been copied and where exactly, what the files are for, and that they should run this program again after adjusting settings.ini.
-- If the files are present, the program should perform its normal function.
-- In "Delivered" mode, READMD.md and settings.ini.template should be copied to the settings folder each time the program is started (but not settings.ini).
-- READMD.md and .env.example (as source for settings.ini.template ) from the repository are to be used. I.e. when the executable is created these files must be included in the executable as additional resources. The content of the created READM.md and shall **not** be included in a python file as strings to avoid duplicated sources.
-- The default mode for operation in development environment shall be "InDevelopment" 
 
+5. **2FA authenticaion**
 
-3. **2FA authenticaion**
-
-3.1. Separate package 2FA authentication
+5.1. Separate package 2FA authentication
 
 - 2FA authentication shall be handled as a separate package
 - The separate 2FA authentication package shall be placed in folder
@@ -96,42 +103,42 @@ automatically using **GitHub Actions**.
   own dependency list
 - This package shall not depend on any code of the main icloud_photo_sync app
 
-3.2. 2FA Trigger and Notification
+5.2. 2FA Trigger and Notification
 
 - If 2FA authentication is required, the user shall be notified immediately via
   a Pushover notification.
 
-3.3. Notification Content
+5.3. Notification Content
 
 - The Pushover notification shall include an HTTP link to a local address (e.g.,
   `http://<local-ip-address-of-pc>:<port>`), which directs the user to the local
   web interface.
 
-3.4. Local Webserver
+5.4. Local Webserver
 
 - A local webserver shall be started automatically when a 2FA authentication is
   required.
 
-3.5. 2FA Session Handling
+5.5. 2FA Session Handling
 
 - The user shall be able to enter the 2FA key directly in the web interface
   provided by the local webserver.
 - The webserver shall provide an interface that enables the user to trigger a
   new 2FA request via a button.
 
-3.6. Folder structure
+5.6. Folder structure
 
 - All files related to the authentication topic shall be placed inside a python
   sub-package
 
-3.7. HTTP Site Security
+5.7. HTTP Site Security
 
 - The HTTP site does not need to be secured (i.e., no HTTPS), as the server runs
   only on the local machine within a private network.
 - The server shall bind only to `<local-ip-address-of-pc>` or prevent external
   access.
 
-3.8. Session Storage
+5.8. Session Storage
 
 - Each 2FA session shall be stored locally in the system’s default user
   directory (e.g., `%USERPROFILE%` on Windows or `$HOME` on Linux/macOS).
@@ -140,17 +147,17 @@ automatically using **GitHub Actions**.
 - Stored session data shall include only necessary information and follow
   security best practices (e.g., appropriate file permissions).
 
-3.9. Error handling
+5.9. Error handling
 
 - The system shall handle errors gracefully if the local server cannot start
   (e.g., due to the port being in use).
 
-3.10. Logging
+5.10. Logging
 
 - 2FA requests and sessions may be logged for debugging or audit purposes. Logs
   shall not include sensitive user information.
 
-4. **Local Deletion Tracking**
+6. **Local Deletion Tracking**
    - Persistently track which files have been deleted locally to avoid
      re-downloading.
    - Use a local lightweight database (e.g., SQLite or a JSON file) for
@@ -176,7 +183,7 @@ automatically using **GitHub Actions**.
      appropriate directory path, where user settings are stored on linux
      systems.
 
-5. **Idempotent Runs**
+7. **Idempotent Runs**
    - Running the tool multiple times must not create duplicate files or
      unintended deletions.
 
@@ -184,28 +191,28 @@ automatically using **GitHub Actions**.
 
 ### 2️⃣ Non-Functional Requirements
 
-6. **Programming Language**
+1. **Programming Language**
    - Python.
 
-7. **iCloud API Integration**
+2. **iCloud API Integration**
    - Use the `pyicloud` package:
      [https://pypi.org/project/pyicloud/](https://pypi.org/project/pyicloud/)
 
-8. **Package Management**
+3. **Package Management**
    - Use `uv` for managing dependencies:
      [https://docs.astral.sh/uv/](https://docs.astral.sh/uv/)
    - Maintain all dependencies in `pyproject.toml`.
 
-9. **Repository Structure**
+4. **Repository Structure**
    - Mono-repo structure as per the guide:
      [https://github.com/JasperHG90/uv-monorepo](https://github.com/JasperHG90/uv-monorepo)
 
-10. **Version Control**
+5. **Version Control**
    - Git repository, hosted on GitHub.
 
-11. **Executable Packaging**
+6. **Executable Packaging**
 
-11.1. **Main Executable Packaging**
+6.1. **Main Executable Packaging**
 - Build a standalone (single file) Windows .exe and a Linux executable using PyInstaller for the main executable, which is based on #main.py as first entry point. 
 - The app shall have the image #foto-pool-main.png as App icon
 - When the executable is used the modus "Delivered" (decribed in chapter **Consideration of delivery artifacts**) shall be the default one.
@@ -213,18 +220,22 @@ automatically using **GitHub Actions**.
 - The Linux build must be statically linked if possible, or provide clear
   runtime requirements.
 
-11.1. **Credentials Manager Executable Packaging**
+6.1. **Credentials Manager Executable Packaging**
 - Build a standalone (single file) Windows .exe and a Linux executable using PyInstaller for the manage_credentials executable, which is based on #manage_credentials.py as first entry point. 
 - The app shall have the image #foto-pool-credentials.png as App icon
 - The Linux build must be statically linked if possible, or provide clear
   runtime requirements.
 
-12. **CI/CD Pipeline**
+7. **CI/CD Pipeline**
 
 - Use GitHub Actions for building, testing, packaging, and releasing the
   executables for both Windows and Linux.
-- Follow this guide for PyInstaller CI/CD:
+- Follow this guide for PyInstaller CI/CD
   [https://ragug.medium.com/ci-cd-pipeline-for-pyinstaller-on-github-actions-for-windows-7f8274349278](https://ragug.medium.com/ci-cd-pipeline-for-pyinstaller-on-github-actions-for-windows-7f8274349278)
+- The previously given link shall be used considering the following adpations:
+  - the release workflow shall be trigger, whenever a new release is requested in github for this repo, i.e. link "https://github.com/.../releases/new" is called
+  - The release workflow shall created executables for windows and linux
+  - Before the creation of the executables start the full test-suite shall be executed. Any error shall cause an aboration.
 
 ---
 
