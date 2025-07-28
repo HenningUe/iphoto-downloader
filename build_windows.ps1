@@ -5,6 +5,8 @@
 param(
     [switch]$Clean,
     [switch]$Test,
+    [switch]$CredentialsOnly,
+    [switch]$MainOnly,
     [string]$OutputDir = "dist"
 )
 
@@ -75,7 +77,8 @@ if (-not $uvCommand) {
                 exit 1
             }
         }
-    } catch {
+    }
+    catch {
         Write-Error "Failed to install uv automatically. Please install manually: pip install uv. Error: $_"
         exit 1
     }
@@ -97,11 +100,13 @@ Write-Host "Installing dependencies..." -ForegroundColor Yellow
 try {
     if ($uvCommand.Source) {
         & $uvCommand sync --dev
-    } else {
+    }
+    else {
         uv sync --dev
     }
     Write-Host "Dependencies installed" -ForegroundColor Green
-} catch {
+}
+catch {
     Write-Error "Failed to install dependencies: $_"
     exit 1
 }
@@ -118,30 +123,71 @@ foreach ($file in $RequiredFiles) {
 Write-Host "All required files present" -ForegroundColor Green
 
 # Build executable with PyInstaller
-Write-Host "Building Windows executable..." -ForegroundColor Yellow
-try {
-    if ($uvCommand.Source) {
-        & $uvCommand run pyinstaller icloud_photo_sync.spec --distpath $OutputDir --workpath build
-    } else {
-        uv run pyinstaller icloud_photo_sync.spec --distpath $OutputDir --workpath build
+Write-Host "Building Windows executable(s)..." -ForegroundColor Yellow
+
+# Build main executable (unless CredentialsOnly is specified)
+if (-not $CredentialsOnly) {
+    Write-Host "Building main iCloud Photo Sync executable..." -ForegroundColor Cyan
+    try {
+        if ($uvCommand.Source) {
+            & $uvCommand run pyinstaller icloud_photo_sync.spec --distpath $OutputDir --workpath build
+        }
+        else {
+            uv run pyinstaller icloud_photo_sync.spec --distpath $OutputDir --workpath build
+        }
+        Write-Host "Main executable build completed successfully" -ForegroundColor Green
     }
-    Write-Host "Build completed successfully" -ForegroundColor Green
-} catch {
-    Write-Error "Build failed: $_"
-    exit 1
+    catch {
+        Write-Error "Main executable build failed: $_"
+        exit 1
+    }
+}
+
+# Build credentials manager executable (unless MainOnly is specified)
+if (-not $MainOnly) {
+    Write-Host "Building credentials manager executable..." -ForegroundColor Cyan
+    try {
+        if ($uvCommand.Source) {
+            & $uvCommand run pyinstaller manage_credentials.spec --distpath $OutputDir --workpath build
+        }
+        else {
+            uv run pyinstaller manage_credentials.spec --distpath $OutputDir --workpath build
+        }
+        Write-Host "Credentials manager build completed successfully" -ForegroundColor Green
+    }
+    catch {
+        Write-Error "Credentials manager build failed: $_"
+        exit 1
+    }
 }
 
 # Verify build output
-$ExePath = Join-Path $OutputDir "icloud_photo_sync.exe"
-if (-not (Test-Path $ExePath)) {
-    Write-Error "Executable not found at expected location: $ExePath"
+$MainExePath = Join-Path $OutputDir "icloud_photo_sync.exe"
+$CredExePath = Join-Path $OutputDir "manage_credentials.exe"
+
+Write-Host "Build Information:" -ForegroundColor Cyan
+
+# Check main executable
+if (-not $CredentialsOnly -and (Test-Path $MainExePath)) {
+    $MainExeSize = (Get-Item $MainExePath).Length / 1MB
+    Write-Host "   Main Executable: $MainExePath" -ForegroundColor White
+    Write-Host "   Main Size: $([math]::Round($MainExeSize, 2)) MB" -ForegroundColor White
+}
+elseif (-not $CredentialsOnly) {
+    Write-Error "Main executable not found at expected location: $MainExePath"
     exit 1
 }
 
-$ExeSize = (Get-Item $ExePath).Length / 1MB
-Write-Host "Build Information:" -ForegroundColor Cyan
-Write-Host "   Executable: $ExePath" -ForegroundColor White
-Write-Host "   Size: $([math]::Round($ExeSize, 2)) MB" -ForegroundColor White
+# Check credentials manager executable
+if (-not $MainOnly -and (Test-Path $CredExePath)) {
+    $CredExeSize = (Get-Item $CredExePath).Length / 1MB
+    Write-Host "   Credentials Manager: $CredExePath" -ForegroundColor White
+    Write-Host "   Credentials Size: $([math]::Round($CredExeSize, 2)) MB" -ForegroundColor White
+}
+elseif (-not $MainOnly) {
+    Write-Error "Credentials manager executable not found at expected location: $CredExePath"
+    exit 1
+}
 
 # Test executable if requested
 if ($Test) {
@@ -152,10 +198,12 @@ if ($Test) {
         $TestOutput = & $ExePath --help 2>&1
         if ($LASTEXITCODE -eq 0) {
             Write-Host "Executable starts successfully" -ForegroundColor Green
-        } else {
+        }
+        else {
             Write-Warning "Executable exit code: $LASTEXITCODE"
         }
-    } catch {
+    }
+    catch {
         Write-Warning "Could not test executable: $_"
     }
     

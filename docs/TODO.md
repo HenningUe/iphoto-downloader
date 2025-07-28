@@ -300,13 +300,13 @@ specified.
   - [x] Configure hiddenimports for keyring backends (Windows, macOS, Linux)
   - [x] Set up proper pathex and binaries configuration
   - [x] Ensure delivery artifacts resources are accessible in executable
-  - [ ] Configure app icon using `foto-pool-main.png` for cross-platform executable branding
-- [ ] Write **Credentials Manager PyInstaller spec** for cross-platform builds:
-  - [ ] Create `manage_credentials.spec` with proper configuration
-  - [ ] Configure app icon using `foto-pool-credentials.png` for credentials manager branding
-  - [ ] Set up proper pathex and binaries configuration for credentials manager
-  - [ ] Configure hiddenimports for keyring backends (Windows, macOS, Linux)
-  - [ ] Ensure static linking where possible for Linux builds
+  - [x] Configure app icon using `foto-pool-main.png` for cross-platform executable branding
+- [x] Write **Credentials Manager PyInstaller spec** for cross-platform builds:
+  - [x] Create `manage_credentials.spec` with proper configuration
+  - [x] Configure app icon using `foto-pool-credentials.png` for credentials manager branding
+  - [x] Set up proper pathex and binaries configuration for credentials manager
+  - [x] Configure hiddenimports for keyring backends (Windows, macOS, Linux)
+  - [x] Ensure static linking where possible for Linux builds
 
 ### 6.2 Build Scripts and Commands
 
@@ -316,14 +316,14 @@ specified.
   - [x] Add PyInstaller execution with spec file
   - [x] Include post-build verification steps
   - [x] Add clean build option and output size reporting
-  - [ ] Add credentials manager executable build support
+  - [x] Add credentials manager executable build support
 - [x] Create **Linux build script**:
   - [x] Add shell script (`build_linux.sh`) for Linux executable generation
   - [x] Configure static linking options where possible
   - [x] Include dependency installation via `uv sync`
   - [x] Add PyInstaller execution with spec file
   - [x] Include system dependency checks and recommendations
-  - [ ] Add credentials manager executable build support
+  - [x] Add credentials manager executable build support
 - [x] Create **cross-platform test script**:
   - [x] Add Python script (`test_build.py`) for executable verification
   - [x] Include startup tests, dependency checks, and resource validation
