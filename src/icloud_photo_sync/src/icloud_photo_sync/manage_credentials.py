@@ -3,8 +3,11 @@
 
 import getpass
 import shutil
+import sys
 
+from icloud_photo_sync import logger
 from icloud_photo_sync.config import get_config, KeyringConfig
+from icloud_photo_sync.delivery_artifacts import DeliveryArtifactsManager
 from icloud_photo_sync.icloud_client import iCloudClient
 
 
@@ -13,6 +16,17 @@ def main():
 
     print("🔑 iCloud Photo Sync - Credential Manager")
     print("=" * 45)
+
+    logger.setup_logging()
+    # Handle delivery artifacts for 'Delivered' mode
+    delivery_manager = DeliveryArtifactsManager()
+    should_continue = delivery_manager.handle_delivered_mode_startup()
+
+    if not should_continue:
+        # First-time setup completed, user needs to configure settings
+            print("\n🎯 Setup complete! Please run the application again after configuring settings.")
+            input("Press Enter to exit...")
+            sys.exit(0)
 
     while True:
         print("\nOptions:")

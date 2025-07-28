@@ -436,10 +436,12 @@ def get_operating_mode() -> str:
     
     # Validate operating mode
     valid_modes = ['InDevelopment', 'Delivered']
+    valid_modes = [m.lower() for m in valid_modes]
+    mode = mode.strip().lower()
     if mode not in valid_modes:
         mode = default_mode  # Use appropriate default
         
-    return mode
+    return mode.lower()
 
 
 
@@ -449,17 +451,22 @@ def get_app_data_folder_path() -> Path:
     Returns:
         Path to the App's data folder based on the operating system
     """
-    if os.name == 'nt':  # Windows
-        # Use %USERPROFILE%/icloud_photo_sync_settings
-        base_path = Path(os.getenv('LOCALAPPDATA', os.path.expanduser('~\\AppData\\Local')))
-    elif os.name == 'posix':
-        # Linux/Unix
-        # Use ~/.config/icloud_photo_sync
-        base_path = Path(os.path.expanduser('~/.config'))
+    if get_operating_mode() == 'delivered':
+        if os.name == 'nt':  # Windows
+            # Use %USERPROFILE%/icloud_photo_sync_settings
+            base_path = Path(os.getenv('LOCALAPPDATA', os.path.expanduser('~\\AppData\\Local')))
+        elif os.name == 'posix':
+            # Linux/Unix
+            # Use ~/.config/icloud_photo_sync
+            base_path = Path(os.path.expanduser('~/.config'))
+        else:
+            raise EnvironmentError(f"Unsupported OS: {os.name}")
+        base_path /= 'foto_pool'
     else:
-        raise EnvironmentError(f"Unsupported OS: {os.name}")
+        # In development mode, use current working directory
+        base_path = Path.cwd()
         
-    return base_path / 'foto_pool'
+    return base_path
 
 
 def get_settings_folder_path() -> Path:
@@ -468,8 +475,13 @@ def get_settings_folder_path() -> Path:
     Returns:
         Path to the settings folder based on the operating system
     """
-    base_path = get_app_data_folder_path()
-    return base_path / 'settings'
+    if get_operating_mode() == 'delivered':
+        base_path = get_app_data_folder_path()
+        base_path /= 'settings'
+    else:
+        # In development mode, use current working directory
+        base_path = Path.cwd()
+    return base_path
 
 
 def get_settings_env_file_path() -> Path:

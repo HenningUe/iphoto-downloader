@@ -1,11 +1,11 @@
 """Delivery Artifacts Management for iCloud Photo Sync Tool."""
 
+import os
 import shutil
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-from .config import BaseConfig, get_settings_folder_path
+from .config import get_settings_folder_path, get_operating_mode
 
 from .logger import get_logger
 
@@ -23,13 +23,12 @@ class DeliveryArtifactsManager:
               }]},
     ]
     
-    def __init__(self, config: 'BaseConfig') -> None:
+    def __init__(self) -> None:
         """Initialize the delivery artifacts manager.
         
         Args:
             config: Application configuration
         """
-        self.config = config
         self.logger = get_logger()
         self.settings_folder = get_settings_folder_path()
         
@@ -39,10 +38,10 @@ class DeliveryArtifactsManager:
         Returns:
             True if startup completed successfully, False if app should terminate
         """
-        if self.config.operating_mode != 'Delivered':
+        if get_operating_mode() != 'delivered':
             return True  # Nothing to do for InDevelopment mode
 
-        self.logger.info(f"Running in '{self.config.operating_mode}' mode - "
+        self.logger.info(f"Running in '{get_operating_mode()}' mode - "
                          f"checking delivery artifacts")
 
         # Ensure settings folder exists
@@ -84,15 +83,13 @@ class DeliveryArtifactsManager:
             "dst_file_type must be 'operation' or 'template'"
 
         required_files = []
-        
-        cfg = self.config
-        cfg.operating_mode  #Operating mode: "InDevelopment" or "Delivered"
+        curr_operating_mode = get_operating_mode()
         
         for file_def in self.ARTEFACT_FILES:
             dst_file = None
             for dst_def in file_def.get('dest', []):
                 if isinstance(dst_def, dict) \
-                        and dst_def.get('operation_mode') == cfg.operating_mode:
+                        and dst_def.get('operation_mode', "").lower().strip() == curr_operating_mode:
                     if dst_file_type == 'operation':
                         dst_file = dst_def.get('file', file_def['src'])
                     elif dst_file_type == 'template' and 'template' in dst_def:
@@ -221,11 +218,18 @@ class DeliveryArtifactsManager:
             print(f"   ✅ {file_def['dest'].name}")
             
         print(f"\n📋 NEXT STEPS:")
-        print(f"1. Edit 'settings.ini' to configure your sync preferences")
-        print(f"2. Review 'settings.ini.template' for all available options") 
-        print(f"3. Run the application again to start syncing")
+        print(f"1. Read README.md :-)")
+        print(f"2. Edit 'settings.ini' to configure your sync preferences")
+        print(f"3. Review 'settings.ini.template' for all available options")
+        print(f"4. Run the application again to start syncing")
         print(f"\n💡 TIP: Your iCloud and Pushover credentials will be")
         print(f"   stored securely when you run the application.")
         print(f"\n🔧 Settings folder: {self.settings_folder}")
         print("="*60)
         
+        print("Shall the file-explorer open the settings folder [y/N]? ", end="")
+        if input().strip().lower() == 'y':
+            os.system(f'explorer "{self.settings_folder}"') if sys.platform == 'win32' else \
+                os.system(f'open "{self.settings_folder}"') if sys.platform == 'darwin' else \
+                os.system(f'xdg-open "{self.settings_folder}"') if sys.platform.startswith('linux') else \
+                print("Unsupported platform for opening settings folder")

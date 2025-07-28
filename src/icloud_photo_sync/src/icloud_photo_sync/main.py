@@ -19,21 +19,22 @@ def main() -> None:
     logger = None
 
     try:
+        # Handle delivery artifacts for 'Delivered' mode
+        delivery_manager = DeliveryArtifactsManager()
+        should_continue = delivery_manager.handle_delivered_mode_startup()
+        
+        if not should_continue:
+            # First-time setup completed, user needs to configure settings
+            print("\n🎯 Setup complete! Please run the application again after configuring settings.")
+            input("Press Enter to exit...")
+            sys.exit(0)
+        
         # Get initial config to determine operating mode
         config = get_config()
 
         # Set up logging with config
         setup_logging(config.get_log_level())
         logger = get_logger()
-        
-        # Handle delivery artifacts for 'Delivered' mode
-        delivery_manager = DeliveryArtifactsManager(config)
-        should_continue = delivery_manager.handle_delivered_mode_startup()
-        
-        if not should_continue:
-            # First-time setup completed, user needs to configure settings
-            print("\n🎯 Setup complete! Please run the application again after configuring settings.")
-            sys.exit(0)
 
         if not config.icloud_has_stored_credentials():
             print("🔑 iCloud credentials not found in keyring.")
@@ -59,11 +60,13 @@ def main() -> None:
         else:
             logger.error("❌ Application failed")
             print("\n❌ Application failed!")
+            input("Press Enter to exit...")
             sys.exit(1)
 
     except KeyboardInterrupt:
         # Handle global keyboard interrupt
         print("\n🛑 Application interrupted by user")
+        input("Press Enter to exit...")
         sys.exit(130)
     except Exception as e:
         # Global exception handler - catch any unhandled exceptions
@@ -85,6 +88,7 @@ def main() -> None:
                     logger.error(f"Failed to send error notification: {notification_error}")
 
         # Ensure graceful application shutdown
+        input("Press Enter to exit...")
         sys.exit(1)
 
 
