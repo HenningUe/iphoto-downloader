@@ -67,6 +67,11 @@ class BaseConfig(ABC):
         self.sync_interval_minutes = float(os.getenv('SYNC_INTERVAL_MINUTES', '2'))
         self.maintenance_interval_hours = float(os.getenv('MAINTENANCE_INTERVAL_HOURS', '1'))
 
+        # Multi-instance control settings
+        self.allow_multi_instance: bool = (
+            os.getenv('ALLOW_MULTI_INSTANCE', 'false').lower() == 'true'
+        )
+
         # Database path configuration
         self.database_parent_directory = os.getenv('DATABASE_PARENT_DIRECTORY', '.data')
 
@@ -193,6 +198,10 @@ class BaseConfig(ABC):
         if self.maintenance_interval_hours * 60 <= self.sync_interval_minutes:
             errors.append("MAINTENANCE_INTERVAL_HOURS * 60 must be bigger than "
                           "SYNC_INTERVAL_MINUTES")
+
+        # Validate multi-instance control settings
+        if not isinstance(self.allow_multi_instance, bool):
+            errors.append(f"ALLOW_MULTI_INSTANCE must be a boolean (true/false), got: {self.allow_multi_instance}")
 
         # Validate database path configuration
         try:

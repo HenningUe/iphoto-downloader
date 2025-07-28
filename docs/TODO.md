@@ -101,18 +101,18 @@ specified.
 
 #### 2.1.4 Multi-Instance Control
 
-- [ ] Implement **instance management configuration**:
-  - [ ] Add `allow_multi_instance` boolean parameter to settings file
-  - [ ] Set default value for `allow_multi_instance` to false if not specified
-  - [ ] Add configuration validation for multi-instance parameter
-- [ ] Implement **single instance enforcement**:
-  - [ ] Detect if another instance of the application is already running
-  - [ ] Display clear message when another instance is detected
-  - [ ] Abort application immediately if multi-instance is disabled
-- [ ] Implement **multi-instance support**:
-  - [ ] Allow multiple instances when `allow_multi_instance=true`
-  - [ ] Ensure proper resource isolation between instances
-  - [ ] Handle concurrent database access appropriately
+- [x] Implement **instance management configuration**:
+  - [x] Add `allow_multi_instance` boolean parameter to settings file
+  - [x] Set default value for `allow_multi_instance` to false if not specified
+  - [x] Add configuration validation for multi-instance parameter
+- [x] Implement **single instance enforcement**:
+  - [x] Detect if another instance of the application is already running
+  - [x] Display clear message when another instance is detected
+  - [x] Abort application immediately if multi-instance is disabled
+- [x] Implement **multi-instance support**:
+  - [x] Allow multiple instances when `allow_multi_instance=true`
+  - [x] Ensure proper resource isolation between instances
+  - [x] Handle concurrent database access appropriately
 
 #### 2.1.5 Delivery Artifacts Management
 
@@ -298,15 +298,15 @@ specified.
   - [x] Test automatic file updates in "Delivered" mode (README.md, settings.ini.template)
   - [x] Test settings.ini preservation in "Delivered" mode
   - [x] Test executable default mode behavior (should be "Delivered")
-- [ ] Add **multi-instance control tests**:
-  - [ ] Test allow_multi_instance configuration parameter validation
-  - [ ] Test single instance enforcement when allow_multi_instance=false
-  - [ ] Test instance detection mechanism
-  - [ ] Test clear error message display for blocked instances
-  - [ ] Test immediate abort behavior for blocked instances
-  - [ ] Test multi-instance support when allow_multi_instance=true
-  - [ ] Test resource isolation between multiple instances
-  - [ ] Test concurrent database access handling
+- [x] Add **multi-instance control tests**:
+  - [x] Test allow_multi_instance configuration parameter validation
+  - [x] Test single instance enforcement when allow_multi_instance=false
+  - [x] Test instance detection mechanism
+  - [x] Test clear error message display for blocked instances
+  - [x] Test immediate abort behavior for blocked instances
+  - [x] Test multi-instance support when allow_multi_instance=true
+  - [x] Test resource isolation between multiple instances
+  - [x] Test concurrent database access handling
 - [ ] (Optional) Add **end-to-end test** using dummy or sandbox iCloud
 - [ ] Add all tests to CI/CD
 - [x] Achieve ≥ **80% test coverage** for core sync logic (✅ **85.21%**

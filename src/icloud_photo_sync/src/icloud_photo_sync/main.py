@@ -6,6 +6,7 @@ from auth2fa.pushover_service import PushoverService
 from icloud_photo_sync.config import get_config, BaseConfig
 from icloud_photo_sync.continuous_runner import run_execution_mode
 from icloud_photo_sync.delivery_artifacts import DeliveryArtifactsManager
+from icloud_photo_sync.instance_manager import InstanceManager
 from icloud_photo_sync.logger import setup_logging, get_logger
 from icloud_photo_sync import manage_credentials
 
@@ -32,36 +33,42 @@ def main() -> None:
         # Get initial config to determine operating mode
         config = get_config()
 
+        # Check multi-instance control before proceeding
+        instance_manager = InstanceManager(config.allow_multi_instance)
+        
         # Set up logging with config
         setup_logging(config.get_log_level())
         logger = get_logger()
 
-        if not config.icloud_has_stored_credentials():
-            print("🔑 iCloud credentials not found in keyring.")
-            manage_credentials.icloud_store_credentials()
+        # Enforce single instance if required (will exit if another instance is running)
+        with instance_manager.instance_context():
+            if not config.icloud_has_stored_credentials():
+                print("🔑 iCloud credentials not found in keyring.")
+                manage_credentials.icloud_store_credentials()
 
-        if config.enable_pushover and not config.pushover_has_stored_credentials():
-            print("🔑 Pushover credentials not found in keyring.")
-            manage_credentials.pushover_store_credentials()
+            if config.enable_pushover and not config.pushover_has_stored_credentials():
+                print("🔑 Pushover credentials not found in keyring.")
+                manage_credentials.pushover_store_credentials()
 
-        config.validate()
+            config.validate()
 
-        logger.info("Starting iCloud Photo Sync Tool")
-        logger.info(f"Configuration: {config}")
-        logger.info(f"Execution mode: {config.execution_mode}")
-        logger.info(f"Operating mode: {config.operating_mode}")
+            logger.info("Starting iCloud Photo Sync Tool")
+            logger.info(f"Configuration: {config}")
+            logger.info(f"Execution mode: {config.execution_mode}")
+            logger.info(f"Operating mode: {config.operating_mode}")
+            logger.info(f"Multi-instance allowed: {config.allow_multi_instance}")
 
-        # Run in the configured execution mode
-        success = run_execution_mode(config)
+            # Run in the configured execution mode
+            success = run_execution_mode(config)
 
-        if success:
-            logger.info("✅ Application completed successfully")
-            print("\n✅ Application completed successfully!")
-        else:
-            logger.error("❌ Application failed")
-            print("\n❌ Application failed!")
-            input("Press Enter to exit...")
-            sys.exit(1)
+            if success:
+                logger.info("✅ Application completed successfully")
+                print("\n✅ Application completed successfully!")
+            else:
+                logger.error("❌ Application failed")
+                print("\n❌ Application failed!")
+                input("Press Enter to exit...")
+                sys.exit(1)
 
     except KeyboardInterrupt:
         # Handle global keyboard interrupt
