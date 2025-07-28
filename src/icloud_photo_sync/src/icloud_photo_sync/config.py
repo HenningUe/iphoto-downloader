@@ -71,7 +71,7 @@ class BaseConfig(ABC):
         self.database_parent_directory = os.getenv('DATABASE_PARENT_DIRECTORY', '.data')
 
         # Operating mode configuration for delivery artifacts management
-        self.operating_mode = self._get_operating_mode()
+        self.operating_mode = get_operating_mode()
 
     @property
     def icloud_username(self) -> str:
@@ -133,44 +133,6 @@ class BaseConfig(ABC):
 
         # Return full path to the database file
         return database_dir / "deletion_tracker.db"
-
-    def _get_operating_mode(self) -> str:
-        """Get and validate operating mode configuration.
-        
-        Returns:
-            Operating mode: "InDevelopment" or "Delivered"
-        """
-        # Check if running from PyInstaller executable
-        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-            # Running from PyInstaller executable - default to 'Delivered'
-            default_mode = 'Delivered'
-        else:
-            # Running from source - default to 'InDevelopment'
-            default_mode = 'InDevelopment'
-            
-        mode = os.getenv('OPERATING_MODE', default_mode)
-        
-        # Validate operating mode
-        valid_modes = ['InDevelopment', 'Delivered']
-        if mode not in valid_modes:
-            mode = default_mode  # Use appropriate default
-            
-        return mode
-
-    def get_settings_folder_path(self) -> Path:
-        """Get the settings folder path for 'Delivered' mode.
-        
-        Returns:
-            Path to the settings folder based on the operating system
-        """
-        if os.name == 'nt':  # Windows
-            # Use %USERPROFILE%/icloud_photo_sync_settings
-            base_path = Path(os.path.expanduser('~'))
-        else:  # Linux/Unix
-            # Use ~/.config/icloud_photo_sync
-            base_path = Path(os.path.expanduser('~/.config'))
-            
-        return base_path / 'icloud_photo_sync_settings'
 
     def validate(self) -> None:
         """Validate configuration settings."""
@@ -249,9 +211,9 @@ class BaseConfig(ABC):
         """Create sync directory if it doesn't exist."""
         self.sync_directory.mkdir(parents=True, exist_ok=True)
 
-    def get_log_level(self) -> int:
+    def get_log_level(self, fallback_lvl:int=logging.INFO) -> int:
         """Get logging level as integer."""
-        return getattr(logging, self.log_level, logging.INFO)
+        return getattr(logging, self.log_level, fallback_lvl)
 
     def get_pushover_config(self) -> 'PushoverConfig | None':
         """Get Pushover configuration if enabled and properly configured."""
@@ -455,6 +417,61 @@ class KeyringConfig(BaseConfig):
     """Configuration class that uses keyring for storing sensitive data."""
 
 
+
+def get_operating_mode() -> str:
+    """Get and validate operating mode configuration.
+    
+    Returns:
+        Operating mode: "InDevelopment" or "Delivered"
+    """
+    # Check if running from PyInstaller executable
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        # Running from PyInstaller executable - default to 'Delivered'
+        default_mode = 'Delivered'
+    else:
+        # Running from source - default to 'InDevelopment'
+        default_mode = 'InDevelopment'
+        
+    mode = os.getenv('OPERATING_MODE', default_mode)
+    
+    # Validate operating mode
+    valid_modes = ['InDevelopment', 'Delivered']
+    if mode not in valid_modes:
+        mode = default_mode  # Use appropriate default
+        
+    return mode
+
+
+
+def get_app_data_folder_path() -> Path:
+    """Get the App's data folder path for 'Delivered' mode.
+    
+    Returns:
+        Path to the App's data folder based on the operating system
+    """
+    if os.name == 'nt':  # Windows
+        # Use %USERPROFILE%/icloud_photo_sync_settings
+        base_path = Path(os.getenv('LOCALAPPDATA', os.path.expanduser('~\\AppData\\Local')))
+    elif os.name == 'posix':
+        # Linux/Unix
+        # Use ~/.config/icloud_photo_sync
+        base_path = Path(os.path.expanduser('~/.config'))
+    else:
+        raise EnvironmentError(f"Unsupported OS: {os.name}")
+        
+    return base_path / 'foto_pool'
+
+
+def get_settings_folder_path() -> Path:
+    """Get the settings folder path for 'Delivered' mode.
+    
+    Returns:
+        Path to the settings folder based on the operating system
+    """
+    base_path = get_app_data_folder_path()
+    return base_path / 'settings'
+
+
 def get_settings_env_file_path() -> Path:
     """Get the path to the settings .env file.
 
@@ -469,25 +486,9 @@ def get_settings_env_file_path() -> Path:
     # First try current directory's .env file
     settings_ini_file_p = Path('.env')
     settings_ini_file_p_options.append(settings_ini_file_p)
-
-    # Fall back to system user settings directory
-    if os.name == 'nt':
-        # Windows
-        # Use LOCALAPPDATA for Windows user settings
-        localappdata = os.getenv('LOCALAPPDATA', os.path.expanduser('~\\AppData\\Local'))
-        user_settings_base = Path(localappdata)
-    elif os.name == 'posix':
-        # Unix-like systems (Linux, macOS)
-        # Use XDG_CONFIG_HOME or ~/.config for Unix systems
-        xdg_config = os.getenv('XDG_CONFIG_HOME')
-        if xdg_config:
-            user_settings_base = Path(xdg_config)
-        else:
-            user_settings_base = Path.home() / '.config'
-    else:
-        raise EnvironmentError(f"Unsupported OS: {os.name}")
+    
     # Create the foto_pool subdirectory path
-    foto_pool_settings_dir = user_settings_base / 'foto_pool'
+    foto_pool_settings_dir = get_settings_folder_path()
     settings_ini_file_p = foto_pool_settings_dir / 'settings.ini'
     settings_ini_file_p_options.append(settings_ini_file_p)
 
@@ -505,7 +506,7 @@ def get_settings_env_file_path() -> Path:
     return settings_ini_file_p
 
 
-def get_config(env_file_path: Path | None = None) -> BaseConfig:
+def get_config() -> BaseConfig:
     """Factory function to create appropriate config instance.
 
     Args:
@@ -514,6 +515,5 @@ def get_config(env_file_path: Path | None = None) -> BaseConfig:
     Returns:
         KeyringConfig instance
     """
-    if env_file_path is None:
-        env_file_path = get_settings_env_file_path()
+    env_file_path = get_settings_env_file_path()
     return KeyringConfig(env_file_path)

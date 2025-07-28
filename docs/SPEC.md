@@ -205,9 +205,17 @@ automatically using **GitHub Actions**.
 
 11. **Executable Packaging**
 
-- Build a standalone (single file) Windows .exe and a Linux executable using PyInstaller.
+11.1. **Main Executable Packaging**
+- Build a standalone (single file) Windows .exe and a Linux executable using PyInstaller for the main executable, which is based on #main.py as first entry point. 
+- The app shall have the image #foto-pool-main.png as App icon
 - When the executable is used the modus "Delivered" (decribed in chapter **Consideration of delivery artifacts**) shall be the default one.
 - Both files "READMD.md" and ".env.example" must be included in the executable as additional resources to be available later on for copying, see chapter **Consideration of delivery artifacts**
+- The Linux build must be statically linked if possible, or provide clear
+  runtime requirements.
+
+11.1. **Credentials Manager Executable Packaging**
+- Build a standalone (single file) Windows .exe and a Linux executable using PyInstaller for the manage_credentials executable, which is based on #manage_credentials.py as first entry point. 
+- The app shall have the image #foto-pool-credentials.png as App icon
 - The Linux build must be statically linked if possible, or provide clear
   runtime requirements.
 

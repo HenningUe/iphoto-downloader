@@ -300,6 +300,13 @@ specified.
   - [x] Configure hiddenimports for keyring backends (Windows, macOS, Linux)
   - [x] Set up proper pathex and binaries configuration
   - [x] Ensure delivery artifacts resources are accessible in executable
+  - [ ] Configure app icon using `foto-pool-main.png` for cross-platform executable branding
+- [ ] Write **Credentials Manager PyInstaller spec** for cross-platform builds:
+  - [ ] Create `manage_credentials.spec` with proper configuration
+  - [ ] Configure app icon using `foto-pool-credentials.png` for credentials manager branding
+  - [ ] Set up proper pathex and binaries configuration for credentials manager
+  - [ ] Configure hiddenimports for keyring backends (Windows, macOS, Linux)
+  - [ ] Ensure static linking where possible for Linux builds
 
 ### 6.2 Build Scripts and Commands
 
@@ -309,12 +316,14 @@ specified.
   - [x] Add PyInstaller execution with spec file
   - [x] Include post-build verification steps
   - [x] Add clean build option and output size reporting
+  - [ ] Add credentials manager executable build support
 - [x] Create **Linux build script**:
   - [x] Add shell script (`build_linux.sh`) for Linux executable generation
   - [x] Configure static linking options where possible
   - [x] Include dependency installation via `uv sync`
   - [x] Add PyInstaller execution with spec file
   - [x] Include system dependency checks and recommendations
+  - [ ] Add credentials manager executable build support
 - [x] Create **cross-platform test script**:
   - [x] Add Python script (`test_build.py`) for executable verification
   - [x] Include startup tests, dependency checks, and resource validation
@@ -341,12 +350,14 @@ specified.
   - [ ] Test delivery artifacts creation on first run
   - [ ] Verify settings folder detection (%USERPROFILE%\\AppData\\Local\\FotoPool)
   - [ ] Test file copying and user notifications
+  - [ ] Test credentials manager `.exe` functionality on Windows
 - [ ] Test **Linux builds**:
   - [x] Create automated testing tools (`test_build.py`)
   - [ ] Verify executable runs on Ubuntu/Debian
   - [ ] Test delivery artifacts creation on first run
   - [ ] Verify settings folder detection (~/.local/share/foto-pool)
   - [ ] Test file copying and user notifications
+  - [ ] Test credentials manager executable functionality on Linux
 - [ ] Test **cross-platform compatibility**:
   - [x] Create comprehensive test framework
   - [ ] Verify same behavior across platforms
@@ -502,6 +513,12 @@ specified.
     - [x] Existing settings.ini is preserved and never overwritten
   - [ ] No credentials leaked in binary
   - [ ] Handles credential failures gracefully
+  - [ ] **Credentials manager executable** works correctly:
+    - [ ] Credential storage functionality works
+    - [ ] Credential deletion functionality works
+    - [ ] Credential checking/viewing functionality works
+    - [ ] Keyring integration works properly
+    - [ ] CLI interface is user-friendly
 - [ ] Test Linux executable:
   - [ ] All 2FA features work on Linux
   - [ ] All album filtering features work on Linux
@@ -512,6 +529,12 @@ specified.
     - [x] Cross-platform settings folder detection works
     - [x] File copying works with appropriate permissions
     - [x] User notifications work correctly on Linux terminal
+  - [ ] **Credentials manager executable** works correctly on Linux:
+    - [ ] Credential storage functionality works
+    - [ ] Credential deletion functionality works
+    - [ ] Credential checking/viewing functionality works
+    - [ ] Keyring integration works properly
+    - [ ] CLI interface is user-friendly
 
 ---
 
@@ -522,6 +545,7 @@ specified.
 - [ ] Verify Windows build published to **WinGet**
 - [ ] Test install & run on fresh Windows/Linux machine
 - [ ] Verify **2FA system** works on fresh installations
+- [ ] Verify **credentials manager executable** works on fresh installations
 
 ---
 

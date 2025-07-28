@@ -1,13 +1,11 @@
 """Delivery Artifacts Management for iCloud Photo Sync Tool."""
 
-import os
 import shutil
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from .config import BaseConfig
+from .config import BaseConfig, get_settings_folder_path
 
 from .logger import get_logger
 
@@ -15,15 +13,14 @@ from .logger import get_logger
 class DeliveryArtifactsManager:
     """Manages delivery artifacts for 'Delivered' operating mode."""
     
-    REQUIRED_FILES = [
-        'README.md',
-        'settings.ini.template',
-        'settings.ini'
-    ]
-    
-    TEMPLATE_FILES = [
-        'README.md',
-        'settings.ini.template'
+    ARTEFACT_FILES = [
+        {'src': 'README.md'},
+        {'src': '.env.example',
+         'dest': [
+             {'operation_mode': 'delivered',
+              'file': 'settings.ini',
+              'template': 'settings.ini.template',
+              }]},
     ]
     
     def __init__(self, config: 'BaseConfig') -> None:
@@ -34,7 +31,7 @@ class DeliveryArtifactsManager:
         """
         self.config = config
         self.logger = get_logger()
-        self.settings_folder = config.get_settings_folder_path()
+        self.settings_folder = get_settings_folder_path()
         
     def handle_delivered_mode_startup(self) -> bool:
         """Handle startup operations for 'Delivered' mode.
@@ -44,24 +41,25 @@ class DeliveryArtifactsManager:
         """
         if self.config.operating_mode != 'Delivered':
             return True  # Nothing to do for InDevelopment mode
-            
-        self.logger.info("Running in 'Delivered' mode - checking delivery artifacts")
-        
+
+        self.logger.info(f"Running in '{self.config.operating_mode}' mode - "
+                         f"checking delivery artifacts")
+
         # Ensure settings folder exists
         self._ensure_settings_folder_exists()
-        
-        # Check if required files exist
-        missing_files = self._check_required_files()
-        
-        if missing_files:
-            # Copy missing files and terminate
-            self._copy_missing_files(missing_files)
-            self._notify_user_about_copied_files(missing_files)
-            return False  # Signal that app should terminate
             
         # Update template files on every startup
-        self._update_template_files()
+        required_template_file_defs = self._check_required_files("template")
+        self._update_template_files(required_template_file_defs)
         
+        # Check if required files exist
+        missing_file_defs = self._check_required_files("operation")
+        if missing_file_defs:
+            # Copy missing files and terminate
+            self._copy_missing_files(missing_file_defs)
+            self._notify_user_about_copied_files(missing_file_defs)
+            return False  # Signal that app should terminate
+
         return True  # Continue with normal operation
         
     def _ensure_settings_folder_exists(self) -> None:
@@ -73,75 +71,102 @@ class DeliveryArtifactsManager:
             self.logger.error(f"Failed to create settings folder {self.settings_folder}: {e}")
             raise
             
-    def _check_required_files(self) -> list[str]:
+    def _check_required_files(
+        self,
+        dst_file_type: str) -> list[dict[str, Path]]:
         """Check which required files are missing.
         
         Returns:
-            List of missing file names
+            List of missing file definitions
         """
-        missing_files = []
         
-        for file_name in self.REQUIRED_FILES:
-            file_path = self.settings_folder / file_name
-            if not file_path.exists():
-                missing_files.append(file_name)
-                self.logger.debug(f"Required file missing: {file_path}")
+        assert dst_file_type in ['operation', 'template'], \
+            "dst_file_type must be 'operation' or 'template'"
+
+        required_files = []
+        
+        cfg = self.config
+        cfg.operating_mode  #Operating mode: "InDevelopment" or "Delivered"
+        
+        for file_def in self.ARTEFACT_FILES:
+            dst_file = None
+            for dst_def in file_def.get('dest', []):
+                if isinstance(dst_def, dict) \
+                        and dst_def.get('operation_mode') == cfg.operating_mode:
+                    if dst_file_type == 'operation':
+                        dst_file = dst_def.get('file', file_def['src'])
+                    elif dst_file_type == 'template' and 'template' in dst_def:
+                        dst_file = dst_def['template']
+                    break
+                else:
+                    raise ValueError(f"Unsupported delivery file: {dst_def}")
+            if dst_file is None and dst_file_type == 'operation':
+                dst_file = file_def['src']
+            elif dst_file is None:
+                continue
+            dst_file_path = self.settings_folder / dst_file
+            if not dst_file_path.exists():
+                missing_file_def = {
+                    'src': Path(file_def['src']),
+                    'dest': dst_file_path
+                }
+                required_files.append(missing_file_def)
+                self.logger.debug(f"Required file missing: {dst_file_path}")
                 
-        return missing_files
-        
-    def _copy_missing_files(self, missing_files: list[str]) -> None:
+        return required_files
+
+    def _copy_missing_files(self, missing_files: list[dict[str, Path]]) -> None:
         """Copy missing required files to settings folder.
         
         Args:
-            missing_files: List of file names to copy
+            missing_files: List of file definitions to copy
         """
-        for file_name in missing_files:
+        for file_def in missing_files:
             try:
-                if file_name == 'settings.ini':
-                    # Create empty settings.ini from template
-                    self._create_settings_ini_from_template()
-                else:
-                    # Copy from embedded resources
-                    self._copy_file_from_resources(file_name)
-                    
-                self.logger.info(f"Copied required file: {file_name}")
-                
+                self._copy_file_from_resources(file_def['src'], file_def['dest'])
+                self.logger.info(f"Copied required file: {file_def['src'].name}")
+
             except Exception as e:
-                self.logger.error(f"Failed to copy file {file_name}: {e}")
+                self.logger.error(f"Failed to copy file {file_def['src']}: {e}")
                 raise
                 
-    def _update_template_files(self) -> None:
+    def _update_template_files(
+        self,
+        required_template_file_defs: list[dict[str, Path]]) -> None:
         """Update template files on every startup (overwrite existing)."""
-        for file_name in self.TEMPLATE_FILES:
+        for file_def in required_template_file_defs:
             try:
-                self._copy_file_from_resources(file_name)
-                self.logger.debug(f"Updated template file: {file_name}")
+                self._copy_file_from_resources(file_def['src'], file_def['dest'])
+                self.logger.debug(f"Updated template file: {file_def['dest'].name}")
             except Exception as e:
-                self.logger.warning(f"Failed to update template file {file_name}: {e}")
-                
-    def _copy_file_from_resources(self, file_name: str) -> None:
+                self.logger.warning(f"Failed to update template file {file_def['dest'].name}: {e}")
+
+    def _copy_file_from_resources(
+        self,
+        src_file_name: str | Path,
+        dst_file_path: Path) -> None:
         """Copy a file from repository sources to settings folder.
         
         Args:
             file_name: Name of the file to copy
         """
-        destination = self.settings_folder / file_name
         
         # Determine source file location from repository
-        if file_name == 'README.md':
+        src_file_name = str(src_file_name)
+        if src_file_name == 'README.md':
             source_file = self._get_repository_readme_path()
-        elif file_name == 'settings.ini.template':
+        elif src_file_name == '.env.example':
             source_file = self._get_repository_env_example_path()
         else:
-            self.logger.error(f"Unknown file type for delivery: {file_name}")
-            raise ValueError(f"Unsupported delivery file: {file_name}")
+            self.logger.error(f"Unknown file type for delivery: {src_file_name}")
+            raise ValueError(f"Unsupported delivery file: {src_file_name}")
             
         if not source_file.exists():
             self.logger.error(f"Repository source file not found: {source_file}")
             raise FileNotFoundError(f"Required repository file missing: {source_file}")
-            
-        shutil.copy2(source_file, destination)
-        self.logger.debug(f"Copied repository file {file_name} from {source_file}")
+
+        shutil.copy2(source_file, dst_file_path)
+        self.logger.debug(f"Copied repository file {src_file_name} from {source_file}")
         
     def _get_repository_readme_path(self) -> Path:
         """Get path to repository README.md file.
@@ -176,32 +201,10 @@ class DeliveryArtifactsManager:
             # Navigate up from src/icloud_photo_sync/src/icloud_photo_sync/ to repository root
             repo_root = current_dir.parent.parent.parent.parent
             return repo_root / '.env.example'
-    
-    def _create_settings_ini_from_template(self) -> None:
-        """Create initial settings.ini file with minimal settings."""
-        settings_ini_path = self.settings_folder / 'settings.ini'
         
-        # Only create if it doesn't exist (never overwrite existing settings)
-        if settings_ini_path.exists():
-            self.logger.debug("settings.ini already exists, preserving user settings")
-            return
-            
-        initial_content = """# iCloud Photo Sync Tool - Personal Configuration
-# Edit this file to customize your settings
-# See settings.ini.template for all available options
-
-SYNC_DIRECTORY=./photos
-DRY_RUN=false
-LOG_LEVEL=INFO
-EXECUTION_MODE=single
-OPERATING_MODE=Delivered
-ENABLE_PUSHOVER=true
-"""
-
-        settings_ini_path.write_text(initial_content, encoding='utf-8')
-        self.logger.info(f"Created initial settings.ini file: {settings_ini_path}")
-        
-    def _notify_user_about_copied_files(self, copied_files: list[str]) -> None:
+    def _notify_user_about_copied_files(
+        self,
+        copied_files: list[dict[str, Path]]) -> None:
         """Notify user about copied files and provide guidance.
         
         Args:
@@ -213,9 +216,9 @@ ENABLE_PUSHOVER=true
         print(f"\nRequired configuration files have been created in:")
         print(f"📁 {self.settings_folder}")
         print(f"\nFiles created:")
-        
-        for file_name in copied_files:
-            print(f"   ✅ {file_name}")
+
+        for file_def in copied_files:
+            print(f"   ✅ {file_def['dest'].name}")
             
         print(f"\n📋 NEXT STEPS:")
         print(f"1. Edit 'settings.ini' to configure your sync preferences")
@@ -226,15 +229,3 @@ ENABLE_PUSHOVER=true
         print(f"\n🔧 Settings folder: {self.settings_folder}")
         print("="*60)
         
-    def get_env_file_path(self) -> Path:
-        """Get the path to the .env file based on operating mode.
-        
-        Returns:
-            Path to the .env file to use
-        """
-        if self.config.operating_mode == 'Delivered':
-            # In delivered mode, use settings.ini from settings folder
-            return self.settings_folder / 'settings.ini'
-        else:
-            # In development mode, use .env from project root
-            return Path('.env')

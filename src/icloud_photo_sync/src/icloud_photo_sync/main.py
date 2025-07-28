@@ -10,6 +10,84 @@ from icloud_photo_sync.logger import setup_logging, get_logger
 from icloud_photo_sync import manage_credentials
 
 
+def main() -> None:
+    """Main entry point for the application."""
+    print("🌟 iCloud Photo Sync Tool v0.1.0")
+    print("==================================")
+
+    config = None
+    logger = None
+
+    try:
+        # Get initial config to determine operating mode
+        config = get_config()
+
+        # Set up logging with config
+        setup_logging(config.get_log_level())
+        logger = get_logger()
+        
+        # Handle delivery artifacts for 'Delivered' mode
+        delivery_manager = DeliveryArtifactsManager(config)
+        should_continue = delivery_manager.handle_delivered_mode_startup()
+        
+        if not should_continue:
+            # First-time setup completed, user needs to configure settings
+            print("\n🎯 Setup complete! Please run the application again after configuring settings.")
+            sys.exit(0)
+
+        if not config.icloud_has_stored_credentials():
+            print("🔑 iCloud credentials not found in keyring.")
+            manage_credentials.icloud_store_credentials()
+
+        if config.enable_pushover and not config.pushover_has_stored_credentials():
+            print("🔑 Pushover credentials not found in keyring.")
+            manage_credentials.pushover_store_credentials()
+
+        config.validate()
+
+        logger.info("Starting iCloud Photo Sync Tool")
+        logger.info(f"Configuration: {config}")
+        logger.info(f"Execution mode: {config.execution_mode}")
+        logger.info(f"Operating mode: {config.operating_mode}")
+
+        # Run in the configured execution mode
+        success = run_execution_mode(config)
+
+        if success:
+            logger.info("✅ Application completed successfully")
+            print("\n✅ Application completed successfully!")
+        else:
+            logger.error("❌ Application failed")
+            print("\n❌ Application failed!")
+            sys.exit(1)
+
+    except KeyboardInterrupt:
+        # Handle global keyboard interrupt
+        print("\n🛑 Application interrupted by user")
+        sys.exit(130)
+    except Exception as e:
+        # Global exception handler - catch any unhandled exceptions
+        error_message = f"Critical application error: {e}"
+        print(f"❌ {error_message}")
+
+        # Log the error if possible
+        if logger:
+            logger.critical(f"Unhandled exception in main: {e}", exc_info=True)
+
+        # Send error notification via Pushover if configured
+        if config:
+            try:
+                sanitized_message = sanitize_error_message(e)
+                send_error_notification(config, sanitized_message, "Critical Error")
+            except Exception as notification_error:
+                # Don't let notification failures prevent proper error handling
+                if logger:
+                    logger.error(f"Failed to send error notification: {notification_error}")
+
+        # Ensure graceful application shutdown
+        sys.exit(1)
+
+
 def send_error_notification(
     config: BaseConfig, error_message: str, error_type: str = "Application Error"
 ) -> None:
@@ -81,89 +159,6 @@ def sanitize_error_message(error: Exception) -> str:
         sanitized = sanitized[:max_length - 3] + "..."
 
     return f"{error_type}: {sanitized}"
-
-
-def main() -> None:
-    """Main entry point for the application."""
-    print("🌟 iCloud Photo Sync Tool v0.1.0")
-    print("==================================")
-
-    config = None
-    logger = None
-
-    try:
-        # Get initial config to determine operating mode
-        config = get_config()
-        
-        # Handle delivery artifacts for 'Delivered' mode
-        delivery_manager = DeliveryArtifactsManager(config)
-        should_continue = delivery_manager.handle_delivered_mode_startup()
-        
-        if not should_continue:
-            # First-time setup completed, user needs to configure settings
-            print("\n🎯 Setup complete! Please run the application again after configuring settings.")
-            sys.exit(0)
-        
-        # Re-load config with correct .env file path for delivered mode
-        if config.operating_mode == 'Delivered':
-            env_file_path = delivery_manager.get_env_file_path()
-            config = get_config(env_file_path)
-
-        if not config.icloud_has_stored_credentials():
-            print("🔑 iCloud credentials not found in keyring.")
-            manage_credentials.icloud_store_credentials()
-
-        if config.enable_pushover and not config.pushover_has_stored_credentials():
-            print("🔑 Pushover credentials not found in keyring.")
-            manage_credentials.pushover_store_credentials()
-
-        config.validate()
-
-        # Set up logging with config
-        setup_logging(config.get_log_level())
-        logger = get_logger()
-
-        logger.info("Starting iCloud Photo Sync Tool")
-        logger.info(f"Configuration: {config}")
-        logger.info(f"Execution mode: {config.execution_mode}")
-        logger.info(f"Operating mode: {config.operating_mode}")
-
-        # Run in the configured execution mode
-        success = run_execution_mode(config)
-
-        if success:
-            logger.info("✅ Application completed successfully")
-            print("\n✅ Application completed successfully!")
-        else:
-            logger.error("❌ Application failed")
-            print("\n❌ Application failed!")
-            sys.exit(1)
-
-    except KeyboardInterrupt:
-        # Handle global keyboard interrupt
-        print("\n🛑 Application interrupted by user")
-        sys.exit(130)
-    except Exception as e:
-        # Global exception handler - catch any unhandled exceptions
-        error_message = f"Critical application error: {e}"
-        print(f"❌ {error_message}")
-
-        # Log the error if possible
-        if logger:
-            logger.critical(f"Unhandled exception in main: {e}", exc_info=True)
-
-        # Send error notification via Pushover if configured
-        if config:
-            try:
-                sanitized_message = sanitize_error_message(e)
-                send_error_notification(config, sanitized_message, "Critical Error")
-            except Exception as notification_error:
-                # Don't let notification failures prevent proper error handling
-                if logger:
-                    logger.error(f"Failed to send error notification: {notification_error}")
-
-        # Ensure graceful application shutdown
-        sys.exit(1)
 
 
 if __name__ == "__main__":
