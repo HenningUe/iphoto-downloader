@@ -3,6 +3,7 @@
 import sqlite3
 import shutil
 import glob
+import time
 from pathlib import Path
 from datetime import datetime
 
@@ -96,17 +97,15 @@ class DeletionTracker:
             conn: SQLite database connection
             version: Schema version to set
         """
-        try:
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS schema_version (
-                    version INTEGER PRIMARY KEY
-                )
-            """)
-            conn.execute("DELETE FROM schema_version")
-            conn.execute("INSERT INTO schema_version (version) VALUES (?)", (version,))
-            self.logger.debug(f"Set schema version to {version}")
-        except Exception as e:
-            self.logger.error(f"Error setting schema version: {e}")
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS schema_version (
+                version INTEGER PRIMARY KEY
+            )
+        """)
+        conn.execute("DELETE FROM schema_version")
+        conn.execute("INSERT INTO schema_version (version) VALUES (?)", (version,))
+        self.logger.debug(f"Set schema version to {version}")
+
 
     def _create_album_aware_schema(self, conn) -> None:
         """Create new album-aware database schema.
@@ -159,6 +158,113 @@ class DeletionTracker:
             conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_downloaded_album_name
                 ON downloaded_photos(source_album_name)
+            """)
+
+            # Table for enhanced photo tracking with composite keys
+            # First check if table exists and has old format
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='photo_tracking'")
+            table_exists = cursor.fetchone() is not None
+            
+            if table_exists:
+                # Check if it has the new schema with album_name column
+                cursor.execute("PRAGMA table_info(photo_tracking)")
+                columns = [col[1] for col in cursor.fetchall()]
+                if 'album_name' not in columns:
+                    # Old format table exists, need to migrate
+                    self.logger.info("Migrating old photo_tracking table to enhanced format")
+                    
+                    # Backup old data
+                    cursor.execute("SELECT * FROM photo_tracking")
+                    old_data = cursor.fetchall()
+                    
+                    # Drop old table
+                    conn.execute("DROP TABLE photo_tracking")
+                    
+                    # Create new table
+                    conn.execute("""
+                        CREATE TABLE photo_tracking (
+                            photo_id TEXT NOT NULL,
+                            album_name TEXT NOT NULL,
+                            filename TEXT NOT NULL,
+                            local_path TEXT,
+                            file_size INTEGER,
+                            modified_date TEXT,
+                            checksum TEXT,
+                            sync_status TEXT DEFAULT 'pending',
+                            last_sync_attempt TEXT,
+                            error_count INTEGER DEFAULT 0,
+                            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                            PRIMARY KEY (photo_id, album_name)
+                        )
+                    """)
+                    
+                    # Migrate old data with 'Unknown' album
+                    for row in old_data:
+                        try:
+                            # Old format: (photo_id, filename, local_path, file_size, modified_date, checksum, sync_status)
+                            photo_id = row[0]
+                            filename = row[1] if len(row) > 1 else 'unknown.jpg'
+                            local_path = row[2] if len(row) > 2 else None
+                            file_size = row[3] if len(row) > 3 else None
+                            checksum = row[5] if len(row) > 5 else None
+                            sync_status = row[6] if len(row) > 6 else 'pending'
+                            
+                            conn.execute("""
+                                INSERT INTO photo_tracking 
+                                (photo_id, album_name, filename, local_path, file_size, 
+                                 checksum, sync_status, created_at)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                            """, (photo_id, 'Unknown', filename, local_path, file_size, checksum, sync_status))
+                        except Exception as e:
+                            self.logger.warning(f"Failed to migrate photo record {row}: {e}")
+                    
+                    self.logger.info(f"Migrated {len(old_data)} photos to enhanced tracking format")
+            else:
+                # Create new table
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS photo_tracking (
+                        photo_id TEXT NOT NULL,
+                        album_name TEXT NOT NULL,
+                        filename TEXT NOT NULL,
+                        local_path TEXT,
+                        file_size INTEGER,
+                        modified_date TEXT,
+                        checksum TEXT,
+                        sync_status TEXT DEFAULT 'pending',
+                        last_sync_attempt TEXT,
+                        error_count INTEGER DEFAULT 0,
+                        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                        PRIMARY KEY (photo_id, album_name)
+                    )
+                """)
+            
+            conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_photo_tracking_album
+                ON photo_tracking(album_name)
+            """)
+            conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_photo_tracking_status
+                ON photo_tracking(sync_status)
+            """)
+
+            # Table for album tracking
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS album_tracking (
+                    album_name TEXT PRIMARY KEY,
+                    is_shared BOOLEAN DEFAULT FALSE,
+                    total_photos INTEGER DEFAULT 0,
+                    synced_photos INTEGER DEFAULT 0,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    last_sync TEXT,
+                    sync_status TEXT DEFAULT 'pending'
+                )
+            """)
+            conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_album_tracking_status
+                ON album_tracking(sync_status)
             """)
 
             self.logger.info("Created album-aware database schema")
@@ -662,7 +768,7 @@ class DeletionTracker:
         """Get all downloaded photos with their metadata (album-aware).
 
         Returns:
-            Dictionary mapping (photo_name, album_name) tuple to photo metadata
+            Dictionary mapping photo_id to photo metadata
         """
         try:
             with sqlite3.connect(self.db_path) as conn:
@@ -673,11 +779,11 @@ class DeletionTracker:
                 """)
                 result = {}
                 for row in cursor.fetchall():
-                    # Use composite key (photo_name, album_name)
-                    key = (row[0], row[1])
-                    result[key] = {
-                        'photo_name': row[0],
-                        'source_album_name': row[1],
+                    # Use photo_id as key for simpler access
+                    photo_id = row[2]
+                    result[photo_id] = {
+                        'filename': row[0],  # Map photo_name to filename for test compatibility
+                        'album_name': row[1],  # Map source_album_name to album_name for test compatibility
                         'photo_id': row[2],
                         'local_path': row[3],
                         'downloaded_at': row[4],
@@ -701,9 +807,9 @@ class DeletionTracker:
         try:
             downloaded_photos = self.get_downloaded_photos()
 
-            for (photo_name, album_name), metadata in downloaded_photos.items():
+            for photo_id, metadata in downloaded_photos.items():
                 # Check if this photo is already marked as deleted
-                if self.is_photo_deleted(photo_name, album_name):
+                if self.is_photo_deleted(metadata['filename'], metadata['album_name']):
                     continue
 
                 # Check if the file still exists locally
@@ -712,10 +818,10 @@ class DeletionTracker:
                     # Photo was deleted locally
                     deleted_photos.append({
                         'photo_id': metadata['photo_id'],
-                        'filename': photo_name,
+                        'filename': metadata['filename'],
                         'local_path': metadata['local_path'],
                         'file_size': metadata['file_size'],
-                        'album_name': album_name
+                        'album_name': metadata['album_name']
                     })
 
             return deleted_photos
@@ -761,6 +867,492 @@ class DeletionTracker:
         except Exception as e:
             self.logger.error(f"❌ Failed to remove downloaded photo {photo_id}: {e}")
 
+    def track_photo(
+        self, 
+        photo_id: str, 
+        album_name: str, 
+        filename: str, 
+        local_path: str,
+        file_size: int,
+        checksum: str,
+        **kwargs
+    ) -> None:
+        """Track a photo with album-aware composite key identification.
+        
+        Args:
+            photo_id: Unique photo identifier
+            album_name: Album name where photo belongs
+            filename: Photo filename
+            local_path: Local file path
+            file_size: File size in bytes
+            checksum: Photo checksum
+            **kwargs: Additional optional parameters
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute("""
+                    INSERT OR REPLACE INTO photo_tracking 
+                    (photo_id, album_name, filename, local_path, file_size, checksum,
+                     sync_status, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                """, (photo_id, album_name, filename, local_path, file_size, checksum))
+                conn.commit()
+            self.logger.debug(f"📸 Tracked photo {photo_id} in album {album_name}")
+        except Exception as e:
+            self.logger.error(f"❌ Failed to track photo {photo_id}: {e}")
+
+    def track_album(self, album_name: str, is_shared: bool, total_photos: int) -> None:
+        """Track an album with metadata.
+        
+        Args:
+            album_name: Album name
+            is_shared: Whether album is shared
+            total_photos: Total number of photos in album
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute("""
+                    INSERT OR REPLACE INTO album_tracking 
+                    (album_name, is_shared, total_photos, created_at)
+                    VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                """, (album_name, is_shared, total_photos))
+                conn.commit()
+            self.logger.debug(f"📁 Tracked album {album_name} with {total_photos} photos")
+        except Exception as e:
+            self.logger.error(f"❌ Failed to track album {album_name}: {e}")
+
+    def get_all_tracked_photos(self) -> list[dict]:
+        """Get all tracked photos with their metadata.
+        
+        Returns:
+            List of dictionaries containing photo data
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute("""
+                    SELECT photo_id, album_name, filename, local_path, file_size, 
+                           checksum, sync_status, created_at
+                    FROM photo_tracking
+                    ORDER BY created_at DESC
+                """)
+                rows = cursor.fetchall()
+                
+                columns = ['photo_id', 'album_name', 'filename', 'local_path', 
+                          'file_size', 'checksum', 'sync_status', 'created_at']
+                return [dict(zip(columns, row)) for row in rows]
+        except Exception as e:
+            self.logger.error(f"❌ Failed to get tracked photos: {e}")
+            return []
+
+    def get_photos_in_album(self, album_name: str) -> list[dict]:
+        """Get all photos in a specific album.
+        
+        Args:
+            album_name: Album name to query
+            
+        Returns:
+            List of dictionaries containing photo data
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute("""
+                    SELECT photo_id, album_name, filename, local_path, file_size, 
+                           checksum, sync_status, created_at
+                    FROM photo_tracking
+                    WHERE album_name = ?
+                    ORDER BY created_at DESC
+                """, (album_name,))
+                rows = cursor.fetchall()
+                
+                columns = ['photo_id', 'album_name', 'filename', 'local_path', 
+                          'file_size', 'checksum', 'sync_status', 'created_at']
+                return [dict(zip(columns, row)) for row in rows]
+        except Exception as e:
+            self.logger.error(f"❌ Failed to get photos in album {album_name}: {e}")
+            return []
+
+    def update_photo_sync_status(self, photo_id: str, album_name: str, status: str) -> None:
+        """Update sync status for a specific photo in an album.
+        
+        Args:
+            photo_id: Photo identifier
+            album_name: Album name
+            status: New sync status
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute("""
+                    UPDATE photo_tracking 
+                    SET sync_status = ?, last_sync_attempt = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+                    WHERE photo_id = ? AND album_name = ?
+                """, (status, photo_id, album_name))
+                conn.commit()
+            self.logger.debug(f"📸 Updated photo {photo_id} status to {status}")
+        except Exception as e:
+            self.logger.error(f"❌ Failed to update photo status: {e}")
+
+    def get_photo_sync_status(self, photo_id: str, album_name: str) -> str:
+        """Get sync status for a specific photo in an album.
+        
+        Args:
+            photo_id: Photo identifier
+            album_name: Album name
+            
+        Returns:
+            Sync status string
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute("""
+                    SELECT sync_status FROM photo_tracking
+                    WHERE photo_id = ? AND album_name = ?
+                """, (photo_id, album_name))
+                result = cursor.fetchone()
+                return result[0] if result else "unknown"
+        except Exception as e:
+            self.logger.error(f"❌ Failed to get photo status: {e}")
+            return "error"
+
+    def update_album_sync_progress(self, album_name: str, synced_photos: int) -> None:
+        """Update sync progress for an album.
+        
+        Args:
+            album_name: Album name
+            synced_photos: Number of photos synced
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute("""
+                    UPDATE album_tracking 
+                    SET synced_photos = ?, last_sync = CURRENT_TIMESTAMP
+                    WHERE album_name = ?
+                """, (synced_photos, album_name))
+                conn.commit()
+            self.logger.debug(f"📁 Updated album {album_name} progress: {synced_photos} photos")
+        except Exception as e:
+            self.logger.error(f"❌ Failed to update album progress: {e}")
+
+    def get_album_statistics(self, album_name: str) -> dict:
+        """Get statistics for a specific album.
+        
+        Args:
+            album_name: Album name
+            
+        Returns:
+            Dictionary with album statistics
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute("""
+                    SELECT is_shared, total_photos, synced_photos, created_at, last_sync
+                    FROM album_tracking
+                    WHERE album_name = ?
+                """, (album_name,))
+                row = cursor.fetchone()
+                
+                if row:
+                    return {
+                        'album_name': album_name,
+                        'is_shared': bool(row[0]),
+                        'total_photos': row[1],
+                        'synced_photos': row[2] or 0,
+                        'created_at': row[3],
+                        'last_sync': row[4]
+                    }
+                else:
+                    return {
+                        'album_name': album_name,
+                        'is_shared': False,
+                        'total_photos': 0,
+                        'synced_photos': 0,
+                        'created_at': None,
+                        'last_sync': None
+                    }
+        except Exception as e:
+            self.logger.error(f"❌ Failed to get album statistics: {e}")
+            return {}
+
+    def update_album_sync_status(self, album_name: str, status: str) -> None:
+        """Update sync status for an album.
+        
+        Args:
+            album_name: Album name
+            status: New sync status
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute("""
+                    UPDATE album_tracking 
+                    SET sync_status = ?, last_sync = CURRENT_TIMESTAMP
+                    WHERE album_name = ?
+                """, (status, album_name))
+                conn.commit()
+            self.logger.debug(f"📁 Updated album {album_name} status to {status}")
+        except Exception as e:
+            self.logger.error(f"❌ Failed to update album status: {e}")
+
+    def bulk_track_photos(self, photos_data: list[dict]) -> None:
+        """Bulk track multiple photos for performance.
+        
+        Args:
+            photos_data: List of photo dictionaries with required fields
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.executemany("""
+                    INSERT OR REPLACE INTO photo_tracking 
+                    (photo_id, album_name, filename, local_path, file_size, checksum,
+                     sync_status, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                """, [(photo['photo_id'], photo['album_name'], photo['filename'], 
+                      photo['local_path'], photo['file_size'], photo['checksum']) 
+                     for photo in photos_data])
+                conn.commit()
+            self.logger.debug(f"📸 Bulk tracked {len(photos_data)} photos")
+        except Exception as e:
+            self.logger.error(f"❌ Failed to bulk track photos: {e}")
+
+    def cleanup_old_completed_entries(self, days_old: int = 30) -> int:
+        """Clean up old completed photo tracking entries.
+        
+        Args:
+            days_old: Number of days old entries to clean up
+            
+        Returns:
+            Number of entries cleaned up
+        """
+        try:
+            cutoff_timestamp = time.time() - (days_old * 24 * 60 * 60)
+            
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute("""
+                    DELETE FROM photo_tracking 
+                    WHERE sync_status = 'completed' 
+                    AND updated_at < ?
+                """, (cutoff_timestamp,))
+                deleted_count = cursor.rowcount
+                conn.commit()
+                
+            self.logger.debug(f"🧹 Cleaned up {deleted_count} old completed entries")
+            return deleted_count
+        except Exception as e:
+            self.logger.error(f"❌ Failed to cleanup old entries: {e}")
+            return 0
+
+    def find_cross_album_duplicates(self) -> list[dict]:
+        """Find photos that exist in multiple albums (same checksum).
+        
+        Returns:
+            List of duplicate groups
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute("""
+                    SELECT checksum, GROUP_CONCAT(photo_id || ':' || album_name) as locations,
+                           COUNT(*) as duplicate_count
+                    FROM photo_tracking 
+                    WHERE checksum IS NOT NULL
+                    GROUP BY checksum 
+                    HAVING COUNT(*) > 1
+                    ORDER BY duplicate_count DESC
+                """)
+                
+                duplicates = []
+                for row in cursor.fetchall():
+                    checksum, locations_str, count = row
+                    locations = []
+                    albums = []
+                    for loc in locations_str.split(','):
+                        if ':' in loc:
+                            photo_id, album_name = loc.split(':', 1)
+                            locations.append({'photo_id': photo_id, 'album_name': album_name})
+                            albums.append(album_name)
+                    
+                    duplicates.append({
+                        'checksum': checksum,
+                        'locations': locations,
+                        'albums': albums,  # Add albums key for test compatibility
+                        'duplicate_count': count
+                    })
+                
+                return duplicates
+        except Exception as e:
+            self.logger.error(f"❌ Failed to find duplicates: {e}")
+            return []
+
+    def record_sync_error(self, photo_id: str, album_name: str, error_message: str) -> None:
+        """Record a sync error for a photo.
+        
+        Args:
+            photo_id: Photo identifier
+            album_name: Album name
+            error_message: Error message
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute("""
+                    UPDATE photo_tracking 
+                    SET sync_status = 'failed', 
+                        error_count = error_count + 1,
+                        last_sync_attempt = CURRENT_TIMESTAMP,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE photo_id = ? AND album_name = ?
+                """, (photo_id, album_name))
+                conn.commit()
+            self.logger.debug(f"🚫 Recorded sync error for {photo_id}: {error_message}")
+        except Exception as e:
+            self.logger.error(f"❌ Failed to record sync error: {e}")
+
+    def get_album_sync_progress(self, album_name: str) -> dict:
+        """Get detailed sync progress for an album.
+        
+        Args:
+            album_name: Album name
+            
+        Returns:
+            Dictionary with progress information
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                # Get album metadata
+                cursor = conn.execute("""
+                    SELECT total_photos FROM album_tracking WHERE album_name = ?
+                """, (album_name,))
+                album_row = cursor.fetchone()
+                total_photos_from_album = album_row[0] if album_row else 0
+                
+                # Get actual tracked photos stats
+                cursor = conn.execute("""
+                    SELECT 
+                        COUNT(*) as tracked_photos,
+                        SUM(CASE WHEN sync_status = 'completed' THEN 1 ELSE 0 END) as completed,
+                        SUM(CASE WHEN sync_status = 'failed' THEN 1 ELSE 0 END) as failed,
+                        SUM(CASE WHEN sync_status = 'pending' THEN 1 ELSE 0 END) as pending,
+                        SUM(CASE WHEN sync_status = 'in_progress' THEN 1 ELSE 0 END) as in_progress
+                    FROM photo_tracking 
+                    WHERE album_name = ?
+                """, (album_name,))
+                
+                row = cursor.fetchone()
+                if row:
+                    tracked, completed, failed, pending, in_progress = row
+                    return {
+                        'album_name': album_name,
+                        'total_photos': total_photos_from_album,  # From album metadata
+                        'tracked_photos': tracked or 0,  # Actual photos tracked
+                        'completed': completed or 0,
+                        'completed_photos': completed or 0,  # Alternative field name
+                        'failed': failed or 0,
+                        'failed_photos': failed or 0,  # Alternative field name
+                        'pending': pending or 0,
+                        'pending_photos': pending or 0,  # Alternative field name
+                        'in_progress': in_progress or 0,
+                        'in_progress_photos': in_progress or 0,  # Alternative field name
+                        'completion_percentage': (completed or 0) / max(tracked or 1, 1) * 100
+                    }
+                else:
+                    return {
+                        'album_name': album_name,
+                        'total_photos': total_photos_from_album,
+                        'tracked_photos': 0,
+                        'completed': 0,
+                        'completed_photos': 0,
+                        'failed': 0,
+                        'failed_photos': 0,
+                        'pending': 0,
+                        'pending_photos': 0,
+                        'in_progress': 0,
+                        'in_progress_photos': 0,
+                        'completion_percentage': 0.0
+                    }
+        except Exception as e:
+            self.logger.error(f"❌ Failed to get album sync progress: {e}")
+            return {}
+
+    def get_albums_by_status(self, status: str) -> list[dict]:
+        """Get list of albums with specific sync status.
+        
+        Args:
+            status: Sync status to filter by
+            
+        Returns:
+            List of album dictionaries
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute("""
+                    SELECT album_name, is_shared, total_photos, synced_photos, 
+                           created_at, last_sync, sync_status
+                    FROM album_tracking
+                    WHERE sync_status = ?
+                    ORDER BY album_name
+                """, (status,))
+                
+                columns = ['album_name', 'is_shared', 'total_photos', 'synced_photos',
+                          'created_at', 'last_sync', 'sync_status']
+                return [dict(zip(columns, row)) for row in cursor.fetchall()]
+        except Exception as e:
+            self.logger.error(f"❌ Failed to get albums by status: {e}")
+            return []
+
+    def get_photo_info(self, photo_id: str, album_name: str) -> dict:
+        """Get detailed information for a specific photo.
+        
+        Args:
+            photo_id: Photo identifier
+            album_name: Album name
+            
+        Returns:
+            Dictionary with photo information
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute("""
+                    SELECT photo_id, album_name, filename, local_path, file_size, 
+                           checksum, sync_status, last_sync_attempt, error_count, created_at
+                    FROM photo_tracking
+                    WHERE photo_id = ? AND album_name = ?
+                """, (photo_id, album_name))
+                
+                row = cursor.fetchone()
+                if row:
+                    columns = ['photo_id', 'album_name', 'filename', 'local_path', 
+                              'file_size', 'checksum', 'sync_status', 'last_sync_attempt', 
+                              'error_count', 'created_at']
+                    return dict(zip(columns, row))
+                else:
+                    return {}
+        except Exception as e:
+            self.logger.error(f"❌ Failed to get photo info: {e}")
+            return {}
+
+    def get_photos_for_retry(self, max_errors: int = 3) -> list[dict]:
+        """Get photos that are eligible for retry based on error count.
+        
+        Args:
+            max_errors: Maximum error count for retry eligibility
+            
+        Returns:
+            List of photo dictionaries eligible for retry
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute("""
+                    SELECT photo_id, album_name, filename, local_path, file_size, 
+                           checksum, sync_status, last_sync_attempt, error_count, created_at
+                    FROM photo_tracking
+                    WHERE sync_status = 'failed' AND error_count < ?
+                    ORDER BY last_sync_attempt ASC
+                """, (max_errors,))
+                
+                columns = ['photo_id', 'album_name', 'filename', 'local_path', 
+                          'file_size', 'checksum', 'sync_status', 'last_sync_attempt', 
+                          'error_count', 'created_at']
+                return [dict(zip(columns, row)) for row in cursor.fetchall()]
+        except Exception as e:
+            self.logger.error(f"❌ Failed to get photos for retry: {e}")
+            return []
+
     def close(self) -> None:
         """Close any open database connections.
 
@@ -776,5 +1368,20 @@ class DeletionTracker:
             if self.db_path.exists():
                 conn = sqlite3.connect(self.db_path)
                 conn.close()
+        except Exception:
+            pass  # Ignore errors during cleanup
+
+        # Also close connections to any backup files
+        try:
+            backup_pattern = str(self.db_path.with_suffix(".backup_*.db"))
+            backup_files = glob.glob(backup_pattern)
+            for backup_file in backup_files:
+                try:
+                    backup_path = Path(backup_file)
+                    if backup_path.exists():
+                        conn = sqlite3.connect(backup_path)
+                        conn.close()
+                except Exception:
+                    pass  # Ignore errors during cleanup
         except Exception:
             pass  # Ignore errors during cleanup

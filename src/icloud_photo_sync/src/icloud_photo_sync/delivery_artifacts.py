@@ -44,22 +44,27 @@ class DeliveryArtifactsManager:
         self.logger.info(f"Running in '{get_operating_mode()}' mode - "
                          f"checking delivery artifacts")
 
-        # Ensure settings folder exists
-        self._ensure_settings_folder_exists()
+        try:
+            # Ensure settings folder exists
+            self._ensure_settings_folder_exists()
+                
+            # Update template files on every startup
+            required_template_file_defs = self._check_required_files("template")
+            self._update_template_files(required_template_file_defs)
             
-        # Update template files on every startup
-        required_template_file_defs = self._check_required_files("template")
-        self._update_template_files(required_template_file_defs)
-        
-        # Check if required files exist
-        missing_file_defs = self._check_required_files("operation")
-        if missing_file_defs:
-            # Copy missing files and terminate
-            self._copy_missing_files(missing_file_defs)
-            self._notify_user_about_copied_files(missing_file_defs)
-            return False  # Signal that app should terminate
+            # Check if required files exist
+            missing_file_defs = self._check_required_files("operation")
+            if missing_file_defs:
+                # Copy missing files and terminate
+                self._copy_missing_files(missing_file_defs)
+                self._notify_user_about_copied_files(missing_file_defs)
+                return False  # Signal that app should terminate
 
-        return True  # Continue with normal operation
+            return True  # Continue with normal operation
+            
+        except Exception as e:
+            self.logger.error(f"Critical error during delivered mode startup: {e}")
+            return False  # Signal that app should terminate
         
     def _ensure_settings_folder_exists(self) -> None:
         """Create settings folder if it doesn't exist."""
@@ -95,8 +100,7 @@ class DeliveryArtifactsManager:
                     elif dst_file_type == 'template' and 'template' in dst_def:
                         dst_file = dst_def['template']
                     break
-                else:
-                    raise ValueError(f"Unsupported delivery file: {dst_def}")
+            # If no specific dest was found, use src as default for operation files
             if dst_file is None and dst_file_type == 'operation':
                 dst_file = file_def['src']
             elif dst_file is None:
@@ -121,7 +125,8 @@ class DeliveryArtifactsManager:
         for file_def in missing_files:
             try:
                 self._copy_file_from_resources(file_def['src'], file_def['dest'])
-                self.logger.info(f"Copied required file: {file_def['src'].name}")
+                src_name = file_def['src'].name if hasattr(file_def['src'], 'name') else str(file_def['src'])
+                self.logger.info(f"Copied required file: {src_name}")
 
             except Exception as e:
                 self.logger.error(f"Failed to copy file {file_def['src']}: {e}")

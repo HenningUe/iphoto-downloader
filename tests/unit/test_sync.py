@@ -129,8 +129,10 @@ class TestPhotoSyncer:
 
             mock_2fa.return_value = True
             mock_get_local.return_value = set()
-            syncer.icloud_client.list_photos.return_value = []
+            syncer.icloud_client.list_photos_from_filtered_albums.return_value = []
             syncer.deletion_tracker.get_deleted_photos.return_value = set()
+            syncer.deletion_tracker.get_stats.return_value = {'total_deleted': 0}
+            syncer.deletion_tracker.detect_locally_deleted_photos.return_value = []
 
             result = syncer.sync()
 
@@ -194,6 +196,12 @@ class TestPhotoSyncer:
             }
         }
         syncer.deletion_tracker.get_downloaded_photos.return_value = mock_downloaded_photos
+        
+        # Mock deletion tracker stats
+        syncer.deletion_tracker.get_stats.return_value = {
+            'total_deleted': 3,
+            'recently_deleted': 1
+        }
 
         # Mock sync directory
         syncer.config.sync_directory = Path("/mock/sync/dir")
@@ -217,39 +225,49 @@ class TestPhotoSyncer:
         mock_photo1 = {
             'id': 'photo1',
             'filename': 'new_photo1.jpg',
-            'size': 1024
+            'size': 1024,
+            'album_name': None  # No album
         }
 
         mock_photo2 = {
             'id': 'photo2',
             'filename': 'existing_photo.jpg',
-            'size': 2048
+            'size': 2048,
+            'album_name': None  # No album
         }
 
-        syncer.icloud_client.list_photos.return_value = [mock_photo1, mock_photo2]
+        # Mock photo iterator to return our test photos
+        with patch.object(syncer, '_get_photo_iterator') as mock_iterator:
+            mock_iterator.return_value = iter([mock_photo1, mock_photo2])
 
-        # Mock local files (existing_photo.jpg already exists)
-        local_files = {"existing_photo.jpg"}
+            # Mock local files (existing_photo.jpg already exists)
+            local_files = {"existing_photo.jpg"}
 
-        # Mock deletion tracker
-        syncer.deletion_tracker.is_deleted.return_value = False
+            # Mock deletion tracker
+            syncer.deletion_tracker.is_photo_deleted.return_value = False
+            
+            # Mock is_photo_downloaded to return True for existing_photo.jpg
+            def mock_is_downloaded(filename, album_name):
+                return filename == "existing_photo.jpg"
+            
+            syncer.deletion_tracker.is_photo_downloaded.side_effect = mock_is_downloaded
 
-        # Mock download success and create fake file
-        def mock_download_photo(photo_info, local_path):
-            # Create a fake file with the right size
-            from pathlib import Path
-            Path(local_path).parent.mkdir(parents=True, exist_ok=True)
-            Path(local_path).write_bytes(b'x' * photo_info['size'])
-            return True
+            # Mock download success and create fake file
+            def mock_download_photo(photo_info, local_path):
+                # Create a fake file with the right size
+                from pathlib import Path
+                Path(local_path).parent.mkdir(parents=True, exist_ok=True)
+                Path(local_path).write_bytes(b'x' * photo_info['size'])
+                return True
 
-        syncer.icloud_client.download_photo.side_effect = mock_download_photo
+            syncer.icloud_client.download_photo.side_effect = mock_download_photo
 
-        syncer._sync_photos(local_files)
+            syncer._sync_photos(local_files)
 
-        # Should try to download new_photo1.jpg but not existing_photo.jpg
-        syncer.icloud_client.download_photo.assert_called_once_with(
-            mock_photo1, str(syncer.config.sync_directory / "new_photo1.jpg")
-        )
+            # Should try to download new_photo1.jpg but not existing_photo.jpg
+            syncer.icloud_client.download_photo.assert_called_once_with(
+                mock_photo1, str(syncer.config.sync_directory / "new_photo1.jpg")
+            )
 
         # Check stats
         assert syncer.stats['total_photos'] == 2
@@ -263,25 +281,28 @@ class TestPhotoSyncer:
         mock_photo = {
             'id': 'photo1',
             'filename': 'deleted_photo.jpg',
-            'size': 1024
+            'size': 1024,
+            'album_name': None
         }
 
-        syncer.icloud_client.list_photos.return_value = [mock_photo]
+        # Mock photo iterator to return our test photo
+        with patch.object(syncer, '_get_photo_iterator') as mock_iterator:
+            mock_iterator.return_value = iter([mock_photo])
 
-        # Mock deletion tracker - photo is marked as deleted
-        syncer.deletion_tracker.is_deleted.return_value = True
+            # Mock deletion tracker - photo is marked as deleted
+            syncer.deletion_tracker.is_photo_deleted.return_value = True
 
-        local_files = set()
+            local_files = set()
 
-        syncer._sync_photos(local_files)
+            syncer._sync_photos(local_files)
 
-        # Should not try to download deleted photo
-        syncer.icloud_client.download_photo.assert_not_called()
+            # Should not try to download deleted photo
+            syncer.icloud_client.download_photo.assert_not_called()
 
-        # Check stats
-        assert syncer.stats['total_photos'] == 1
-        assert syncer.stats['deleted_skipped'] == 1
-        assert syncer.stats['new_downloads'] == 0
+            # Check stats
+            assert syncer.stats['total_photos'] == 1
+            assert syncer.stats['deleted_skipped'] == 1
+            assert syncer.stats['new_downloads'] == 0
 
     def test_sync_photos_download_failure(self, syncer):
         """Test handling download failures."""
@@ -289,28 +310,32 @@ class TestPhotoSyncer:
         mock_photo = {
             'id': 'photo1',
             'filename': 'fail_photo.jpg',
-            'size': 1024
+            'size': 1024,
+            'album_name': None
         }
 
-        syncer.icloud_client.list_photos.return_value = [mock_photo]
+        # Mock photo iterator to return our test photo
+        with patch.object(syncer, '_get_photo_iterator') as mock_iterator:
+            mock_iterator.return_value = iter([mock_photo])
 
-        # Mock deletion tracker
-        syncer.deletion_tracker.is_deleted.return_value = False
+            # Mock deletion tracker
+            syncer.deletion_tracker.is_photo_deleted.return_value = False
+            syncer.deletion_tracker.is_photo_downloaded.return_value = False
 
-        # Mock download failure
-        syncer.icloud_client.download_photo.return_value = False
+            # Mock download failure
+            syncer.icloud_client.download_photo.return_value = False
 
-        local_files = set()
+            local_files = set()
 
-        syncer._sync_photos(local_files)
+            syncer._sync_photos(local_files)
 
-        # Should try to download but fail
-        syncer.icloud_client.download_photo.assert_called_once()
+            # Should try to download but fail
+            syncer.icloud_client.download_photo.assert_called_once()
 
-        # Check stats
-        assert syncer.stats['total_photos'] == 1
-        assert syncer.stats['errors'] == 1
-        assert syncer.stats['new_downloads'] == 0
+            # Check stats
+            assert syncer.stats['total_photos'] == 1
+            assert syncer.stats['errors'] == 1
+            assert syncer.stats['new_downloads'] == 0
 
     def test_sync_photos_dry_run(self, syncer):
         """Test sync in dry run mode."""
@@ -320,23 +345,28 @@ class TestPhotoSyncer:
         mock_photo = {
             'id': 'photo1',
             'filename': 'new_photo.jpg',
-            'size': 1024
+            'size': 1024,
+            'album_name': None
         }
 
-        syncer.icloud_client.list_photos.return_value = [mock_photo]
-        syncer.deletion_tracker.is_deleted.return_value = False
+        # Mock photo iterator to return our test photo
+        with patch.object(syncer, '_get_photo_iterator') as mock_iterator:
+            mock_iterator.return_value = iter([mock_photo])
+            
+            syncer.deletion_tracker.is_photo_deleted.return_value = False
+            syncer.deletion_tracker.is_photo_downloaded.return_value = False
 
-        local_files = set()
+            local_files = set()
 
-        syncer._sync_photos(local_files)
+            syncer._sync_photos(local_files)
 
-        # Should not actually download in dry run mode
-        syncer.icloud_client.download_photo.assert_not_called()
+            # Should not actually download in dry run mode
+            syncer.icloud_client.download_photo.assert_not_called()
 
-        # But should update stats as if it would download
-        assert syncer.stats['total_photos'] == 1
-        assert syncer.stats['new_downloads'] == 1
-        assert syncer.stats['bytes_downloaded'] == 1024
+            # But should update stats as if it would download
+            assert syncer.stats['total_photos'] == 1
+            assert syncer.stats['new_downloads'] == 1
+            assert syncer.stats['bytes_downloaded'] == 1024
 
     def test_handle_2fa_success(self, syncer):
         """Test successful 2FA handling."""

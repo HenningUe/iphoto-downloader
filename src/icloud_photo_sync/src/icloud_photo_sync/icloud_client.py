@@ -170,12 +170,16 @@ class iCloudClient:
         if not self._api:
             return False
 
-        result = self._api.validate_2fa_code(code)
-        if result:
-            self.logger.info("✅ 2FA verification successful")
-        else:
-            self.logger.error("❌ 2FA verification failed")
-        return result
+        try:
+            result = self._api.validate_2fa_code(code)
+            if result:
+                self.logger.info("✅ 2FA verification successful")
+            else:
+                self.logger.error("❌ 2FA verification failed")
+            return result
+        except Exception as e:
+            self.logger.error(f"❌ 2FA verification error: {e}")
+            return False
 
     def trust_session(self) -> bool:
         """Request to trust the current session to avoid future 2FA.
@@ -248,33 +252,37 @@ class iCloudClient:
 
         self.logger.info("📥 Fetching photo list from iCloud...")
 
-        # Get all photos from iCloud
-        photos = self._api.photos.all
-        total_count = len(photos)
+        try:
+            # Get all photos from iCloud
+            photos = self._api.photos.all
+            total_count = len(photos)
 
-        self.logger.info(f"📊 Found {total_count} photos in iCloud")
+            self.logger.info(f"📊 Found {total_count} photos in iCloud")
 
-        for i, photo in enumerate(photos, 1):
-            if i % 100 == 0:  # Log progress every 100 photos
-                self.logger.info(f"📥 Processing photo {i}/{total_count}")
+            for i, photo in enumerate(photos, 1):
+                if i % 100 == 0:  # Log progress every 100 photos
+                    self.logger.info(f"📥 Processing photo {i}/{total_count}")
 
-            try:
-                # Extract photo metadata
-                photo_info = {
-                    'id': photo.id,
-                    'filename': photo.filename,
-                    'size': getattr(photo, 'size', 0),
-                    'created': getattr(photo, 'created', None),
-                    'modified': getattr(photo, 'modified', None),
-                    'album_name': 'All Photos',  # Default album for main library
-                    'photo_obj': photo  # Keep reference for downloading
-                }
+                try:
+                    # Extract photo metadata
+                    photo_info = {
+                        'id': photo.id,
+                        'filename': photo.filename,
+                        'size': getattr(photo, 'size', 0),
+                        'created': getattr(photo, 'created', None),
+                        'modified': getattr(photo, 'modified', None),
+                        'album_name': 'All Photos',  # Default album for main library
+                        'photo_obj': photo  # Keep reference for downloading
+                    }
 
-                yield photo_info
+                    yield photo_info
 
-            except Exception as e:
-                self.logger.warning(f"⚠️ Error processing photo {i}: {e}")
-                continue
+                except Exception as e:
+                    self.logger.warning(f"⚠️ Error processing photo {i}: {e}")
+                    continue
+        except Exception as e:
+            self.logger.error(f"❌ Error fetching photos from iCloud: {e}")
+            return
 
     def list_albums(self) -> t.Iterator[dict[str, t.Any]]:
         """List all albums from iCloud Photos.
@@ -290,7 +298,11 @@ class iCloudClient:
 
         # Get all albums from iCloud
         albums = self._api.photos.albums
-        albums_list = list(albums.values())
+        
+        # Get personal albums (excluding the Library album which contains shared streams)  
+        all_albums = list(albums.values()) if hasattr(albums, 'values') else []
+        albums_list = [album for album in all_albums if getattr(album, 'name', '') != 'Library']
+        
         self.logger.info(f"📊 Found {len(albums_list)} personal albums in iCloud")
 
         # shared albums
@@ -302,10 +314,15 @@ class iCloudClient:
         for album in albums_list + albums_shared_list:
             is_shared = getattr(album, 'list_type', '') == "sharedstream"
             # Extract album metadata
+            try:
+                photo_count = len(album)
+            except (TypeError, AttributeError):
+                photo_count = 0
+                
             album_info = {
                 'id': getattr(album, 'id', None),
                 'name': album.name,
-                'photo_count': len(album),  # type: ignore
+                'photo_count': photo_count,
                 'is_shared': is_shared,
                 'album_obj': album  # Keep reference for accessing photos
             }

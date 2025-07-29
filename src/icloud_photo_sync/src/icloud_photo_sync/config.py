@@ -88,6 +88,11 @@ class BaseConfig(ABC):
     @property
     def icloud_username(self) -> str:
         """Get iCloud username from credential store."""
+        # First check environment variables
+        env_username = os.getenv('ICLOUD_USERNAME')
+        if env_username:
+            return env_username
+        
         # Fall back to keyring
         v = self._icloud_get_username_from_store()
         if not v and self.enable_pushover:
@@ -97,6 +102,11 @@ class BaseConfig(ABC):
     @property
     def icloud_password(self) -> str:
         """Get iCloud password from credential store."""
+        # First check environment variables
+        env_password = os.getenv('ICLOUD_PASSWORD')
+        if env_password:
+            return env_password
+        
         # Fall back to keyring
         v = self._icloud_get_password_from_store()
         if not v and self.enable_pushover:
@@ -371,6 +381,10 @@ class BaseConfig(ABC):
             pushover_api_token_display = None
 
         credential_store = "keyring"
+        
+        # Check if credentials come from environment variables
+        if os.getenv('ICLOUD_USERNAME') and not self._icloud_get_username_from_store():
+            credential_store = "env-only"
 
         return (
             f"Config("

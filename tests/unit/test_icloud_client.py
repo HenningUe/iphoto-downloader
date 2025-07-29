@@ -25,7 +25,7 @@ class TestiCloudClient:
         config.icloud_password = "testpass123"
         config.max_file_size_mb = 0  # No limit
         config.dry_run = False
-        config.session_directory = "C:\\Users\\henningue\\icloud_photo_sync\\sessions"
+        config.session_directory = "C:\\Users\\uekoe\\icloud_photo_sync\\sessions"
         return config
 
     @pytest.fixture
@@ -205,7 +205,10 @@ class TestiCloudClient:
 
     def test_list_photos_exception(self, mock_config, mock_pyicloud_api):
         """Test photo listing with exception."""
-        mock_pyicloud_api.photos.all = Mock(side_effect=Exception("Photo fetch failed"))
+        # Create a mock that raises exception when len() is called
+        mock_photos_all = Mock()
+        mock_photos_all.__len__ = Mock(side_effect=Exception("Photo fetch failed"))
+        mock_pyicloud_api.photos.all = mock_photos_all
 
         client = iCloudClient(mock_config)
         client._api = mock_pyicloud_api
@@ -438,19 +441,37 @@ class TestiCloudClient:
 
         # Mock API structure
         mock_album1 = MagicMock()
-        mock_album1.title = "Family Trip"
+        mock_album1.name = "Family Trip"
         mock_album1.id = "album1"
         mock_album1.photos = []
         mock_album1.isShared = False
+        mock_album1.__len__ = Mock(return_value=5)
 
         mock_album2 = MagicMock()
-        mock_album2.title = "Shared Album"
+        mock_album2.name = "Shared Album"
         mock_album2.id = "album2"
         mock_album2.photos = []
         mock_album2.isShared = True
+        mock_album2.__len__ = Mock(return_value=3)
+        mock_album2.list_type = "sharedstream"
+
+        # Mock the shared streams  
+        mock_shared_dict = {
+            'album2': mock_album2
+        }
+        
+        # Create mock albums dictionary
+        mock_library = Mock()
+        mock_library.name = "Library"  # Give it a name so it gets filtered out
+        mock_library.service.shared_streams = mock_shared_dict
+        
+        # Use a mock dict that properly excludes Library from values()
+        mock_albums_dict = Mock()
+        mock_albums_dict.__getitem__ = lambda self, key: mock_library if key == 'Library' else mock_album1
+        mock_albums_dict.values = Mock(return_value=[mock_album1])  # Only return non-Library albums
 
         mock_photos_service = MagicMock()
-        mock_photos_service.albums = [mock_album1, mock_album2]
+        mock_photos_service.albums = mock_albums_dict
 
         client._api = MagicMock()
         client._api.photos = mock_photos_service
@@ -485,7 +506,11 @@ class TestiCloudClient:
         mock_album.__iter__ = MagicMock(return_value=iter([mock_photo]))
         mock_album.__len__ = MagicMock(return_value=1)
 
-        photos = client.list_photos_from_album(mock_album, "Test Album")
+        # Mock the API to return our album
+        client._api = MagicMock()
+        client._api.photos.albums = {"Test Album": mock_album}
+
+        photos = list(client.list_photos_from_album("Test Album", is_shared=False))
 
         assert len(photos) == 1
         assert photos[0]['id'] == "photo1"
@@ -519,12 +544,16 @@ class TestiCloudClient:
         mock_album2.__len__ = MagicMock(return_value=1)
 
         mock_photos_service = MagicMock()
-        mock_photos_service.albums = [mock_album1, mock_album2]
+        mock_photos_service.albums = {
+            "Album1": mock_album1, 
+            "Album2": mock_album2,
+            "Library": Mock(service=Mock(shared_streams={}))
+        }
 
-        client.api = MagicMock()
-        client.api.photos = mock_photos_service
+        client._api = MagicMock()
+        client._api.photos = mock_photos_service
 
-        photos = client.list_photos_from_albums(album_names)
+        photos = list(client.list_photos_from_albums(album_names))
 
         assert len(photos) == 2
         assert photos[0]['album_name'] == "Album1"
@@ -539,14 +568,18 @@ class TestiCloudClient:
         mock_album1.name = "Existing Album"
 
         mock_photos_service = MagicMock()
-        mock_photos_service.albums = [mock_album1]
+        mock_photos_service.albums = {
+            "Existing Album": mock_album1,
+            "Library": Mock(service=Mock(shared_streams={}))
+        }
 
-        client.api = MagicMock()
-        client.api.photos = mock_photos_service
+        client._api = MagicMock()
+        client._api.photos = mock_photos_service
 
-        missing = client.verify_albums_exist(["Existing Album", "Missing Album"])
+        all_albums, existing, missing = client.verify_albums_exist(["Existing Album", "Missing Album"])
 
         assert missing == ["Missing Album"]
+        assert existing == ["Existing Album"]
 
     def test_get_filtered_albums_personal_only(self, mock_config):
         """Test filtering to personal albums only."""
@@ -563,19 +596,36 @@ class TestiCloudClient:
 
         # Mock albums - mix of personal and shared
         mock_personal = MagicMock()
-        mock_personal.title = "Personal Album"
+        mock_personal.name = "Personal Album"
         mock_personal.id = "personal1"
         mock_personal.photos = []
         mock_personal.isShared = False
+        mock_personal.__len__ = Mock(return_value=5)
 
         mock_shared = MagicMock()
-        mock_shared.title = "Shared Album"
+        mock_shared.name = "Shared Album"
         mock_shared.id = "shared1"
         mock_shared.photos = []
         mock_shared.isShared = True
+        mock_shared.list_type = "sharedstream"
+        mock_shared.__len__ = Mock(return_value=3)
+
+        # Create proper album dictionary structure
+        mock_library = Mock()
+        mock_library.name = 'Library'
+        mock_albums_dict = {
+            'personal1': mock_personal,
+            'Library': mock_library
+        }
+        
+        mock_shared_dict = {
+            'shared1': mock_shared
+        }
+        
+        mock_library.service.shared_streams = mock_shared_dict
 
         mock_photos_service = MagicMock()
-        mock_photos_service.albums = [mock_personal, mock_shared]
+        mock_photos_service.albums = mock_albums_dict
 
         client._api = MagicMock()
         client._api.photos = mock_photos_service
@@ -601,27 +651,42 @@ class TestiCloudClient:
 
         # Mock albums
         mock_allowed_personal = MagicMock()
-        mock_allowed_personal.title = "Allowed Personal"
+        mock_allowed_personal.name = "Allowed Personal"
         mock_allowed_personal.id = "personal1"
         mock_allowed_personal.photos = []
         mock_allowed_personal.isShared = False
+        mock_allowed_personal.__len__ = Mock(return_value=5)
 
         mock_denied_personal = MagicMock()
-        mock_denied_personal.title = "Denied Personal"
+        mock_denied_personal.name = "Denied Personal"
         mock_denied_personal.id = "personal2"
         mock_denied_personal.photos = []
         mock_denied_personal.isShared = False
+        mock_denied_personal.__len__ = Mock(return_value=3)
 
         mock_allowed_shared = MagicMock()
-        mock_allowed_shared.title = "Allowed Shared"
+        mock_allowed_shared.name = "Allowed Shared"
         mock_allowed_shared.id = "shared1"
         mock_allowed_shared.photos = []
         mock_allowed_shared.isShared = True
+        mock_allowed_shared.list_type = "sharedstream"
+        mock_allowed_shared.__len__ = Mock(return_value=7)
+
+        # Create proper album dictionary structure
+        mock_albums_dict = {
+            'personal1': mock_allowed_personal,
+            'personal2': mock_denied_personal,
+            'Library': Mock()
+        }
+        
+        mock_shared_dict = {
+            'shared1': mock_allowed_shared
+        }
+        
+        mock_albums_dict['Library'].service.shared_streams = mock_shared_dict
 
         mock_photos_service = MagicMock()
-        mock_photos_service.albums = [
-            mock_allowed_personal, mock_denied_personal, mock_allowed_shared
-        ]
+        mock_photos_service.albums = mock_albums_dict
 
         client._api = MagicMock()
         client._api.photos = mock_photos_service
@@ -661,15 +726,26 @@ class TestiCloudClient:
 
         # Mock album
         mock_album = MagicMock()
-        mock_album.title = "Test Album"
+        mock_album.name = "Test Album"  # Use 'name' not 'title'
         mock_album.id = "album_id"
         mock_album.photos = []
         mock_album.isShared = False
         mock_album.__iter__ = MagicMock(return_value=iter([mock_album_photo]))
         mock_album.__len__ = MagicMock(return_value=1)
 
+        # Create proper album dictionary structure like other tests
+        mock_library = MagicMock()
+        mock_library.name = 'Library'
+        mock_shared_dict = {}
+        mock_library.service.shared_streams = mock_shared_dict
+        
+        mock_albums_dict = {
+            'album_id': mock_album,
+            'Library': mock_library
+        }
+
         mock_photos_service = MagicMock()
-        mock_photos_service.albums = [mock_album]
+        mock_photos_service.albums = mock_albums_dict
         mock_photos_service.all.__iter__ = MagicMock(return_value=iter([mock_main_photo]))
         mock_photos_service.all.__len__ = MagicMock(return_value=1)
 
@@ -677,12 +753,12 @@ class TestiCloudClient:
         client._api.photos = mock_photos_service
 
         photos = list(client.list_photos_from_filtered_albums(
-            mock_filter_config, include_main_library=True
+            mock_filter_config
         ))
 
-        # Should get photos from main library (without album_name) and from albums (with album_name)
-        assert len(photos) >= 1  # At least main library photo
+        # Should get photos from filtered albums only
+        assert len(photos) >= 1  # At least one album photo
 
-        # Check that main library photos have album_name=None
-        main_photos = [p for p in photos if p.get('album_name') is None]
-        assert len(main_photos) >= 1
+        # Check that photos have album_name set (since they come from albums)
+        album_photos = [p for p in photos if p.get('album_name') is not None]
+        assert len(album_photos) >= 1

@@ -61,19 +61,25 @@ ENABLE_PUSHOVER=false
         original_cwd = os.getcwd()
         os.chdir(test_dir)
 
-        try:
-            config = BaseConfig(test_env_file)
-            database_path = config.database_path
+        # Ensure DATABASE_PARENT_DIRECTORY is not set in environment for this test
+        with patch.dict(os.environ, {}, clear=False):
+            # Remove DATABASE_PARENT_DIRECTORY if it exists
+            if 'DATABASE_PARENT_DIRECTORY' in os.environ:
+                del os.environ['DATABASE_PARENT_DIRECTORY']
+            
+            try:
+                config = BaseConfig(test_env_file)
+                database_path = config.database_path
 
-            # Should default to .data subdirectory - check by looking at parent directory name
-            # The parent directory should be named .data
-            self.assertEqual(database_path.parent.name, ".data")
-            self.assertTrue(str(database_path).endswith("deletion_tracker.db"))
+                # Should default to .data subdirectory - check by looking at parent directory name
+                # The parent directory should be named .data
+                self.assertEqual(database_path.parent.name, ".data")
+                self.assertTrue(str(database_path).endswith("deletion_tracker.db"))
 
-            # Database directory should be created
-            self.assertTrue(database_path.parent.exists())
-        finally:
-            os.chdir(original_cwd)
+                # Database directory should be created
+                self.assertTrue(database_path.parent.exists())
+            finally:
+                os.chdir(original_cwd)
 
     def test_relative_database_path(self):
         """Test relative database path configuration."""

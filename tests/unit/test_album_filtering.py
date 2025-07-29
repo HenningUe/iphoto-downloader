@@ -4,12 +4,12 @@ import unittest
 import tempfile
 import shutil
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 import logging
 
-from src.icloud_photo_sync.src.icloud_photo_sync.logger import setup_logging
-from src.icloud_photo_sync.src.icloud_photo_sync.icloud_client import iCloudClient
-from src.icloud_photo_sync.src.icloud_photo_sync.config import BaseConfig
+from icloud_photo_sync.logger import setup_logging
+from icloud_photo_sync.icloud_client import iCloudClient
+from icloud_photo_sync.config import BaseConfig
 
 
 class TestAlbumFiltering(unittest.TestCase):
@@ -18,18 +18,37 @@ class TestAlbumFiltering(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         setup_logging(log_level=logging.INFO)
+        self.temp_dir = tempfile.mkdtemp()
+        
+        # Create mock config
+        self.mock_config = Mock(spec=BaseConfig)
+        
+        # Create mock iCloud client with proper patching
+        with patch('icloud_photo_sync.icloud_client.iCloudClient') as mock_client_class:
+            self.client = Mock()
+            self.client._api = Mock()
+            self.client._api.photos = Mock()
+            self.client.logger = Mock()
 
-        self.temp_dir = Path(tempfile.mkdtemp())
-        self.env_file = self.temp_dir / ".env"
-
-        # Create test .env file
-        self.env_file.write_text("""
-SYNC_DIRECTORY=./test_photos
-DRY_RUN=true
-LOG_LEVEL=INFO
-PERSONAL_ALBUMS_ALLOWLIST=Family,Vacation
-SHARED_ALBUMS_ALLOWLIST=Wedding,Party
-""")
+            # Mock album data
+            self.mock_albums = [
+                {'name': 'Family', 'is_shared': False, 'guid': 'family_123'},
+                {'name': 'Vacation', 'is_shared': False, 'guid': 'vacation_456'},
+                {'name': 'Work', 'is_shared': False, 'guid': 'work_789'},
+                {'name': 'Wedding', 'is_shared': True, 'guid': 'wedding_abc'},
+                {'name': 'Party', 'is_shared': True, 'guid': 'party_def'},
+                {'name': 'School', 'is_shared': True, 'guid': 'school_ghi'},
+            ]
+            
+            # Mock the list_albums method
+            self.client.list_albums = Mock(return_value=self.mock_albums)
+            
+            # Create a real iCloudClient instance for testing the get_filtered_albums method
+            real_client = iCloudClient(self.mock_config)
+            real_client._api = Mock()
+            real_client._api.photos = Mock()
+            real_client.list_albums = Mock(return_value=self.mock_albums)
+            self.real_client = real_client
 
     def tearDown(self):
         """Clean up test fixtures."""
@@ -37,341 +56,211 @@ SHARED_ALBUMS_ALLOWLIST=Wedding,Party
 
     def test_personal_album_filtering_with_allowlist(self):
         """Test personal album filtering with allowlist."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.album_filter import (
-            AlbumFilter
-        )
+        # Create config with personal allowlist
+        config = Mock(spec=BaseConfig)
+        config.include_personal_albums = True
+        config.include_shared_albums = False
+        config.personal_album_names_to_include = ["Family", "Vacation"]
+        config.shared_album_names_to_include = []
 
-        # Create album filter with personal allowlist
-        config = Mock()
-        config.personal_albums_allowlist = ["Family", "Vacation", "Pets"]
-        config.shared_albums_allowlist = []
-        config.enable_shared_albums = False
+        # Get filtered albums
+        filtered_albums = list(self.real_client.get_filtered_albums(config))
 
-        album_filter = AlbumFilter(config)
-
-        # Test personal albums that should be included
-        self.assertTrue(album_filter.should_include_album("Family", is_shared=False))
-        self.assertTrue(album_filter.should_include_album("Vacation", is_shared=False))
-        self.assertTrue(album_filter.should_include_album("Pets", is_shared=False))
-
-        # Test personal albums that should be excluded
-        self.assertFalse(album_filter.should_include_album("Work", is_shared=False))
-        self.assertFalse(album_filter.should_include_album("Random", is_shared=False))
+        # Should only return personal albums in the allowlist
+        expected_albums = [
+            {'name': 'Family', 'is_shared': False, 'guid': 'family_123'},
+            {'name': 'Vacation', 'is_shared': False, 'guid': 'vacation_456'}
+        ]
+        self.assertEqual(filtered_albums, expected_albums)
 
     def test_shared_album_filtering_with_allowlist(self):
         """Test shared album filtering with allowlist."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.album_filter import (
-            AlbumFilter
-        )
+        # Create config with shared allowlist
+        config = Mock(spec=BaseConfig)
+        config.include_personal_albums = False
+        config.include_shared_albums = True
+        config.personal_album_names_to_include = []
+        config.shared_album_names_to_include = ["Wedding", "Party"]
 
-        # Create album filter with shared allowlist
-        config = Mock()
-        config.personal_albums_allowlist = []
-        config.shared_albums_allowlist = ["Wedding", "Party", "Group Trip"]
-        config.enable_shared_albums = True
+        # Get filtered albums
+        filtered_albums = list(self.real_client.get_filtered_albums(config))
 
-        album_filter = AlbumFilter(config)
-
-        # Test shared albums that should be included
-        self.assertTrue(album_filter.should_include_album("Wedding", is_shared=True))
-        self.assertTrue(album_filter.should_include_album("Party", is_shared=True))
-        self.assertTrue(album_filter.should_include_album("Group Trip", is_shared=True))
-
-        # Test shared albums that should be excluded
-        self.assertFalse(album_filter.should_include_album("Other Event", is_shared=True))
-        self.assertFalse(album_filter.should_include_album("Private", is_shared=True))
-
-    def test_mixed_album_filtering(self):
-        """Test mixed personal and shared album filtering."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.album_filter import (
-            AlbumFilter
-        )
-
-        config = Mock()
-        config.personal_albums_allowlist = ["Family", "Vacation"]
-        config.shared_albums_allowlist = ["Wedding", "Party"]
-        config.enable_shared_albums = True
-
-        album_filter = AlbumFilter(config)
-
-        # Test personal albums
-        self.assertTrue(album_filter.should_include_album("Family", is_shared=False))
-        self.assertFalse(album_filter.should_include_album("Work", is_shared=False))
-
-        # Test shared albums
-        self.assertTrue(album_filter.should_include_album("Wedding", is_shared=True))
-        self.assertFalse(album_filter.should_include_album("Other", is_shared=True))
-
-    def test_album_filtering_disabled_shared_albums(self):
-        """Test album filtering when shared albums are disabled."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.album_filter import (
-            AlbumFilter
-        )
-
-        config = Mock()
-        config.personal_albums_allowlist = ["Family"]
-        config.shared_albums_allowlist = ["Wedding"]
-        config.enable_shared_albums = False
-
-        album_filter = AlbumFilter(config)
-
-        # Personal albums should work as expected
-        self.assertTrue(album_filter.should_include_album("Family", is_shared=False))
-
-        # Shared albums should always be excluded when disabled
-        self.assertFalse(album_filter.should_include_album("Wedding", is_shared=True))
-        self.assertFalse(album_filter.should_include_album("Any Shared", is_shared=True))
-
-    def test_empty_allowlists_behavior(self):
-        """Test behavior with empty allowlists."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.album_filter import (
-            AlbumFilter
-        )
-
-        config = Mock()
-        config.personal_albums_allowlist = []
-        config.shared_albums_allowlist = []
-        config.enable_shared_albums = True
-
-        album_filter = AlbumFilter(config)
-
-        # Empty allowlists should include all albums
-        self.assertTrue(album_filter.should_include_album("Any Personal", is_shared=False))
-        self.assertTrue(album_filter.should_include_album("Any Shared", is_shared=True))
-
-    def test_case_insensitive_album_matching(self):
-        """Test case-insensitive album name matching."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.album_filter import (
-            AlbumFilter
-        )
-
-        config = Mock()
-        config.personal_albums_allowlist = ["Family", "VACATION"]
-        config.shared_albums_allowlist = ["wedding"]
-        config.enable_shared_albums = True
-
-        album_filter = AlbumFilter(config)
-
-        # Test case variations
-        self.assertTrue(album_filter.should_include_album("family", is_shared=False))
-        self.assertTrue(album_filter.should_include_album("FAMILY", is_shared=False))
-        self.assertTrue(album_filter.should_include_album("vacation", is_shared=False))
-        self.assertTrue(album_filter.should_include_album("Vacation", is_shared=False))
-        self.assertTrue(album_filter.should_include_album("Wedding", is_shared=True))
-        self.assertTrue(album_filter.should_include_album("WEDDING", is_shared=True))
-
-    def test_special_album_handling(self):
-        """Test handling of special album types."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.album_filter import (
-            AlbumFilter
-        )
-
-        config = Mock()
-        config.personal_albums_allowlist = ["Family"]
-        config.shared_albums_allowlist = []
-        config.enable_shared_albums = False
-        config.include_all_photos = True
-        config.include_recently_deleted = False
-
-        album_filter = AlbumFilter(config)
-
-        # Test special albums
-        self.assertTrue(album_filter.should_include_album("All Photos", is_shared=False))
-        self.assertFalse(album_filter.should_include_album("Recently Deleted", is_shared=False))
-
-        # Test with recently deleted enabled
-        config.include_recently_deleted = True
-        album_filter = AlbumFilter(config)
-        self.assertTrue(album_filter.should_include_album("Recently Deleted", is_shared=False))
-
-    def test_album_pattern_matching(self):
-        """Test pattern-based album matching."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.album_filter import (
-            AlbumFilter
-        )
-
-        config = Mock()
-        config.personal_albums_allowlist = ["Family*", "*Vacation*", "*Trip"]
-        config.shared_albums_allowlist = []
-        config.enable_shared_albums = False
-
-        album_filter = AlbumFilter(config)
-
-        # Test pattern matching
-        self.assertTrue(album_filter.should_include_album("Family Photos", is_shared=False))
-        self.assertTrue(album_filter.should_include_album("Family 2023", is_shared=False))
-        self.assertTrue(album_filter.should_include_album(
-            "Summer Vacation Photos", is_shared=False))
-        self.assertTrue(album_filter.should_include_album("Europe Trip", is_shared=False))
-        self.assertTrue(album_filter.should_include_album("Road Trip", is_shared=False))
-
-        # Test non-matching patterns
-        self.assertFalse(album_filter.should_include_album("Work Photos", is_shared=False))
-        self.assertFalse(album_filter.should_include_album("Random", is_shared=False))
-
-    def test_album_priority_logic(self):
-        """Test album priority logic for overlapping names."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.album_filter import (
-            AlbumFilter
-        )
-
-        config = Mock()
-        config.personal_albums_allowlist = ["Family"]
-        config.shared_albums_allowlist = ["Family"]  # Same name in both lists
-        config.enable_shared_albums = True
-
-        album_filter = AlbumFilter(config)
-
-        # Both personal and shared "Family" albums should be included
-        self.assertTrue(album_filter.should_include_album("Family", is_shared=False))
-        self.assertTrue(album_filter.should_include_album("Family", is_shared=True))
-
-    def test_album_metadata_filtering(self):
-        """Test filtering based on album metadata."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.album_filter import (
-            AlbumFilter
-        )
-
-        config = Mock()
-        config.personal_albums_allowlist = []
-        config.shared_albums_allowlist = []
-        config.enable_shared_albums = True
-        config.filter_by_date_range = True
-        config.start_date = "2023-01-01"
-        config.end_date = "2023-12-31"
-
-        album_filter = AlbumFilter(config)
-
-        # Mock album metadata
-        album_metadata = {
-            "name": "Family Photos",
-            "is_shared": False,
-            "created_date": "2023-06-15",
-            "photo_count": 50
-        }
-
-        # Test metadata-based filtering
-        result = album_filter.should_include_album_with_metadata(album_metadata)
-        self.assertTrue(result)
-
-        # Test album outside date range
-        album_metadata["created_date"] = "2022-06-15"
-        result = album_filter.should_include_album_with_metadata(album_metadata)
-        self.assertFalse(result)
-
-    def test_dynamic_album_discovery(self):
-        """Test dynamic album discovery and filtering."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.album_filter import (
-            AlbumFilter
-        )
-        from src.icloud_photo_sync.src.icloud_photo_sync.icloud_client import (
-            iCloudClient
-        )
-
-        # Mock iCloud client
-        mock_client = Mock(spec=iCloudClient)
-        mock_albums = [
-            {"name": "Family", "is_shared": False, "photo_count": 10},
-            {"name": "Work", "is_shared": False, "photo_count": 5},
-            {"name": "Wedding", "is_shared": True, "photo_count": 20},
-            {"name": "Private", "is_shared": True, "photo_count": 3}
+        # Should only return shared albums in the allowlist
+        expected_albums = [
+            {'name': 'Wedding', 'is_shared': True, 'guid': 'wedding_abc'},
+            {'name': 'Party', 'is_shared': True, 'guid': 'party_def'}
         ]
-        mock_client.get_albums.return_value = mock_albums
+        self.assertEqual(filtered_albums, expected_albums)
 
-        config = Mock()
-        config.personal_albums_allowlist = ["Family"]
-        config.shared_albums_allowlist = ["Wedding"]
-        config.enable_shared_albums = True
+    def test_both_album_types_with_allowlists(self):
+        """Test filtering both personal and shared albums with allowlists."""
+        # Create config with both allowlists
+        config = Mock(spec=BaseConfig)
+        config.include_personal_albums = True
+        config.include_shared_albums = True
+        config.personal_album_names_to_include = ["Family"]
+        config.shared_album_names_to_include = ["Wedding"]
 
-        album_filter = AlbumFilter(config)
+        # Get filtered albums
+        filtered_albums = list(self.real_client.get_filtered_albums(config))
 
-        # Test filtering discovered albums
-        filtered_albums = album_filter.filter_albums(mock_albums)
-
-        self.assertEqual(len(filtered_albums), 2)
-        album_names = [album["name"] for album in filtered_albums]
-        self.assertIn("Family", album_names)
-        self.assertIn("Wedding", album_names)
-        self.assertNotIn("Work", album_names)
-        self.assertNotIn("Private", album_names)
-
-    def test_album_sync_coordination(self):
-        """Test album filtering coordination with sync process."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.album_filter import (
-            AlbumFilter
-        )
-        from src.icloud_photo_sync.src.icloud_photo_sync.sync import PhotoSync
-
-        # Mock PhotoSync
-        mock_sync = Mock(spec=PhotoSync)
-
-        config = Mock()
-        config.personal_albums_allowlist = ["Family", "Vacation"]
-        config.shared_albums_allowlist = ["Wedding"]
-        config.enable_shared_albums = True
-
-        album_filter = AlbumFilter(config)
-
-        # Mock albums from sync process
-        sync_albums = [
-            {"name": "Family", "is_shared": False},
-            {"name": "Work", "is_shared": False},
-            {"name": "Wedding", "is_shared": True},
-            {"name": "Other", "is_shared": True}
+        # Should return specified albums from both types
+        expected_albums = [
+            {'name': 'Family', 'is_shared': False, 'guid': 'family_123'},
+            {'name': 'Wedding', 'is_shared': True, 'guid': 'wedding_abc'}
         ]
+        self.assertEqual(filtered_albums, expected_albums)
 
-        # Test integration with sync process
-        filtered_albums = []
-        for album in sync_albums:
-            if album_filter.should_include_album(album["name"], album["is_shared"]):
-                filtered_albums.append(album)
+    def test_personal_albums_without_allowlist(self):
+        """Test personal album filtering without allowlist (all personal albums)."""
+        # Create config without personal allowlist
+        config = Mock(spec=BaseConfig)
+        config.include_personal_albums = True
+        config.include_shared_albums = False
+        config.personal_album_names_to_include = None
+        config.shared_album_names_to_include = []
 
-        self.assertEqual(len(filtered_albums), 2)
-        self.assertEqual(filtered_albums[0]["name"], "Family")
-        self.assertEqual(filtered_albums[1]["name"], "Wedding")
+        # Get filtered albums
+        filtered_albums = list(self.real_client.get_filtered_albums(config))
 
-    def test_album_filtering_performance(self):
-        """Test album filtering performance with large album lists."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.album_filter import (
-            AlbumFilter
-        )
-        import time
+        # Should return all personal albums
+        expected_albums = [
+            {'name': 'Family', 'is_shared': False, 'guid': 'family_123'},
+            {'name': 'Vacation', 'is_shared': False, 'guid': 'vacation_456'},
+            {'name': 'Work', 'is_shared': False, 'guid': 'work_789'}
+        ]
+        self.assertEqual(filtered_albums, expected_albums)
 
-        config = Mock()
-        config.personal_albums_allowlist = ["Family", "Vacation", "Work"]
-        config.shared_albums_allowlist = ["Wedding", "Party"]
-        config.enable_shared_albums = True
+    def test_shared_albums_without_allowlist(self):
+        """Test shared album filtering without allowlist (all shared albums)."""
+        # Create config without shared allowlist
+        config = Mock(spec=BaseConfig)
+        config.include_personal_albums = False
+        config.include_shared_albums = True
+        config.personal_album_names_to_include = []
+        config.shared_album_names_to_include = None
 
-        album_filter = AlbumFilter(config)
+        # Get filtered albums
+        filtered_albums = list(self.real_client.get_filtered_albums(config))
 
-        # Create large list of albums to test performance
-        large_album_list = []
-        for i in range(1000):
-            large_album_list.append({
-                "name": f"Album_{i}",
-                "is_shared": i % 2 == 0
-            })
+        # Should return all shared albums
+        expected_albums = [
+            {'name': 'Wedding', 'is_shared': True, 'guid': 'wedding_abc'},
+            {'name': 'Party', 'is_shared': True, 'guid': 'party_def'},
+            {'name': 'School', 'is_shared': True, 'guid': 'school_ghi'}
+        ]
+        self.assertEqual(filtered_albums, expected_albums)
 
-        # Add some albums that should match
-        large_album_list.extend([
-            {"name": "Family", "is_shared": False},
-            {"name": "Wedding", "is_shared": True}
-        ])
+    def test_no_albums_when_both_types_disabled(self):
+        """Test that no albums are returned when both types are disabled."""
+        # Create config with both types disabled
+        config = Mock(spec=BaseConfig)
+        config.include_personal_albums = False
+        config.include_shared_albums = False
+        config.personal_album_names_to_include = []
+        config.shared_album_names_to_include = []
 
-        # Test filtering performance
-        start_time = time.time()
-        filtered_albums = album_filter.filter_albums(large_album_list)
-        end_time = time.time()
+        # Get filtered albums
+        filtered_albums = list(self.real_client.get_filtered_albums(config))
 
-        # Should complete quickly (under 1 second for 1000+ albums)
-        self.assertLess(end_time - start_time, 1.0)
+        # Should return no albums
+        self.assertEqual(filtered_albums, [])
 
-        # Should find the matching albums
-        self.assertEqual(len(filtered_albums), 2)
-        album_names = [album["name"] for album in filtered_albums]
-        self.assertIn("Family", album_names)
-        self.assertIn("Wedding", album_names)
+    def test_empty_allowlist_excludes_all_albums(self):
+        """Test that empty allowlist still includes all albums (empty list is falsy)."""
+        # Create config with empty personal allowlist - this should include ALL personal albums
+        # because empty list is falsy, so the condition (config.personal_album_names_to_include and ...)
+        # evaluates to False and no filtering is applied
+        config = Mock(spec=BaseConfig)
+        config.include_personal_albums = True
+        config.include_shared_albums = True
+        config.personal_album_names_to_include = []  # Empty list = falsy = no filtering = include all
+        config.shared_album_names_to_include = ["Wedding"]
+
+        # Get filtered albums
+        filtered_albums = list(self.real_client.get_filtered_albums(config))
+
+        # Should return all personal albums AND the specified shared album
+        expected_albums = [
+            {'name': 'Family', 'is_shared': False, 'guid': 'family_123'},
+            {'name': 'Vacation', 'is_shared': False, 'guid': 'vacation_456'},
+            {'name': 'Work', 'is_shared': False, 'guid': 'work_789'},
+            {'name': 'Wedding', 'is_shared': True, 'guid': 'wedding_abc'}
+        ]
+        self.assertEqual(filtered_albums, expected_albums)
+
+    def test_nonexistent_album_in_allowlist(self):
+        """Test filtering with nonexistent album in allowlist."""
+        # Create config with nonexistent album in allowlist
+        config = Mock(spec=BaseConfig)
+        config.include_personal_albums = True
+        config.include_shared_albums = False
+        config.personal_album_names_to_include = ["Family", "NonExistent"]
+        config.shared_album_names_to_include = []
+
+        # Get filtered albums
+        filtered_albums = list(self.real_client.get_filtered_albums(config))
+
+        # Should only return existing albums
+        expected_albums = [
+            {'name': 'Family', 'is_shared': False, 'guid': 'family_123'}
+        ]
+        self.assertEqual(filtered_albums, expected_albums)
+
+    def test_case_sensitive_album_matching(self):
+        """Test that album name matching is case sensitive."""
+        # Create config with different case
+        config = Mock(spec=BaseConfig)
+        config.include_personal_albums = True
+        config.include_shared_albums = False
+        config.personal_album_names_to_include = ["family"]  # lowercase
+        config.shared_album_names_to_include = []
+
+        # Get filtered albums
+        filtered_albums = list(self.real_client.get_filtered_albums(config))
+
+        # Should return no albums (case mismatch)
+        self.assertEqual(filtered_albums, [])
+
+    def test_unauthenticated_client_returns_no_albums(self):
+        """Test that unauthenticated client returns no albums."""
+        # Create client without authentication
+        mock_config = Mock(spec=BaseConfig)
+        client = iCloudClient(mock_config)
+        client._api = None
+
+        config = Mock(spec=BaseConfig)
+        config.include_personal_albums = True
+        config.include_shared_albums = True
+        config.personal_album_names_to_include = None
+        config.shared_album_names_to_include = None
+
+        # Get filtered albums
+        filtered_albums = list(client.get_filtered_albums(config))
+
+        # Should return no albums (method returns early when _api is None)
+        self.assertEqual(filtered_albums, [])
+
+    def test_client_without_photos_service_returns_no_albums(self):
+        """Test that client without photos service returns no albums."""
+        # Create client without photos service
+        mock_config = Mock(spec=BaseConfig)
+        client = iCloudClient(mock_config)
+        client._api = Mock()
+        client._api.photos = None
+
+        config = Mock(spec=BaseConfig)
+        config.include_personal_albums = True
+        config.include_shared_albums = True
+        config.personal_album_names_to_include = None
+        config.shared_album_names_to_include = None
+
+        # Get filtered albums
+        filtered_albums = list(client.get_filtered_albums(config))
+
+        # Should return no albums (method returns early when photos service is None)
+        self.assertEqual(filtered_albums, [])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

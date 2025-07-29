@@ -35,10 +35,12 @@ def clean_env(monkeypatch):
 class TestBaseConfig:
     """Test the BaseConfig class."""
 
-    def test_can_instantiate_base_config(self):
+    def test_can_instantiate_base_config(self, temp_dir):
         """Test that BaseConfig can be instantiated directly."""
-        # BaseConfig is not abstract anymore, but it requires env setup
-        config = BaseConfig()
+        # BaseConfig requires env_file_path parameter
+        env_file = temp_dir / ".env"
+        env_file.write_text("LOG_LEVEL=INFO\n")
+        config = BaseConfig(env_file)
         assert config is not None
 
 
@@ -55,17 +57,21 @@ class TestConfigFactory:
         assert isinstance(config, KeyringConfig)
 
 
+@pytest.fixture
+def mock_keyring():
+    """Mock keyring module."""
+    with patch('icloud_photo_sync.config.keyring') as mock_keyring:
+        yield mock_keyring
+
+
 class TestKeyringConfig:
     """Test KeyringConfig class."""
 
-    @pytest.fixture
-    def mock_keyring(self):
-        """Mock keyring module."""
-        with patch('icloud_photo_sync.config.keyring') as mock_keyring:
-            yield mock_keyring
-
-    def test_init_with_env_variables(self, temp_dir, clean_env):
+    def test_init_with_env_variables(self, temp_dir, clean_env, mock_keyring):
         """Test initialization with environment variables."""
+        # Mock keyring to return no credentials to ensure env vars are used
+        mock_keyring.get_password.return_value = None
+        
         env_file = temp_dir / ".env"
         env_file.write_text(
             "ICLOUD_USERNAME=test@example.com\n"
@@ -77,7 +83,7 @@ class TestKeyringConfig:
             "MAX_FILE_SIZE_MB=50\n"
         )
 
-        config = KeyringConfig(str(env_file))
+        config = KeyringConfig(env_file)
 
         assert config.icloud_username == "test@example.com"
         assert config.icloud_password == "test-password"
@@ -98,7 +104,7 @@ class TestKeyringConfig:
         env_file = temp_dir / ".env"
         env_file.write_text("SYNC_DIRECTORY=./test_photos\n")
 
-        config = KeyringConfig(str(env_file))
+        config = KeyringConfig(env_file)
 
         assert config.icloud_username == "keyring@example.com"
         assert config.icloud_password == "keyring-password"
@@ -118,7 +124,7 @@ class TestKeyringConfig:
             "SYNC_DIRECTORY=./test_photos\n"
         )
 
-        config = KeyringConfig(str(env_file))
+        config = KeyringConfig(env_file)
 
         assert config.icloud_username == "env@example.com"
         assert config.icloud_password == "env-password"
@@ -131,8 +137,9 @@ class TestKeyringConfig:
         env_file = temp_dir / ".env"
         env_file.write_text("SYNC_DIRECTORY=./test_photos\n")
 
+        config = KeyringConfig(env_file)
         with pytest.raises(ValueError, match="Configuration errors"):
-            KeyringConfig(str(env_file))
+            config.validate()
 
     def test_store_credentials_success(self, temp_dir, clean_env, mock_keyring):
         """Test successful credential storage."""
@@ -143,7 +150,7 @@ class TestKeyringConfig:
             "SYNC_DIRECTORY=./test_photos\n"
         )
 
-        config = KeyringConfig(str(env_file))
+        config = KeyringConfig(env_file)
 
         result = config.icloud_store_credentials("new@example.com", "new-password")
 
@@ -164,7 +171,7 @@ class TestKeyringConfig:
             "SYNC_DIRECTORY=./test_photos\n"
         )
 
-        config = KeyringConfig(str(env_file))
+        config = KeyringConfig(env_file)
 
         result = config.icloud_store_credentials("new@example.com", "new-password")
 
@@ -184,7 +191,7 @@ class TestKeyringConfig:
             "SYNC_DIRECTORY=./test_photos\n"
         )
 
-        config = KeyringConfig(str(env_file))
+        config = KeyringConfig(env_file)
 
         assert config.icloud_has_stored_credentials() is True
 
@@ -199,7 +206,7 @@ class TestKeyringConfig:
             "SYNC_DIRECTORY=./test_photos\n"
         )
 
-        config = KeyringConfig(str(env_file))
+        config = KeyringConfig(env_file)
 
         result = config.icloud_delete_credentials()
 
@@ -217,7 +224,7 @@ class TestKeyringConfig:
             f"SYNC_DIRECTORY={sync_dir}\n"
         )
 
-        config = KeyringConfig(str(env_file))
+        config = KeyringConfig(env_file)
 
         assert not sync_dir.exists()
         config.ensure_sync_directory()
@@ -233,12 +240,15 @@ class TestKeyringConfig:
             "LOG_LEVEL=DEBUG\n"
         )
 
-        config = KeyringConfig(str(env_file))
+        config = KeyringConfig(env_file)
 
         assert config.get_log_level() == 10  # DEBUG level
 
-    def test_string_representation_hides_sensitive_data(self, temp_dir, clean_env):
+    def test_string_representation_hides_sensitive_data(self, temp_dir, clean_env, mock_keyring):
         """Test that string representation hides sensitive data."""
+        # Mock keyring to return no credentials to ensure env vars are used
+        mock_keyring.get_password.return_value = None
+        
         env_file = temp_dir / ".env"
         env_file.write_text(
             "ICLOUD_USERNAME=test@example.com\n"
@@ -246,7 +256,7 @@ class TestKeyringConfig:
             "SYNC_DIRECTORY=./test_photos\n"
         )
 
-        config = KeyringConfig(str(env_file))
+        config = KeyringConfig(env_file)
         config_str = str(config)
 
         assert "test@example.com" not in config_str
@@ -265,18 +275,23 @@ class TestConfigsWithEnvVars:
             "SYNC_DIRECTORY=./test_photos\n"
         )
 
-        config = KeyringConfig(str(env_file))
+        config = KeyringConfig(env_file)
 
         assert config.sync_directory == Path("./test_photos")
 
-    def test_string_representation_shows_env_only(self, temp_dir, clean_env):
+    def test_string_representation_shows_env_only(self, temp_dir, clean_env, mock_keyring):
         """Test that string representation shows env-only source."""
+        # Mock keyring to return no credentials to ensure env vars are used
+        mock_keyring.get_password.return_value = None
+        
         env_file = temp_dir / ".env"
         env_file.write_text(
+            "ICLOUD_USERNAME=test@example.com\n"
+            "ICLOUD_PASSWORD=test-password\n"
             "SYNC_DIRECTORY=./test_photos\n"
         )
 
-        config = KeyringConfig(str(env_file))
+        config = KeyringConfig(env_file)
         config_str = str(config)
 
         assert "env-only" in config_str
@@ -290,7 +305,7 @@ class TestAlbumFilteringConfig:
         env_file = temp_dir / ".env"
         env_file.write_text("")
 
-        config = KeyringConfig(str(env_file))
+        config = KeyringConfig(env_file)
 
         assert config.include_personal_albums is True
         assert config.include_shared_albums is True
@@ -305,7 +320,7 @@ class TestAlbumFilteringConfig:
             "INCLUDE_SHARED_ALBUMS=true\n"
         )
 
-        config = KeyringConfig(str(env_file))
+        config = KeyringConfig(env_file)
 
         assert config.include_personal_albums is False
         assert config.include_shared_albums is True
@@ -318,7 +333,7 @@ class TestAlbumFilteringConfig:
             "SHARED_ALBUM_NAMES_TO_INCLUDE=Shared1, Shared2 , Shared3\n"
         )
 
-        config = KeyringConfig(str(env_file))
+        config = KeyringConfig(env_file)
 
         assert config.personal_album_names_to_include == ["Album1", "Album2", "Album3"]
         assert config.shared_album_names_to_include == ["Shared1", "Shared2", "Shared3"]
@@ -331,7 +346,7 @@ class TestAlbumFilteringConfig:
             "SHARED_ALBUM_NAMES_TO_INCLUDE=,,,\n"
         )
 
-        config = KeyringConfig(str(env_file))
+        config = KeyringConfig(env_file)
 
         assert config.personal_album_names_to_include == []
         assert config.shared_album_names_to_include == []
@@ -344,7 +359,7 @@ class TestAlbumFilteringConfig:
             "INCLUDE_SHARED_ALBUMS=false\n"
         )
 
-        config = KeyringConfig(str(env_file))
+        config = KeyringConfig(env_file)
 
         with pytest.raises(
                 ValueError,
@@ -363,13 +378,13 @@ class TestAlbumFilteringConfig:
             "SHARED_ALBUM_NAMES_TO_INCLUDE=SharedExisting,SharedMissing\n"
         )
 
-        config = KeyringConfig(str(env_file))
+        config = KeyringConfig(env_file)
 
         # Mock icloud_client
         mock_client = MagicMock()
         mock_client.verify_albums_exist.side_effect = [
-            (["Existing"], ["Missing"]),  # Personal albums
-            (["SharedExisting"], ["SharedMissing"])  # Shared albums
+            (["all_albums"], ["Existing"], ["Missing"]),  # Personal albums - (all, existing, missing)
+            (["all_albums"], ["SharedExisting"], ["SharedMissing"])  # Shared albums - (all, existing, missing)
         ]
 
         with pytest.raises(ValueError, match="The following specified albums do not exist"):
@@ -385,13 +400,13 @@ class TestAlbumFilteringConfig:
             "SHARED_ALBUM_NAMES_TO_INCLUDE=Shared1,Shared2\n"
         )
 
-        config = KeyringConfig(str(env_file))
+        config = KeyringConfig(env_file)
 
         # Mock icloud_client
         mock_client = MagicMock()
         mock_client.verify_albums_exist.side_effect = [
-            (["Album1", "Album2"], []),  # Personal albums - all found
-            (["Shared1", "Shared2"], [])  # Shared albums - all found
+            (["all_albums"], ["Album1", "Album2"], []),  # Personal albums - all found  
+            (["all_albums"], ["Shared1", "Shared2"], [])  # Shared albums - all found
         ]
 
         # Should not raise an exception
