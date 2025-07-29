@@ -412,14 +412,6 @@ specified.
   - [ ] Exclude unnecessary dependencies from builds
   - [ ] Use UPX compression where appropriate
   - [ ] Test startup performance of compressed executables
-- [ ] Optimize **startup time**:
-  - [ ] Profile executable startup sequence
-  - [ ] Minimize import overhead in frozen builds
-  - [ ] Test cold start vs warm start performance
-- [ ] Validate **resource usage**:
-  - [ ] Monitor memory usage in packaged builds
-  - [ ] Test long-running continuous mode resource consumption
-  - [ ] Verify proper cleanup on application exit
 
 ### 6.7 Build System Status
 
@@ -485,24 +477,24 @@ specified.
 
 ## 9️⃣ 📜 Documentation
 
-- [ ] Write **user guide**:
-  - [ ] How to install (Windows & Linux)
-  - [ ] How to configure sync dir & credentials
-  - [ ] How to configure **database location**
-  - [ ] How to use environment variables in database path
-  - [ ] Cross-platform database path configuration examples
-  - [ ] How to configure **Pushover notifications**
-  - [ ] How **2FA web interface** works
-  - [ ] How to run dry-run mode
-  - [ ] How local deletion tracking works
-  - [ ] **2FA troubleshooting guide**
-  - [ ] **Album filtering configuration guide**:
-    - [ ] How to configure personal album filtering
-    - [ ] How to configure shared album filtering
-    - [ ] How to use album allow-lists
-    - [ ] Examples of album filtering configurations
-    - [ ] How album-aware tracking works
-- [ ] Include usage examples & troubleshooting tips
+- [x] Write **user guide**:
+  - [x] How to install (Windows & Linux)
+  - [x] How to configure sync dir & credentials
+  - [x] How to configure **database location**
+  - [x] How to use environment variables in database path
+  - [x] Cross-platform database path configuration examples
+  - [x] How to configure **Pushover notifications**
+  - [x] How **2FA web interface** works
+  - [x] How to run dry-run mode
+  - [x] How local deletion tracking works
+  - [x] **2FA troubleshooting guide**
+  - [x] **Album filtering configuration guide**:
+    - [x] How to configure personal album filtering
+    - [x] How to configure shared album filtering
+    - [x] How to use album allow-lists
+    - [x] Examples of album filtering configurations
+    - [x] How album-aware tracking works
+- [x] Include usage examples & troubleshooting tips
 
 ---
 

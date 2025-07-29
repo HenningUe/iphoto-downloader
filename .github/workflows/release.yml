@@ -127,21 +127,21 @@ jobs:
 
     - name: Create Debian package structure
       run: |
-        mkdir -p debian-package/foto-pool/DEBIAN
-        mkdir -p debian-package/foto-pool/usr/bin
-        mkdir -p debian-package/foto-pool/usr/share/doc/foto-pool
-        mkdir -p debian-package/foto-pool/usr/share/applications
+        mkdir -p debian-package/iphoto-downloader/DEBIAN
+        mkdir -p debian-package/iphoto-downloader/usr/bin
+        mkdir -p debian-package/iphoto-downloader/usr/share/doc/iphoto-downloader
+        mkdir -p debian-package/iphoto-downloader/usr/share/applications
 
     - name: Copy executables to package
       run: |
-        cp linux-executables/icloud_photo_sync debian-package/foto-pool/usr/bin/
-        cp linux-executables/manage_credentials debian-package/foto-pool/usr/bin/foto-pool-credentials
-        chmod +x debian-package/foto-pool/usr/bin/*
+        cp linux-executables/icloud_photo_sync debian-package/iphoto-downloader/usr/bin/
+        cp linux-executables/manage_credentials debian-package/iphoto-downloader/usr/bin/iphoto-downloader-credentials
+        chmod +x debian-package/iphoto-downloader/usr/bin/*
 
     - name: Create Debian control file
       run: |
-        cat > debian-package/foto-pool/DEBIAN/control << EOF
-        Package: foto-pool
+        cat > debian-package/iphoto-downloader/DEBIAN/control << EOF
+        Package: iphoto-downloader
         Version: ${{ github.event.release.tag_name || github.event.inputs.version }}
         Section: utils
         Priority: optional
@@ -163,12 +163,12 @@ jobs:
 
     - name: Create desktop entry
       run: |
-        cat > debian-package/foto-pool/usr/share/applications/foto-pool.desktop << EOF
+        cat > debian-package/iphoto-downloader/usr/share/applications/iphoto-downloader.desktop << EOF
         [Desktop Entry]
         Name=Foto Pool
         Comment=iCloud Photo Sync Tool
         Exec=/usr/bin/icloud_photo_sync
-        Icon=foto-pool
+        Icon=iphoto-downloader
         Terminal=true
         Type=Application
         Categories=Graphics;Photography;
@@ -176,14 +176,14 @@ jobs:
 
     - name: Copy documentation
       run: |
-        cp README.md debian-package/foto-pool/usr/share/doc/foto-pool/
-        cp LICENSE debian-package/foto-pool/usr/share/doc/foto-pool/copyright
+        cp README.md debian-package/iphoto-downloader/usr/share/doc/iphoto-downloader/
+        cp LICENSE debian-package/iphoto-downloader/usr/share/doc/iphoto-downloader/copyright
 
     - name: Build Debian package
       run: |
         cd debian-package
-        dpkg-deb --build foto-pool
-        mv foto-pool.deb ../foto-pool_${{ github.event.release.tag_name || github.event.inputs.version }}_amd64.deb
+        dpkg-deb --build iphoto-downloader
+        mv iphoto-downloader.deb ../foto-pool_${{ github.event.release.tag_name || github.event.inputs.version }}_amd64.deb
 
     - name: Upload APT package artifact
       uses: actions/upload-artifact@v4
@@ -263,7 +263,7 @@ jobs:
         Copyright: Copyright (c) HenningUe
         ShortDescription: iCloud Photo Sync Tool with intelligent deletion tracking
         Description: A comprehensive tool for synchronizing photos from iCloud to local storage with smart deletion tracking, album filtering, and 2FA support.
-        Moniker: foto-pool
+        Moniker: iphoto-downloader
         Tags:
         - icloud
         - photos
@@ -374,19 +374,19 @@ jobs:
         
         # Package Windows executables
         cd windows-executables
-        zip ../release-assets/foto-pool-windows-x64.zip *
+        zip ../release-assets/iphoto-downloader-windows-x64.zip *
         cd ..
         
         # Package Linux executables
         cd linux-executables
-        tar -czf ../release-assets/foto-pool-linux-x64.tar.gz *
+        tar -czf ../release-assets/iphoto-downloader-linux-x64.tar.gz *
         cd ..
         
         # Copy individual executables with versioned names
         cp windows-executables/icloud_photo_sync.exe release-assets/
         cp windows-executables/manage_credentials.exe release-assets/
         cp linux-executables/icloud_photo_sync release-assets/
-        cp linux-executables/manage_credentials release-assets/foto-pool-credentials
+        cp linux-executables/manage_credentials release-assets/iphoto-downloader-credentials
 
     - name: Upload release assets
       uses: softprops/action-gh-release@v2
@@ -399,14 +399,14 @@ jobs:
           ### Downloads
           
           **Windows:**
-          - 📦 [Complete Windows Package](./foto-pool-windows-x64.zip) - Both executables in one ZIP
+          - 📦 [Complete Windows Package](./iphoto-downloader-windows-x64.zip) - Both executables in one ZIP
           - 🖼️ [Main Application (icloud_photo_sync.exe)](./icloud_photo_sync.exe)
           - 🔐 [Credentials Manager (manage_credentials.exe)](./manage_credentials.exe)
           
           **Linux:**
-          - 📦 [Complete Linux Package](./foto-pool-linux-x64.tar.gz) - Both executables in one archive
+          - 📦 [Complete Linux Package](./iphoto-downloader-linux-x64.tar.gz) - Both executables in one archive
           - 🖼️ [Main Application (icloud_photo_sync)](./icloud_photo_sync)
-          - 🔐 [Credentials Manager (foto-pool-credentials)](./foto-pool-credentials)
+          - 🔐 [Credentials Manager (iphoto-downloader-credentials)](./iphoto-downloader-credentials)
           
           ### Installation
           
@@ -419,10 +419,10 @@ jobs:
           ```bash
           # APT repository submission in progress
           # Manual installation for now:
-          wget https://github.com/HenningUe/foto-pool/releases/download/${{ github.event.release.tag_name }}/foto-pool-linux-x64.tar.gz
-          tar -xzf foto-pool-linux-x64.tar.gz
+          wget https://github.com/HenningUe/foto-pool/releases/download/${{ github.event.release.tag_name }}/iphoto-downloader-linux-x64.tar.gz
+          tar -xzf iphoto-downloader-linux-x64.tar.gz
           sudo mv icloud_photo_sync /usr/local/bin/
-          sudo mv manage_credentials /usr/local/bin/foto-pool-credentials
+          sudo mv manage_credentials /usr/local/bin/iphoto-downloader-credentials
           ```
           
           ### What's New
