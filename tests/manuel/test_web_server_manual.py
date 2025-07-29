@@ -1,3 +1,4 @@
+import pytest
 """Manual testing for the 2FA web server.
 
 This module provides interactive tests for manually validating the web server
@@ -21,6 +22,7 @@ from auth2fa.web_server import TwoFAWebServer
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 
+@pytest.mark.manual
 def test_web_interface_manual():
     """Manual test of the web interface - opens browser for user interaction."""
     print("\n🧪 Starting manual web interface test...")
@@ -119,6 +121,7 @@ def test_web_interface_manual():
         return False
 
 
+@pytest.mark.manual
 def test_port_conflict_handling():
     """Test port conflict handling by starting multiple servers."""
     print("\n🧪 Testing port conflict handling...")
@@ -173,6 +176,7 @@ def test_port_conflict_handling():
         return False
 
 
+@pytest.mark.manual
 def test_server_state_management():
     """Test server state management and transitions."""
     print("\n🧪 Testing server state management...")
@@ -230,6 +234,7 @@ def test_server_state_management():
         return False
 
 
+@pytest.mark.manual
 def test_browser_integration():
     """Test automatic browser opening functionality."""
     print("\n🧪 Testing browser integration...")

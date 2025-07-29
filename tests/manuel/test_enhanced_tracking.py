@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import pytest
 """Test script to verify enhanced photo tracking with album-aware schema."""
 
 import sys
@@ -20,6 +21,7 @@ except ImportError as e:
 setup_logging(logging.INFO)
 
 
+@pytest.mark.manual
 def test_album_aware_tracking():
     """Test the album-aware photo tracking functionality."""
     print("🧪 Testing Enhanced Photo Tracking (Album-Aware)...")
@@ -126,6 +128,7 @@ def test_album_aware_tracking():
             Path(test_db_path).unlink()
 
 
+@pytest.mark.manual
 def test_legacy_migration():
     """Test migration from legacy schema to album-aware schema."""
     print("\n🔄 Testing Legacy Schema Migration...")

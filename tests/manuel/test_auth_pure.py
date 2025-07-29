@@ -6,6 +6,7 @@ functionality including the web interface, 2FA workflow, and server management.
 Run this file directly to start interactive testing:
     python tests/manuel/test_web_server_manual.py
 """
+import pytest
 from pathlib import Path
 import sys
 
@@ -18,6 +19,7 @@ from auth2fa.authenticator import Auth2FAConfig
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 
+@pytest.mark.manual
 def test_web_interface_manual():
     """Manual test of the web interface - opens browser for user interaction."""
     print("\n🧪 Starting manual web interface test...")

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import pytest
 """
 Test script for Pushover notification configuration.
 
@@ -17,6 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 
+@pytest.mark.manual
 def test_pushover_config():
     """Test Pushover notification configuration."""
     # Setup logging

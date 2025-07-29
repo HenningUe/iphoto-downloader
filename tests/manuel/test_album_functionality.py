@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import pytest
 """
 Test script to verify album functionality implementation.
 
@@ -39,6 +40,7 @@ class MockConfig2(MockConfig):
         self.icloud_password = icloud_password
 
 
+@pytest.mark.manual
 def test_album_sync_functionality():
     """Test that album-based sync creates proper subfolder structure."""
 
@@ -123,6 +125,7 @@ def test_album_sync_functionality():
         return True
 
 
+@pytest.mark.manual
 def test_album_client_methods():
     """Test the new album methods in iCloudClient."""
 

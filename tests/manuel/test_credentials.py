@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import pytest
 """Test script for credential manager functionality."""
 
 from icloud_photo_sync.config import KeyringConfig
@@ -10,6 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 
+@pytest.mark.manual
 def test_keyring_helper():
     """Test the keyring helper function."""
     print("Testing keyring helper...")

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import pytest
 """Simple test script to verify that sync pauses during maintenance operations."""
 
 import threading
@@ -22,6 +23,7 @@ except ImportError as e:
 setup_logging(logging.INFO)
 
 
+@pytest.mark.manual
 def test_threading_synchronization():
     """Test the basic threading synchronization mechanism."""
     print("🧪 Testing basic threading synchronization...")
@@ -91,6 +93,7 @@ def test_threading_synchronization():
         return False
 
 
+@pytest.mark.manual
 def test_no_maintenance_interference():
     """Test that sync proceeds normally when no maintenance is in progress."""
     print("\n🧪 Testing sync without maintenance interference...")

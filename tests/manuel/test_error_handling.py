@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import pytest
 """
 Test script to verify the global exception handling implementation.
 """
@@ -8,6 +9,7 @@ import sys
 sys.path.append('src/icloud_photo_sync/src')
 
 
+@pytest.mark.manual
 def test_error_sanitization():
     """Test that sensitive information is properly sanitized from error messages."""
 

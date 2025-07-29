@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import pytest
 """Test the improved 2FA success page with better closing functionality."""
 
 from auth2fa.web_server import TwoFAWebServer
@@ -10,6 +11,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent / "shared" / "auth2fa" / "src"))
 
 
+@pytest.mark.manual
 def test_improved_success_page():
     """Test the improved success page with better window closing."""
 

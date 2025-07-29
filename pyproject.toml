@@ -70,6 +70,7 @@ markers = [
     "integration: Integration tests",
     "e2e: End-to-end tests requiring real iCloud credentials",
     "slow: Slow tests",
+    "manual: Manual tests requiring user interaction (excluded from CI/CD)",
 ]
 
 [tool.coverage.run]

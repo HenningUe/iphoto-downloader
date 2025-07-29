@@ -29,7 +29,7 @@ jobs:
 
     - name: Run tests with updated dependencies
       run: |
-        uv run pytest tests/ --tb=short
+        uv run pytest -m "not manual" --tb=short
 
     - name: Check for changes
       id: changes

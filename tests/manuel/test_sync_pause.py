@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import pytest
 """Test script to verify that sync pauses during maintenance operations."""
 
 import threading
@@ -35,6 +36,7 @@ class MockConfig(BaseConfig):
         self.sync_directory.mkdir(exist_ok=True)
 
 
+@pytest.mark.manual
 def test_sync_pause_during_maintenance():
     """Test that sync operations pause during maintenance."""
     print("🧪 Testing sync pause during maintenance...")
@@ -93,6 +95,7 @@ def test_sync_pause_during_maintenance():
         return False
 
 
+@pytest.mark.manual
 def test_maintenance_blocks_sync():
     """Test that starting maintenance blocks new sync operations."""
     print("\n🧪 Testing maintenance blocks sync...")

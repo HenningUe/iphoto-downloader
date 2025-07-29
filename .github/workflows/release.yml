@@ -33,7 +33,7 @@ jobs:
 
     - name: Run tests before building
       run: |
-        uv run pytest tests/ --tb=short
+        uv run pytest -m "not manual" --tb=short
 
     - name: Build Windows executables
       run: |
@@ -82,7 +82,7 @@ jobs:
 
     - name: Run tests before building
       run: |
-        uv run pytest tests/ --tb=short
+        uv run pytest -m "not manual" --tb=short
 
     - name: Build Linux executables
       run: |

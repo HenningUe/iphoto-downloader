@@ -1,3 +1,4 @@
+import pytest
 """Manual test script for multi-instance control functionality."""
 
 import sys
@@ -16,6 +17,7 @@ from icloud_photo_sync.instance_manager import (
 from icloud_photo_sync.config import BaseConfig
 
 
+@pytest.mark.manual
 def test_validate_multi_instance_config():
     """Test the validation function."""
     print("Testing validate_multi_instance_config...")
@@ -41,6 +43,7 @@ def test_validate_multi_instance_config():
         print("✅ Invalid number value properly rejected")
 
 
+@pytest.mark.manual
 def test_config_integration():
     """Test integration with config system."""
     print("\nTesting config integration...")
@@ -92,6 +95,7 @@ ALLOW_MULTI_INSTANCE=false
         os.rmdir(temp_dir)
 
 
+@pytest.mark.manual
 def test_instance_manager_basic():
     """Test basic InstanceManager functionality."""
     print("\nTesting InstanceManager basic functionality...")

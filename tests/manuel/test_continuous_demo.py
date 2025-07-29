@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import pytest
 """
 Integration test to demonstrate continuous execution mode functionality.
 """
@@ -15,6 +16,7 @@ from pathlib import Path
 sys.path.append('src/icloud_photo_sync/src')
 
 
+@pytest.mark.manual
 def test_continuous_mode_demo():
     """Demonstrate continuous execution mode with a short demo."""
 

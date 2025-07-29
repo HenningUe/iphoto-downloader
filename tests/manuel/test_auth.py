@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import pytest
 """Simple authentication test to check if 2FA is required."""
 
 from icloud_photo_sync.logger import setup_logging
@@ -11,6 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 
+@pytest.mark.manual
 def test_authentication():
     """Test iCloud authentication and check 2FA status."""
     print("🔐 Testing iCloud Authentication")

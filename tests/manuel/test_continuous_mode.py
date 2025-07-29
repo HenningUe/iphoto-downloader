@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import pytest
 """
 Test script to verify continuous execution mode functionality.
 """
@@ -9,6 +10,7 @@ import sys
 sys.path.append('src/icloud_photo_sync/src')
 
 
+@pytest.mark.manual
 def test_execution_mode_config():
     """Test that execution mode configuration works correctly."""
 

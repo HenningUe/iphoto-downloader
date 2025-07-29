@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Test the 2FA web server success page functionality."""
 
+import pytest
 from auth2fa.web_server import TwoFAWebServer
 import sys
 import time
@@ -10,6 +11,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent / "shared" / "auth2fa" / "src"))
 
 
+@pytest.mark.manual
 def test_2fa_flow():
     """Test the complete 2FA flow including success page."""
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import pytest
 """Test script to verify deletion tracking functionality."""
 
 from icloud_photo_sync.logger import setup_logging
@@ -21,6 +22,7 @@ setup_logging(logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.manual
 def test_deletion_tracker_basics():
     """Test basic deletion tracker functionality."""
     logger.info("🔄 Testing deletion tracker basics...")
@@ -63,6 +65,7 @@ def test_deletion_tracker_basics():
             tracker.close()
 
 
+@pytest.mark.manual
 def test_local_deletion_detection():
     """Test detection of locally deleted photos."""
     logger.info("🔄 Testing local deletion detection...")
@@ -128,6 +131,7 @@ def test_local_deletion_detection():
             tracker.close()
 
 
+@pytest.mark.manual
 def test_end_to_end_deletion_prevention():
     """Test end-to-end deletion prevention scenario."""
     logger.info("🔄 Testing end-to-end deletion prevention...")

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import pytest
 """Simple test script to verify the success page implementation."""
 
 import time
@@ -12,6 +13,7 @@ from auth2fa.web_server import TwoFAWebServer
 sys.path.append(str(Path(__file__).parent / "shared" / "auth2fa" / "src"))
 
 
+@pytest.mark.manual
 def test_success_page():
     """Test that the success page route is available."""
 

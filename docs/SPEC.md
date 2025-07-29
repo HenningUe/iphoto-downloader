@@ -235,7 +235,7 @@ automatically using **GitHub Actions**.
 - The previously given link shall be used considering the following adpations:
   - the release workflow shall be trigger, whenever a new release is requested in github for this repo, i.e. link "https://github.com/.../releases/new" is called
   - The release workflow shall created executables for windows and linux
-  - Before the creation of the executables start the full test-suite shall be executed. Any error shall cause an aboration.
+  - Before the creation of the executables the test-suite shall be executed. Any error shall cause an aboration. The tests which are included, shall not be blocked by any required user-interaction.
   - The windows executable shall be published automatically to winget, i.e. the Windows Package Manager.
   - The linux executable shall be published automatically to APT (Advanced Packaging Tool), i.e. the ubuntu package manager
 

@@ -1,3 +1,4 @@
+import pytest
 """Manual testing for the TwoFactorAuthHandler.
 
 This module provides interactive tests for manually validating the complete 2FA
@@ -23,6 +24,7 @@ from icloud_photo_sync.logger import setup_logging
 from auth2fa import TwoFactorAuthHandler, handle_2fa_authentication
 
 
+@pytest.mark.manual
 def test_complete_2fa_flow():
     """Test the complete 2FA authentication flow with all components."""
     print("\n🧪 Starting Complete 2FA Flow Test...")
@@ -103,6 +105,7 @@ def test_complete_2fa_flow():
         return False
 
 
+@pytest.mark.manual
 def test_pushover_integration():
     """Test Pushover notification integration."""
     print("\n🧪 Testing Pushover Integration...")
@@ -151,6 +154,7 @@ def test_pushover_integration():
         return False
 
 
+@pytest.mark.manual
 def test_web_server_integration():
     """Test web server integration without full flow."""
     print("\n🧪 Testing Web Server Integration...")
@@ -238,6 +242,7 @@ def test_web_server_integration():
                 pass
 
 
+@pytest.mark.manual
 def test_timeout_behavior():
     """Test timeout behavior of the 2FA handler."""
     print("\n🧪 Testing Timeout Behavior...")
@@ -274,6 +279,7 @@ def test_timeout_behavior():
         return False
 
 
+@pytest.mark.manual
 def test_convenience_function():
     """Test the convenience function for external use."""
     print("\n🧪 Testing Convenience Function...")
@@ -317,6 +323,7 @@ def test_convenience_function():
         return False
 
 
+@pytest.mark.manual
 def test_error_handling():
     """Test error handling in various scenarios."""
     print("\n🧪 Testing Error Handling...")

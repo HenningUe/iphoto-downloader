@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import pytest
 """Quick test script to verify database safety methods integration."""
 
 from icloud_photo_sync.deletion_tracker import DeletionTracker
@@ -13,6 +14,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'icloud_photo_sync', 'src'))
 
 
+@pytest.mark.manual
 def test_database_safety_integration():
     """Test that all database safety methods are properly called."""
 

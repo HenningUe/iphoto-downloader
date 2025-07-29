@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import pytest
 """Test script for 2FA implementation with session storage."""
 
 import os
@@ -14,6 +15,7 @@ from icloud_photo_sync.config import get_config
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 
+@pytest.mark.manual
 def test_2fa_implementation():
     """Test the 2FA implementation with session storage."""
     print("🧪 Testing 2FA Implementation with Session Storage")
@@ -71,6 +73,7 @@ def test_2fa_implementation():
         return False
 
 
+@pytest.mark.manual
 def test_syncer_integration():
     """Test the PhotoSyncer integration with 2FA."""
     print("\n🧪 Testing PhotoSyncer 2FA Integration")

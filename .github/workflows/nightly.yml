@@ -32,7 +32,7 @@ jobs:
 
     - name: Run extended test suite
       run: |
-        uv run pytest tests/ --tb=long --verbose
+        uv run pytest -m "not manual" --tb=long --verbose
 
     - name: Test build process (Linux/macOS)
       if: runner.os != 'Windows'

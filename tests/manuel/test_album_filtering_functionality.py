@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import pytest
 """
 Test script to verify album filtering functionality implementation.
 
@@ -39,6 +40,7 @@ def create_test_config(temp_dir, **env_vars):
     return KeyringConfig(str(env_file))
 
 
+@pytest.mark.manual
 def test_album_filtering_configuration():
     """Test album filtering configuration parsing."""
 
@@ -91,6 +93,7 @@ def test_album_filtering_configuration():
             print("✅ Validation correctly rejects when both album types are disabled")
 
 
+@pytest.mark.manual
 def test_album_filtering_logic():
     """Test the album filtering logic in iCloudClient."""
 
@@ -145,6 +148,7 @@ def test_album_filtering_logic():
         print("   - Shared albums excluded: ✅")
 
 
+@pytest.mark.manual
 def test_album_existence_validation():
     """Test album existence validation."""
 
@@ -174,6 +178,7 @@ def test_album_existence_validation():
             print("✅ Album existence validation correctly identifies missing albums")
 
 
+@pytest.mark.manual
 def test_end_to_end_album_filtering():
     """Test end-to-end album filtering in sync process."""
 
