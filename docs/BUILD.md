@@ -1,6 +1,6 @@
 # 🔨 Build System Documentation
 
-This document describes how to build the iCloud Photo Sync Tool for different platforms.
+This document describes how to build the iPhoto Downloader Tool for different platforms.
 
 ## 📋 Prerequisites
 
@@ -51,11 +51,11 @@ Use the cross-platform test script to verify your builds:
 
 ```bash
 # Full test suite
-python test_build.py dist/icloud_photo_sync.exe     # Windows
-python test_build.py dist/icloud_photo_sync         # Linux
+python test_build.py dist/iphoto_downloader.exe     # Windows
+python test_build.py dist/iphoto_downloader         # Linux
 
 # Quick smoke test
-python test_build.py --summary-only dist/icloud_photo_sync.exe
+python test_build.py --summary-only dist/iphoto_downloader.exe
 ```
 
 ## 📁 Build Outputs
@@ -63,8 +63,8 @@ python test_build.py --summary-only dist/icloud_photo_sync.exe
 ### Directory Structure
 ```
 dist/
-├── icloud_photo_sync.exe      # Windows executable
-├── icloud_photo_sync          # Linux executable
+├── iphoto_downloader.exe      # Windows executable
+├── iphoto_downloader          # Linux executable
 └── _internal/                 # PyInstaller runtime files (if using --onedir)
 
 build/                         # Temporary build files (can be deleted)
@@ -82,7 +82,7 @@ These resources are automatically copied to the user's settings folder in "Deliv
 
 ### PyInstaller Spec File
 
-The build process uses `icloud_photo_sync.spec` which includes:
+The build process uses `iphoto_downloader.spec` which includes:
 
 ```python
 # Data files included in executable
@@ -125,7 +125,7 @@ Built executables automatically:
 
 ### Advanced PyInstaller Options
 
-You can modify `icloud_photo_sync.spec` to customize:
+You can modify `iphoto_downloader.spec` to customize:
 
 ```python
 # Single file vs directory bundle
@@ -200,10 +200,10 @@ For detailed build information:
 
 ```bash
 # Verbose PyInstaller output
-uv run pyinstaller --log-level DEBUG icloud_photo_sync.spec
+uv run pyinstaller --log-level DEBUG iphoto_downloader.spec
 
 # Check imported modules
-uv run pyi-makespec --onefile src/icloud_photo_sync/src/icloud_photo_sync/main.py
+uv run pyi-makespec --onefile src/iphoto_downloader/src/iphoto_downloader/main.py
 ```
 
 ## 📦 Distribution
@@ -222,21 +222,21 @@ uv run pyi-makespec --onefile src/icloud_photo_sync/src/icloud_photo_sync/main.p
 
 ```bash
 # Create AppImage (requires linuxdeploy)
-linuxdeploy --appdir AppDir --executable dist/icloud_photo_sync --create-desktop-file --output appimage
+linuxdeploy --appdir AppDir --executable dist/iphoto_downloader --create-desktop-file --output appimage
 
 # Create deb package (requires fpm)
 fpm -s dir -t deb -n icloud-photo-sync -v 1.0.0 \
-    --description "iCloud Photo Sync Tool" \
+    --description "iPhoto Downloader Tool" \
     --url "https://github.com/your-org/iphoto-downloader" \
     --maintainer "Your Name <your.email@example.com>" \
-    dist/icloud_photo_sync=/usr/local/bin/
+    dist/iphoto_downloader=/usr/local/bin/
 
 # Create rpm package (requires fpm)
 fpm -s dir -t rpm -n icloud-photo-sync -v 1.0.0 \
-    --description "iCloud Photo Sync Tool" \
+    --description "iPhoto Downloader Tool" \
     --url "https://github.com/your-org/iphoto-downloader" \
     --maintainer "Your Name <your.email@example.com>" \
-    dist/icloud_photo_sync=/usr/local/bin/
+    dist/iphoto_downloader=/usr/local/bin/
 ```
 
 ## 📚 References

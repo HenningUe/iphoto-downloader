@@ -7,9 +7,9 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 import logging
 
-from icloud_photo_sync.logger import setup_logging
-from icloud_photo_sync.icloud_client import iCloudClient
-from icloud_photo_sync.config import BaseConfig
+from iphoto_downloader.logger import setup_logging
+from iphoto_downloader.icloud_client import iCloudClient
+from iphoto_downloader.config import BaseConfig
 
 
 class TestAlbumFiltering(unittest.TestCase):
@@ -24,7 +24,7 @@ class TestAlbumFiltering(unittest.TestCase):
         self.mock_config = Mock(spec=BaseConfig)
         
         # Create mock iCloud client with proper patching
-        with patch('icloud_photo_sync.icloud_client.iCloudClient') as mock_client_class:
+        with patch('iphoto_downloader.icloud_client.iCloudClient') as mock_client_class:
             self.client = Mock()
             self.client._api = Mock()
             self.client._api.photos = Mock()

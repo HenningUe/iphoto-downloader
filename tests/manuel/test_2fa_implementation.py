@@ -6,10 +6,10 @@ import os
 import sys
 from pathlib import Path
 
-from icloud_photo_sync.sync import PhotoSyncer
-from icloud_photo_sync.logger import setup_logging
-from icloud_photo_sync.icloud_client import iCloudClient
-from icloud_photo_sync.config import get_config
+from iphoto_downloader.sync import PhotoSyncer
+from iphoto_downloader.logger import setup_logging
+from iphoto_downloader.icloud_client import iCloudClient
+from iphoto_downloader.config import get_config
 
 # Add the src directory to the path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -90,7 +90,7 @@ def test_syncer_integration():
         PhotoSyncer(config)
         print("✅ PhotoSyncer created successfully")
         print("💡 2FA handling is now implemented in PhotoSyncer._handle_2fa()")
-        print("💡 Sessions will be stored in: %USERPROFILE%\\icloud_photo_sync\\sessions")
+        print("💡 Sessions will be stored in: %USERPROFILE%\\iphoto_downloader\\sessions")
 
         return True
 
@@ -121,7 +121,7 @@ if __name__ == "__main__":
     if test1_result and test2_result:
         print("\n🎉 All tests passed! 2FA implementation is ready.")
         print("\n💡 Usage:")
-        print("  1. Run: python -m icloud_photo_sync.main")
+        print("  1. Run: python -m iphoto_downloader.main")
         print("  2. If 2FA required, enter 6-digit code when prompted")
         print("  3. Session will be trusted for future runs")
         print("  4. Subsequent runs should not require 2FA")

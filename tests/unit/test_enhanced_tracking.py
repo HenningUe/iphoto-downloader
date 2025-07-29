@@ -7,7 +7,7 @@ import sqlite3
 from pathlib import Path
 import logging
 
-from src.icloud_photo_sync.src.icloud_photo_sync.logger import setup_logging
+from src.iphoto_downloader.src.iphoto_downloader.logger import setup_logging
 
 
 class TestEnhancedTracking(unittest.TestCase):
@@ -71,7 +71,7 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def test_album_aware_photo_identification(self):
         """Test album-aware photo identification and tracking."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.deletion_tracker import (
+        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import (
             DeletionTracker
         )
 
@@ -118,7 +118,7 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def test_composite_primary_key_tracking(self):
         """Test composite primary key tracking (photo_id + album_name)."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.deletion_tracker import (
+        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import (
             DeletionTracker
         )
 
@@ -156,7 +156,7 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def test_album_level_tracking_statistics(self):
         """Test album-level tracking and statistics."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.deletion_tracker import (
+        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import (
             DeletionTracker
         )
 
@@ -208,7 +208,7 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def test_cross_album_duplicate_detection(self):
         """Test detection of photos that exist in multiple albums."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.deletion_tracker import (
+        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import (
             DeletionTracker
         )
 
@@ -240,7 +240,7 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def test_album_sync_coordination(self):
         """Test sync coordination across albums."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.deletion_tracker import (
+        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import (
             DeletionTracker
         )
 
@@ -272,7 +272,7 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def test_migration_from_old_tracking_format(self):
         """Test migration from old single-key tracking to composite keys."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.deletion_tracker import (
+        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import (
             DeletionTracker
         )
 
@@ -321,7 +321,7 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def test_sync_progress_tracking_per_album(self):
         """Test detailed sync progress tracking per album."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.deletion_tracker import (
+        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import (
             DeletionTracker
         )
 
@@ -360,7 +360,7 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def test_error_tracking_and_retry_logic(self):
         """Test error tracking and retry logic for failed syncs."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.deletion_tracker import (
+        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import (
             DeletionTracker
         )
 
@@ -395,7 +395,7 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def test_bulk_operations_performance(self):
         """Test performance of bulk operations on enhanced tracking."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.deletion_tracker import (
+        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import (
             DeletionTracker
         )
         import time
@@ -443,7 +443,7 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def test_cleanup_and_maintenance_operations(self):
         """Test cleanup and maintenance operations."""
-        from src.icloud_photo_sync.src.icloud_photo_sync.deletion_tracker import (
+        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import (
             DeletionTracker
         )
         import time

@@ -1,4 +1,4 @@
-# 📄 Software Specification — iCloud Photo Sync Tool
+# 📄 Software Specification — iPhoto Downloader Tool
 
 ## Overview
 
@@ -101,7 +101,7 @@ automatically using **GitHub Actions**.
   shared/auth2fa
 - This package shall have its own test-suite, its own pyproject.toml, thus its
   own dependency list
-- This package shall not depend on any code of the main icloud_photo_sync app
+- This package shall not depend on any code of the main iphoto_downloader app
 
 5.2. 2FA Trigger and Notification
 

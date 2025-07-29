@@ -25,7 +25,7 @@ class iCloudClient:
         self._api: PyiCloudService | None = None
 
         # Set up session storage directory
-        self.session_dir = Path.home() / "icloud_photo_sync" / "sessions"
+        self.session_dir = Path.home() / "iphoto_downloader" / "sessions"
         self.session_dir.mkdir(parents=True, exist_ok=True)
 
     @property
@@ -614,7 +614,7 @@ def cleanup_sessions(max_age_days: int = 30, session_dir: t.Optional[Path] = Non
     logger = get_logger()
 
     if session_dir is None:
-        session_dir = Path.home() / "icloud_photo_sync" / "sessions"
+        session_dir = Path.home() / "iphoto_downloader" / "sessions"
 
     if not session_dir.exists():
         logger.debug("Session directory does not exist, nothing to clean")

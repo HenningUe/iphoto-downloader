@@ -5,9 +5,9 @@ Test script to verify continuous execution mode functionality.
 """
 
 from pathlib import Path
-from icloud_photo_sync.config import BaseConfig
+from iphoto_downloader.config import BaseConfig
 import sys
-sys.path.append('src/icloud_photo_sync/src')
+sys.path.append('src/iphoto_downloader/src')
 
 
 @pytest.mark.manual

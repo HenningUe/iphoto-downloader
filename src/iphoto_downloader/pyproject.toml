@@ -26,7 +26,7 @@ dependencies = [
 ]
 
 [project.scripts]
-icloud-photo-sync = "icloud_photo_sync.main:main"
+icloud-photo-sync = "iphoto_downloader.main:main"
 
 [dependency-groups]
 dev = [
@@ -39,5 +39,5 @@ dev = [
 ]
 
 [tool.uv.sources]
-icloud_photo_sync = { path = "." }
+iphoto_downloader = { path = "." }
 auth2fa = { workspace = true }

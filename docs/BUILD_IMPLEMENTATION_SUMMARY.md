@@ -6,7 +6,7 @@
 All tasks have been successfully implemented:
 
 #### Main Application PyInstaller Spec
-- ✅ **App Icon**: Added `iphoto-downloader-main.png` icon to `icloud_photo_sync.spec`
+- ✅ **App Icon**: Added `iphoto-downloader-main.png` icon to `iphoto_downloader.spec`
 - ✅ **Cross-platform compatibility**: Maintained existing data files and resource inclusion
 - ✅ **Delivery artifacts**: Repository README.md and .env.example embedded as resources
 - ✅ **Keyring backends**: Comprehensive hiddenimports for Windows, macOS, Linux
@@ -36,7 +36,7 @@ All tasks have been successfully implemented:
 ## 🎯 Build Results
 
 ### Successful Builds
-- **Main Executable**: `icloud_photo_sync.exe` (15.72 MB)
+- **Main Executable**: `iphoto_downloader.exe` (15.72 MB)
 - **Credentials Manager**: `manage_credentials.exe` (15.69 MB)
 
 ### Build Script Usage Examples

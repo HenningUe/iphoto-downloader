@@ -1,4 +1,4 @@
-"""Delivery Artifacts Management for iCloud Photo Sync Tool."""
+"""Delivery Artifacts Management for iPhoto Downloader Tool."""
 
 import os
 import shutil
@@ -183,7 +183,7 @@ class DeliveryArtifactsManager:
         else:
             # In development, navigate to repository root
             current_dir = Path(__file__).parent
-            # Navigate up from src/icloud_photo_sync/src/icloud_photo_sync/ to repository root
+            # Navigate up from src/iphoto_downloader/src/iphoto_downloader/ to repository root
             repo_root = current_dir.parent.parent.parent.parent
             return repo_root / 'README.md'
             
@@ -200,7 +200,7 @@ class DeliveryArtifactsManager:
         else:
             # In development, navigate to repository root
             current_dir = Path(__file__).parent
-            # Navigate up from src/icloud_photo_sync/src/icloud_photo_sync/ to repository root
+            # Navigate up from src/iphoto_downloader/src/iphoto_downloader/ to repository root
             repo_root = current_dir.parent.parent.parent.parent
             return repo_root / '.env.example'
         

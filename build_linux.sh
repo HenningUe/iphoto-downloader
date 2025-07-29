@@ -1,5 +1,5 @@
 #!/bin/bash
-# Linux build script for iCloud Photo Sync Tool
+# Linux build script for iPhoto Downloader Tool
 # Builds a Linux executable using PyInstaller
 
 set -euo pipefail
@@ -50,7 +50,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-echo "🚀 Building iCloud Photo Sync Tool for Linux"
+echo "🚀 Building iPhoto Downloader Tool for Linux"
 echo "=============================================="
 
 # Check if running in correct directory
@@ -85,7 +85,7 @@ echo "✅ Dependencies installed"
 
 # Verify required files exist
 echo "🔍 Verifying required files..."
-REQUIRED_FILES=("README.md" ".env.example" "icloud_photo_sync.spec")
+REQUIRED_FILES=("README.md" ".env.example" "iphoto_downloader.spec")
 for file in "${REQUIRED_FILES[@]}"; do
     if [ ! -f "$file" ]; then
         echo "❌ Required file missing: $file"
@@ -117,8 +117,8 @@ echo "🔨 Building Linux executable(s)..."
 
 # Build main executable (unless credentials-only is specified)
 if [ "$CREDENTIALS_ONLY" = false ]; then
-    echo "🔧 Building main iCloud Photo Sync executable..."
-    if ! uv run pyinstaller icloud_photo_sync.spec --distpath "$OUTPUT_DIR" --workpath build; then
+    echo "🔧 Building main iPhoto Downloader executable..."
+    if ! uv run pyinstaller iphoto_downloader.spec --distpath "$OUTPUT_DIR" --workpath build; then
         echo "❌ Main executable build failed"
         exit 1
     fi
@@ -136,7 +136,7 @@ if [ "$MAIN_ONLY" = false ]; then
 fi
 
 # Verify build output
-MAIN_EXE_PATH="$OUTPUT_DIR/icloud_photo_sync"
+MAIN_EXE_PATH="$OUTPUT_DIR/iphoto_downloader"
 CRED_EXE_PATH="$OUTPUT_DIR/manage_credentials"
 
 echo "📊 Build Information:"

@@ -1,6 +1,6 @@
-from icloud_photo_sync.config import get_config
-from icloud_photo_sync.icloud_client import iCloudClient
-from icloud_photo_sync.logger import setup_logging
+from iphoto_downloader.config import get_config
+from iphoto_downloader.icloud_client import iCloudClient
+from iphoto_downloader.logger import setup_logging
 
 
 def test_interactive_2fa_authentication():

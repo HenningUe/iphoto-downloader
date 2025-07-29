@@ -4,16 +4,16 @@ import pytest
 Integration test to demonstrate continuous execution mode functionality.
 """
 
-from icloud_photo_sync.logger import setup_logging
-from icloud_photo_sync.continuous_runner import ContinuousRunner
-from icloud_photo_sync.config import BaseConfig
+from iphoto_downloader.logger import setup_logging
+from iphoto_downloader.continuous_runner import ContinuousRunner
+from iphoto_downloader.config import BaseConfig
 import sys
 import tempfile
 import threading
 import time
 from pathlib import Path
 
-sys.path.append('src/icloud_photo_sync/src')
+sys.path.append('src/iphoto_downloader/src')
 
 
 @pytest.mark.manual

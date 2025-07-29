@@ -4,12 +4,12 @@ import pytest
 Test script for Pushover notification configuration.
 
 This script allows you to test your Pushover notification setup
-without running the full iCloud Photo Sync.
+without running the full iPhoto Downloader.
 """
 
-from icloud_photo_sync.logger import setup_logging
+from iphoto_downloader.logger import setup_logging
 from auth2fa.pushover_service import PushoverService as PushoverNotificationService
-from icloud_photo_sync.config import KeyringConfig, get_config
+from iphoto_downloader.config import KeyringConfig, get_config
 import sys
 import logging
 from pathlib import Path
@@ -72,7 +72,7 @@ def test_pushover_config():
 
 def main():
     """Main function."""
-    print("iCloud Photo Sync - Pushover Configuration Test")
+    print("iPhoto Downloader - Pushover Configuration Test")
     print("=" * 50)
     print()
 

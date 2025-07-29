@@ -1,6 +1,6 @@
 # E2E Testing Guide with 2FA Support
 
-This guide explains how to run end-to-end (E2E) integration tests for the iCloud Photo Sync tool, including handling 2FA authentication.
+This guide explains how to run end-to-end (E2E) integration tests for the iPhoto Downloader tool, including handling 2FA authentication.
 
 ## Prerequisites ✅
 
@@ -193,4 +193,4 @@ $env:MAX_DOWNLOADS = "3"
 3. **Run interactive tests** if 2FA required: `python run_e2e_tests.py --interactive`
 4. **Validate full sync**: `python run_e2e_tests.py --all` (when ready)
 
-The E2E testing framework is now ready to validate your iCloud Photo Sync integration with proper 2FA handling! 🚀
+The E2E testing framework is now ready to validate your iPhoto Downloader integration with proper 2FA handling! 🚀

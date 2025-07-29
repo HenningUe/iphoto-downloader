@@ -1,4 +1,4 @@
-This is the project TODO list for implementing the **iCloud Photo Sync Tool** as
+This is the project TODO list for implementing the **iPhoto Downloader Tool** as
 specified.
 
 ---
@@ -167,7 +167,7 @@ specified.
 #### 2.2.4 💾 Session Storage
 
 - [x] Store 2FA sessions in user directory (`%USERPROFILE%` or `$HOME`)
-- [x] Create dedicated subdirectory (`icloud_photo_sync/sessions`)
+- [x] Create dedicated subdirectory (`iphoto_downloader/sessions`)
 - [x] Implement secure file permissions for session data
 - [x] Store only necessary session information
 - [x] Add **session cleanup** for expired sessions
@@ -319,7 +319,7 @@ specified.
 ### 6.1 PyInstaller Configuration
 
 - [x] Write **PyInstaller spec** for cross-platform builds:
-  - [x] Create `icloud_photo_sync.spec` with proper data files inclusion
+  - [x] Create `iphoto_downloader.spec` with proper data files inclusion
   - [x] Include repository `README.md` and `.env.example` as embedded resources
   - [x] Configure hiddenimports for keyring backends (Windows, macOS, Linux)
   - [x] Set up proper pathex and binaries configuration
@@ -368,7 +368,7 @@ specified.
   - [x] Create automated testing tools (`test_build.py`)
   - [ ] Verify `.exe` runs on Windows 10/11
   - [ ] Test delivery artifacts creation on first run
-  - [ ] Verify settings folder detection (%USERPROFILE%\\AppData\\Local\\FotoPool)
+  - [ ] Verify settings folder detection (%USERPROFILE%\\AppData\\Local\\iPhotoDownloader)
   - [ ] Test file copying and user notifications
   - [ ] Test credentials manager `.exe` functionality on Windows
 - [ ] Test **Linux builds**:

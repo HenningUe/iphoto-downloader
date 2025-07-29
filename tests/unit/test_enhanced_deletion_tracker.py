@@ -1,8 +1,8 @@
 """Unit tests for enhanced deletion tracking functionality."""
 
 import logging
-from icloud_photo_sync.logger import setup_logging
-from icloud_photo_sync.deletion_tracker import DeletionTracker
+from iphoto_downloader.logger import setup_logging
+from iphoto_downloader.deletion_tracker import DeletionTracker
 import unittest
 from pathlib import Path
 import tempfile
@@ -10,7 +10,7 @@ import os
 import sys
 
 # Add the source path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src/icloud_photo_sync/src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src/iphoto_downloader/src'))
 
 
 # Setup logging for tests

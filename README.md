@@ -1,6 +1,6 @@
-# 📸 iCloud Photo Sync Workspace
+# 📸 iPhoto Downloader Workspace
 
-A uv monorepo workspace for iCloud photo synchronization tools and utilities.
+A uv monorepo workspace for iCloud photo download tools and utilities.
 
 ## ✨ Features
 
@@ -18,7 +18,7 @@ A uv monorepo workspace for iCloud photo synchronization tools and utilities.
 
 This workspace contains the following packages:
 
-### `src/icloud_photo_sync/`
+### `src/iphoto_downloader/`
 
 The main application package for syncing photos from iCloud to local storage
 with deletion tracking.
@@ -74,9 +74,9 @@ icloud-photo-sync/
 │       ├── pyproject.toml
 │       └── README.md
 ├── src/
-│   └── icloud_photo_sync/    # Main application package
+│   └── iphoto_downloader/    # Main application package
 │       ├── src/
-│       │   └── icloud_photo_sync/
+│       │   └── iphoto_downloader/
 │       │       ├── __init__.py
 │       │       ├── main.py
 │       │       ├── sync.py
@@ -117,7 +117,7 @@ uv run pytest
 Run tests for a specific package:
 
 ```bash
-uv run pytest src/icloud_photo_sync/tests/
+uv run pytest src/iphoto_downloader/tests/
 uv run pytest shared/auth2fa/tests/
 ```
 
@@ -125,7 +125,7 @@ uv run pytest shared/auth2fa/tests/
 
 The workspace is configured so that packages can depend on each other:
 
-- `icloud_photo_sync` depends on `auth2fa` for authentication functionality
+- `iphoto_downloader` depends on `auth2fa` for authentication functionality
 - Both packages can be developed and tested together
 
 ## ⚙️ Configuration
@@ -199,7 +199,7 @@ strategies:
 uv run pytest
 
 # Run with coverage
-uv run pytest --cov=src/icloud_photo_sync
+uv run pytest --cov=src/iphoto_downloader
 
 # Run linting
 uv run ruff check .

@@ -243,10 +243,10 @@ Select from:
 
 ## Integration with Main Application
 
-These tests verify the components that will be used in the main iCloud Photo Sync application:
+These tests verify the components that will be used in the main iPhoto Downloader application:
 
 ```python
-from icloud_photo_sync.auth.two_factor_handler import handle_2fa_authentication
+from iphoto_downloader.auth.two_factor_handler import handle_2fa_authentication
 
 # In your iCloud client code
 def authenticate_with_2fa(username):

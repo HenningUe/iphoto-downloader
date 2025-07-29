@@ -13,10 +13,10 @@
     ],
     "python.autoComplete.extraPaths": [
         "./shared/auth2fa/src",
-        "./src/icloud_photo_sync/src"
+        "./src/iphoto_downloader/src"
     ],
     "python.analysis.extraPaths": [
         "./shared/auth2fa/src",
-        "./src/icloud_photo_sync/src"
+        "./src/iphoto_downloader/src"
     ]
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env powershell
-# Windows build script for iCloud Photo Sync Tool
+# Windows build script for iPhoto Downloader Tool
 # Builds a Windows executable using PyInstaller
 
 param(
@@ -12,7 +12,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "Building iCloud Photo Sync Tool for Windows" -ForegroundColor Green
+Write-Host "Building iPhoto Downloader Tool for Windows" -ForegroundColor Green
 Write-Host "================================================" -ForegroundColor Green
 
 # Check if running in correct directory
@@ -113,7 +113,7 @@ catch {
 
 # Verify required files exist
 Write-Host "Verifying required files..." -ForegroundColor Yellow
-$RequiredFiles = @("README.md", ".env.example", "icloud_photo_sync.spec")
+$RequiredFiles = @("README.md", ".env.example", "iphoto_downloader.spec")
 foreach ($file in $RequiredFiles) {
     if (-not (Test-Path $file)) {
         Write-Error "Required file missing: $file"
@@ -127,13 +127,13 @@ Write-Host "Building Windows executable(s)..." -ForegroundColor Yellow
 
 # Build main executable (unless CredentialsOnly is specified)
 if (-not $CredentialsOnly) {
-    Write-Host "Building main iCloud Photo Sync executable..." -ForegroundColor Cyan
+    Write-Host "Building main iPhoto Downloader executable..." -ForegroundColor Cyan
     try {
         if ($uvCommand.Source) {
-            & $uvCommand run pyinstaller icloud_photo_sync.spec --distpath $OutputDir --workpath build
+            & $uvCommand run pyinstaller iphoto_downloader.spec --distpath $OutputDir --workpath build
         }
         else {
-            uv run pyinstaller icloud_photo_sync.spec --distpath $OutputDir --workpath build
+            uv run pyinstaller iphoto_downloader.spec --distpath $OutputDir --workpath build
         }
         Write-Host "Main executable build completed successfully" -ForegroundColor Green
     }
@@ -162,7 +162,7 @@ if (-not $MainOnly) {
 }
 
 # Verify build output
-$MainExePath = Join-Path $OutputDir "icloud_photo_sync.exe"
+$MainExePath = Join-Path $OutputDir "iphoto_downloader.exe"
 $CredExePath = Join-Path $OutputDir "manage_credentials.exe"
 
 Write-Host "Build Information:" -ForegroundColor Cyan

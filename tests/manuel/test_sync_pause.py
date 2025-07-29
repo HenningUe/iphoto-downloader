@@ -8,13 +8,13 @@ import sys
 from pathlib import Path
 
 # Add src to Python path for testing
-sys.path.insert(0, str(Path(__file__).parent / "src" / "icloud_photo_sync" / "src"))
+sys.path.insert(0, str(Path(__file__).parent / "src" / "iphoto_downloader" / "src"))
 
 # Import after path setup
 try:
-    from icloud_photo_sync.continuous_runner import ContinuousRunner
-    from icloud_photo_sync.config import BaseConfig
-    from icloud_photo_sync.logger import setup_logging
+    from iphoto_downloader.continuous_runner import ContinuousRunner
+    from iphoto_downloader.config import BaseConfig
+    from iphoto_downloader.logger import setup_logging
     import logging
 except ImportError as e:
     print(f"Import error: {e}")

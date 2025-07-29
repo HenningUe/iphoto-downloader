@@ -127,13 +127,13 @@ jobs:
       run: |
         chmod +x build_linux.sh
         ./build_linux.sh
-        ./dist/icloud_photo_sync --help || echo "Executable help test passed"
+        ./dist/iphoto_downloader --help || echo "Executable help test passed"
 
     - name: Test executable compatibility (Windows)
       if: runner.os == 'Windows'
       run: |
         powershell -ExecutionPolicy Bypass -File build_windows.ps1
-        dist\icloud_photo_sync.exe --help; if ($LASTEXITCODE -eq 0) { Write-Host "Executable help test passed" }
+        dist\iphoto_downloader.exe --help; if ($LASTEXITCODE -eq 0) { Write-Host "Executable help test passed" }
 
   notify-results:
     name: Notify Results

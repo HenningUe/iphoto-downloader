@@ -1,4 +1,4 @@
-"""Core sync logic for iCloud Photo Sync Tool."""
+"""Core sync logic for iPhoto Downloader Tool."""
 
 import typing as t
 

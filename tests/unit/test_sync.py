@@ -5,9 +5,9 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 import pytest
 
-from icloud_photo_sync.sync import PhotoSyncer
-from icloud_photo_sync.config import get_config
-from icloud_photo_sync.logger import setup_logging
+from iphoto_downloader.sync import PhotoSyncer
+from iphoto_downloader.config import get_config
+from iphoto_downloader.logger import setup_logging
 
 
 class TestPhotoSyncer:
@@ -56,8 +56,8 @@ class TestPhotoSyncer:
     @pytest.fixture
     def syncer(self, mock_config):
         """Create a PhotoSyncer instance for testing."""
-        with patch('icloud_photo_sync.sync.iCloudClient') as mock_client_class, \
-                patch('icloud_photo_sync.sync.DeletionTracker') as mock_tracker_class:
+        with patch('iphoto_downloader.sync.iCloudClient') as mock_client_class, \
+                patch('iphoto_downloader.sync.DeletionTracker') as mock_tracker_class:
 
             mock_client_class.return_value = Mock()
             mock_tracker_class.return_value = Mock()
@@ -66,8 +66,8 @@ class TestPhotoSyncer:
 
     def test_init_creates_components(self, mock_config):
         """Test that initialization creates all required components."""
-        with patch('icloud_photo_sync.sync.iCloudClient') as mock_client_class, \
-                patch('icloud_photo_sync.sync.DeletionTracker') as mock_tracker_class:
+        with patch('iphoto_downloader.sync.iCloudClient') as mock_client_class, \
+                patch('iphoto_downloader.sync.DeletionTracker') as mock_tracker_class:
 
             syncer = PhotoSyncer(mock_config)
 

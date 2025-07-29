@@ -58,7 +58,7 @@ class PushoverService:
             True if notification was sent successfully, False otherwise
         """
         try:
-            title = "iCloud Photo Sync - 2FA Required"
+            title = "iPhoto Downloader - 2FA Required"
             message = (
                 f"2FA authentication required.\n\n"
                 f"Click the link below to enter your 2FA code:\n"
@@ -117,7 +117,7 @@ class PushoverService:
             True if notification was sent successfully, False otherwise
         """
         try:
-            title = "iCloud Photo Sync - Authentication Successful"
+            title = "iPhoto Downloader - Authentication Successful"
             message = ("2FA authentication completed successfully. "
                        "Photo sync will continue.")
 
@@ -176,7 +176,7 @@ class PushoverService:
             True if notification was sent successfully, False otherwise
         """
         try:
-            title = f"iCloud Photo Sync - {error_type}"
+            title = f"iPhoto Downloader - {error_type}"
 
             # Truncate error message if too long for Pushover
             max_message_length = 1000
@@ -235,7 +235,7 @@ class PushoverService:
             True if test notification was sent successfully, False otherwise
         """
         try:
-            title = "iCloud Photo Sync - Test Notification"
+            title = "iPhoto Downloader - Test Notification"
             message = "This is a test notification to verify your Pushover configuration."
 
             payload = {

@@ -3,9 +3,9 @@
 from unittest.mock import Mock, MagicMock, patch, mock_open
 import pytest
 
-from icloud_photo_sync.icloud_client import iCloudClient
-from icloud_photo_sync.config import get_config
-from icloud_photo_sync.logger import setup_logging
+from iphoto_downloader.icloud_client import iCloudClient
+from iphoto_downloader.config import get_config
+from iphoto_downloader.logger import setup_logging
 
 
 class TestiCloudClient:
@@ -25,7 +25,7 @@ class TestiCloudClient:
         config.icloud_password = "testpass123"
         config.max_file_size_mb = 0  # No limit
         config.dry_run = False
-        config.session_directory = "C:\\Users\\uekoe\\icloud_photo_sync\\sessions"
+        config.session_directory = "C:\\Users\\uekoe\\iphoto_downloader\\sessions"
         return config
 
     @pytest.fixture
@@ -47,7 +47,7 @@ class TestiCloudClient:
 
     def test_authenticate_success(self, mock_config, mock_pyicloud_api):
         """Test successful authentication."""
-        with patch('icloud_photo_sync.icloud_client.PyiCloudService') as mock_api_class:
+        with patch('iphoto_downloader.icloud_client.PyiCloudService') as mock_api_class:
             mock_api_class.return_value = mock_pyicloud_api
 
             client = iCloudClient(mock_config)
@@ -73,7 +73,7 @@ class TestiCloudClient:
         """Test authentication when photos service is unavailable."""
         mock_pyicloud_api.photos = None
 
-        with patch('icloud_photo_sync.icloud_client.PyiCloudService') as mock_api_class:
+        with patch('iphoto_downloader.icloud_client.PyiCloudService') as mock_api_class:
             mock_api_class.return_value = mock_pyicloud_api
 
             client = iCloudClient(mock_config)
@@ -83,7 +83,7 @@ class TestiCloudClient:
 
     def test_authenticate_exception(self, mock_config):
         """Test authentication with exception."""
-        with patch('icloud_photo_sync.icloud_client.PyiCloudService') as mock_api_class:
+        with patch('iphoto_downloader.icloud_client.PyiCloudService') as mock_api_class:
             mock_api_class.side_effect = Exception("Auth failed")
 
             client = iCloudClient(mock_config)
@@ -413,7 +413,7 @@ class TestiCloudClient:
 
     def test_cleanup_sessions_standalone(self, tmp_path):
         """Test standalone cleanup_sessions function."""
-        from icloud_photo_sync.icloud_client import cleanup_sessions
+        from iphoto_downloader.icloud_client import cleanup_sessions
         import time
 
         # Create test files

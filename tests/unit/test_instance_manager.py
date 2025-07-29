@@ -8,7 +8,7 @@ from pathlib import Path
 from unittest.mock import patch, Mock, MagicMock
 import platform
 
-from icloud_photo_sync.instance_manager import (
+from iphoto_downloader.instance_manager import (
     InstanceManager,
     validate_multi_instance_config,
     enforce_single_instance,
@@ -39,8 +39,8 @@ class TestInstanceManager(unittest.TestCase):
         except OSError:
             pass
 
-    @patch('icloud_photo_sync.instance_manager.get_logger')
-    @patch('icloud_photo_sync.instance_manager.get_app_data_folder_path')
+    @patch('iphoto_downloader.instance_manager.get_logger')
+    @patch('iphoto_downloader.instance_manager.get_app_data_folder_path')
     def test_init_with_app_data_folder(self, mock_get_app_data, mock_get_logger):
         """Test initialization with app data folder available."""
         mock_get_logger.return_value = self.mock_logger
@@ -49,12 +49,12 @@ class TestInstanceManager(unittest.TestCase):
         manager = InstanceManager(allow_multi_instance=False)
         
         self.assertFalse(manager.allow_multi_instance)
-        expected_path = Path(self.temp_dir) / "locks" / "icloud_photo_sync.lock"
+        expected_path = Path(self.temp_dir) / "locks" / "iphoto_downloader.lock"
         self.assertEqual(manager.lock_file_path, expected_path)
         self.assertIsNone(manager.lock_file_handle)
         
-    @patch('icloud_photo_sync.instance_manager.get_logger')
-    @patch('icloud_photo_sync.instance_manager.get_app_data_folder_path')
+    @patch('iphoto_downloader.instance_manager.get_logger')
+    @patch('iphoto_downloader.instance_manager.get_app_data_folder_path')
     def test_init_without_app_data_folder(self, mock_get_app_data, mock_get_logger):
         """Test initialization without app data folder."""
         mock_get_logger.return_value = self.mock_logger
@@ -63,11 +63,11 @@ class TestInstanceManager(unittest.TestCase):
         manager = InstanceManager(allow_multi_instance=True)
         
         self.assertTrue(manager.allow_multi_instance)
-        expected_path = Path("icloud_photo_sync.lock")
+        expected_path = Path("iphoto_downloader.lock")
         self.assertEqual(manager.lock_file_path, expected_path)
 
-    @patch('icloud_photo_sync.instance_manager.get_logger')
-    @patch('icloud_photo_sync.instance_manager.get_app_data_folder_path')
+    @patch('iphoto_downloader.instance_manager.get_logger')
+    @patch('iphoto_downloader.instance_manager.get_app_data_folder_path')
     def test_multi_instance_allowed_skips_lock(self, mock_get_app_data, mock_get_logger):
         """Test that multi-instance mode skips lock acquisition."""
         mock_get_logger.return_value = self.mock_logger
@@ -82,8 +82,8 @@ class TestInstanceManager(unittest.TestCase):
             "Multi-instance mode enabled - not checking for existing instances"
         )
 
-    @patch('icloud_photo_sync.instance_manager.get_logger')
-    @patch('icloud_photo_sync.instance_manager.get_app_data_folder_path')
+    @patch('iphoto_downloader.instance_manager.get_logger')
+    @patch('iphoto_downloader.instance_manager.get_app_data_folder_path')
     @patch('platform.system')
     def test_acquire_lock_windows_success(self, mock_platform, mock_get_app_data, mock_get_logger):
         """Test successful lock acquisition on Windows."""
@@ -98,7 +98,7 @@ class TestInstanceManager(unittest.TestCase):
              patch('os.write') as mock_write, \
              patch('os.fsync') as mock_fsync, \
              patch('os.getpid', return_value=12345), \
-             patch('icloud_photo_sync.instance_manager._msvcrt') as mock_msvcrt:
+             patch('iphoto_downloader.instance_manager._msvcrt') as mock_msvcrt:
             
             mock_open.return_value = 123
             mock_msvcrt.locking = Mock()
@@ -113,8 +113,8 @@ class TestInstanceManager(unittest.TestCase):
             mock_write.assert_called_once()
             mock_fsync.assert_called_once()
 
-    @patch('icloud_photo_sync.instance_manager.get_logger')
-    @patch('icloud_photo_sync.instance_manager.get_app_data_folder_path')
+    @patch('iphoto_downloader.instance_manager.get_logger')
+    @patch('iphoto_downloader.instance_manager.get_app_data_folder_path')
     @patch('platform.system')
     def test_acquire_lock_unix_success(self, mock_platform, mock_get_app_data, mock_get_logger):
         """Test successful lock acquisition on Unix-like systems."""
@@ -129,7 +129,7 @@ class TestInstanceManager(unittest.TestCase):
              patch('os.write') as mock_write, \
              patch('os.fsync') as mock_fsync, \
              patch('os.getpid', return_value=12345), \
-             patch('icloud_photo_sync.instance_manager._fcntl') as mock_fcntl:
+             patch('iphoto_downloader.instance_manager._fcntl') as mock_fcntl:
             
             mock_open.return_value = 123
             mock_fcntl.flock = Mock()
@@ -145,8 +145,8 @@ class TestInstanceManager(unittest.TestCase):
             mock_write.assert_called_once()
             mock_fsync.assert_called_once()
 
-    @patch('icloud_photo_sync.instance_manager.get_logger')
-    @patch('icloud_photo_sync.instance_manager.get_app_data_folder_path')
+    @patch('iphoto_downloader.instance_manager.get_logger')
+    @patch('iphoto_downloader.instance_manager.get_app_data_folder_path')
     @patch('platform.system')
     def test_acquire_lock_windows_failure(self, mock_platform, mock_get_app_data, mock_get_logger):
         """Test failed lock acquisition on Windows (another instance running)."""
@@ -159,7 +159,7 @@ class TestInstanceManager(unittest.TestCase):
         
         with patch('os.open') as mock_open, \
              patch('os.close') as mock_close, \
-             patch('icloud_photo_sync.instance_manager._msvcrt') as mock_msvcrt:
+             patch('iphoto_downloader.instance_manager._msvcrt') as mock_msvcrt:
             
             mock_open.return_value = 123
             mock_msvcrt.locking = Mock(side_effect=OSError("Lock failed"))
@@ -171,8 +171,8 @@ class TestInstanceManager(unittest.TestCase):
             self.assertIsNone(manager.lock_file_handle)
             mock_close.assert_called_once_with(123)
 
-    @patch('icloud_photo_sync.instance_manager.get_logger')
-    @patch('icloud_photo_sync.instance_manager.get_app_data_folder_path')
+    @patch('iphoto_downloader.instance_manager.get_logger')
+    @patch('iphoto_downloader.instance_manager.get_app_data_folder_path')
     def test_get_running_instance_info_with_pid(self, mock_get_app_data, mock_get_logger):
         """Test getting running instance info when lock file contains PID."""
         mock_get_logger.return_value = self.mock_logger
@@ -188,8 +188,8 @@ class TestInstanceManager(unittest.TestCase):
         
         self.assertEqual(result, "Process ID: 12345")
 
-    @patch('icloud_photo_sync.instance_manager.get_logger')
-    @patch('icloud_photo_sync.instance_manager.get_app_data_folder_path')
+    @patch('iphoto_downloader.instance_manager.get_logger')
+    @patch('iphoto_downloader.instance_manager.get_app_data_folder_path')
     def test_get_running_instance_info_no_file(self, mock_get_app_data, mock_get_logger):
         """Test getting running instance info when no lock file exists."""
         mock_get_logger.return_value = self.mock_logger
@@ -202,8 +202,8 @@ class TestInstanceManager(unittest.TestCase):
         
         self.assertIsNone(result)
 
-    @patch('icloud_photo_sync.instance_manager.get_logger')
-    @patch('icloud_photo_sync.instance_manager.get_app_data_folder_path')
+    @patch('iphoto_downloader.instance_manager.get_logger')
+    @patch('iphoto_downloader.instance_manager.get_app_data_folder_path')
     @patch('platform.system')
     def test_release_lock_windows(self, mock_platform, mock_get_app_data, mock_get_logger):
         """Test lock release on Windows."""
@@ -219,7 +219,7 @@ class TestInstanceManager(unittest.TestCase):
         self.test_lock_file.touch()
         
         with patch('os.close') as mock_close, \
-             patch('icloud_photo_sync.instance_manager._msvcrt') as mock_msvcrt:
+             patch('iphoto_downloader.instance_manager._msvcrt') as mock_msvcrt:
             
             mock_msvcrt.locking = Mock()
             mock_msvcrt.LK_UNLCK = 0
@@ -231,8 +231,8 @@ class TestInstanceManager(unittest.TestCase):
             self.assertIsNone(manager.lock_file_handle)
             self.assertFalse(self.test_lock_file.exists())
 
-    @patch('icloud_photo_sync.instance_manager.get_logger')
-    @patch('icloud_photo_sync.instance_manager.get_app_data_folder_path')
+    @patch('iphoto_downloader.instance_manager.get_logger')
+    @patch('iphoto_downloader.instance_manager.get_app_data_folder_path')
     @patch('builtins.print')
     def test_instance_context_blocks_second_instance(self, mock_print, mock_get_app_data, mock_get_logger):
         """Test that instance context blocks second instance when multi-instance is disabled."""
@@ -249,10 +249,10 @@ class TestInstanceManager(unittest.TestCase):
                 pass
         
         self.assertEqual(cm.exception.code, 1)
-        mock_print.assert_any_call("❌ Another instance of iCloud Photo Sync Tool is already running.")
+        mock_print.assert_any_call("❌ Another instance of iPhoto Downloader Tool is already running.")
 
-    @patch('icloud_photo_sync.instance_manager.get_logger')
-    @patch('icloud_photo_sync.instance_manager.get_app_data_folder_path')
+    @patch('iphoto_downloader.instance_manager.get_logger')
+    @patch('iphoto_downloader.instance_manager.get_app_data_folder_path')
     def test_instance_context_allows_when_lock_acquired(self, mock_get_app_data, mock_get_logger):
         """Test that instance context allows execution when lock is acquired."""
         mock_get_logger.return_value = self.mock_logger
@@ -303,7 +303,7 @@ class TestValidateMultiInstanceConfig(unittest.TestCase):
 class TestEnforceSingleInstance(unittest.TestCase):
     """Test cases for enforce_single_instance function."""
 
-    @patch('icloud_photo_sync.instance_manager.InstanceManager')
+    @patch('iphoto_downloader.instance_manager.InstanceManager')
     def test_enforce_single_instance_valid_config(self, mock_instance_manager_class):
         """Test enforce_single_instance with valid configuration."""
         mock_instance = Mock()

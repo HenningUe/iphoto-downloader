@@ -5,16 +5,16 @@ import getpass
 import shutil
 import sys
 
-from icloud_photo_sync import logger
-from icloud_photo_sync.config import get_config, KeyringConfig
-from icloud_photo_sync.delivery_artifacts import DeliveryArtifactsManager
-from icloud_photo_sync.icloud_client import iCloudClient
+from iphoto_downloader import logger
+from iphoto_downloader.config import get_config, KeyringConfig
+from iphoto_downloader.delivery_artifacts import DeliveryArtifactsManager
+from iphoto_downloader.icloud_client import iCloudClient
 
 
 def main():
     """Main function for credential management."""
 
-    print("🔑 iCloud Photo Sync - Credential Manager")
+    print("🔑 iPhoto Downloader - Credential Manager")
     print("=" * 45)
 
     logger.setup_logging()

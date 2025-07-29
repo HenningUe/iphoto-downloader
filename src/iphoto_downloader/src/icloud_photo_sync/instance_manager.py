@@ -1,4 +1,4 @@
-"""Multi-instance control management for iCloud Photo Sync Tool."""
+"""Multi-instance control management for iPhoto Downloader Tool."""
 
 import os
 import sys
@@ -30,7 +30,7 @@ from .config import get_app_data_folder_path
 class InstanceManager:
     """Manages single/multi-instance control for the application."""
     
-    LOCK_FILE_NAME = "icloud_photo_sync.lock"
+    LOCK_FILE_NAME = "iphoto_downloader.lock"
     
     def __init__(self, allow_multi_instance: bool = False):
         """Initialize the instance manager.
@@ -204,7 +204,7 @@ class InstanceManager:
         if not self.check_and_acquire_lock():
             # Another instance is running and multi-instance is disabled
             running_info = self.get_running_instance_info()
-            print("❌ Another instance of iCloud Photo Sync Tool is already running.")
+            print("❌ Another instance of iPhoto Downloader Tool is already running.")
             if running_info:
                 print(f"   Running instance: {running_info}")
             print("   To allow multiple instances, set ALLOW_MULTI_INSTANCE=true in your configuration.")

@@ -2,8 +2,8 @@
 import pytest
 """Quick verification test for database safety methods integration."""
 
-from icloud_photo_sync.deletion_tracker import DeletionTracker
-from icloud_photo_sync.logger import setup_logging
+from iphoto_downloader.deletion_tracker import DeletionTracker
+from iphoto_downloader.logger import setup_logging
 import logging
 import tempfile
 from pathlib import Path
@@ -11,7 +11,7 @@ import sys
 import os
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src', 'icloud_photo_sync', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src', 'iphoto_downloader', 'src'))
 
 
 @pytest.mark.manual
@@ -118,7 +118,7 @@ def test_database_safety_integration():
     # Test 4: Integration with PhotoSyncer cleanup
     try:
         # Test that cleanup method exists and works
-        from icloud_photo_sync.sync import PhotoSyncer
+        from iphoto_downloader.sync import PhotoSyncer
 
         # Check if cleanup method exists
         if hasattr(PhotoSyncer, 'cleanup'):

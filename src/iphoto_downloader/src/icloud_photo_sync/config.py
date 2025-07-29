@@ -1,4 +1,4 @@
-"""Configuration management for iCloud Photo Sync Tool."""
+"""Configuration management for iPhoto Downloader Tool."""
 
 import os
 import sys
@@ -410,7 +410,7 @@ class BaseConfig(ABC):
         Raises:
             ValueError: If any specified albums don't exist
         """
-        from icloud_photo_sync.sync import iCloudClient
+        from iphoto_downloader.sync import iCloudClient
         missing_albums = []
         icloud_client_typed: iCloudClient = icloud_client
         # Check personal albums if specified
@@ -483,11 +483,11 @@ def get_app_data_folder_path() -> Path:
     """
     if get_operating_mode() == 'delivered':
         if os.name == 'nt':  # Windows
-            # Use %USERPROFILE%/icloud_photo_sync_settings
+            # Use %USERPROFILE%/iphoto_downloader_settings
             base_path = Path(os.getenv('LOCALAPPDATA', os.path.expanduser('~\\AppData\\Local')))
         elif os.name == 'posix':
             # Linux/Unix
-            # Use ~/.config/icloud_photo_sync
+            # Use ~/.config/iphoto_downloader
             base_path = Path(os.path.expanduser('~/.config'))
         else:
             raise EnvironmentError(f"Unsupported OS: {os.name}")

@@ -2,7 +2,7 @@
 import pytest
 """Test script for credential manager functionality."""
 
-from icloud_photo_sync.config import KeyringConfig
+from iphoto_downloader.config import KeyringConfig
 import sys
 import os
 from pathlib import Path

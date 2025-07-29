@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Cross-platform build verification script for iCloud Photo Sync Tool."""
+"""Cross-platform build verification script for iPhoto Downloader Tool."""
 
 import argparse
 import os
@@ -147,7 +147,7 @@ class BuildTester:
                     
                     # Check if settings folder was created
                     if self.platform == 'windows':
-                        settings_path = Path(temp_dir) / 'AppData' / 'Local' / 'FotoPool'
+                        settings_path = Path(temp_dir) / 'AppData' / 'Local' / 'iPhotoDownloader'
                     else:
                         settings_path = Path(temp_dir) / '.local' / 'share' / 'iphoto-downloader'
                     
@@ -274,7 +274,7 @@ class BuildTester:
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description="Test built iCloud Photo Sync executable"
+        description="Test built iPhoto Downloader executable"
     )
     parser.add_argument(
         "executable",

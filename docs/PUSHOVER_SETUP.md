@@ -18,7 +18,7 @@ alerts.
 
 2. **API Token**:
    - Go to [pushover.net/apps/build](https://pushover.net/apps/build)
-   - Create a new application (e.g., "iCloud Photo Sync")
+   - Create a new application (e.g., "iPhoto Downloader")
    - Copy the API Token/Key
 
 ### 2. Configure Environment Variables
@@ -63,14 +63,14 @@ When 2FA authentication is required:
 
 ### 2FA Required Notification
 
-- **Title**: "iCloud Photo Sync - 2FA Required"
+- **Title**: "iPhoto Downloader - 2FA Required"
 - **Message**: Contains your iCloud username and instructions
 - **Priority**: High (ensures immediate delivery)
 - **URL**: Link to future web interface (placeholder for now)
 
 ### Success Notification
 
-- **Title**: "iCloud Photo Sync - Authentication Successful"
+- **Title**: "iPhoto Downloader - Authentication Successful"
 - **Message**: Confirms successful authentication
 - **Priority**: Normal
 

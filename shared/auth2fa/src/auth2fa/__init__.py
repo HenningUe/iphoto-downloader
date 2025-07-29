@@ -1,4 +1,4 @@
-"""Authentication package for iCloud Photo Sync.
+"""Authentication package for iPhoto Downloader.
 
 This package contains all authentication-related components including:
 - 2FA web server interface

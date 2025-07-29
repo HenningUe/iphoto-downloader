@@ -2,10 +2,10 @@
 import pytest
 """Test script to verify deletion tracking functionality."""
 
-from icloud_photo_sync.logger import setup_logging
-from icloud_photo_sync.config import BaseConfig
-from icloud_photo_sync.sync import PhotoSyncer
-from icloud_photo_sync.deletion_tracker import DeletionTracker
+from iphoto_downloader.logger import setup_logging
+from iphoto_downloader.config import BaseConfig
+from iphoto_downloader.sync import PhotoSyncer
+from iphoto_downloader.deletion_tracker import DeletionTracker
 import os
 import sys
 import tempfile
@@ -14,7 +14,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 # Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent / "src" / "icloud_photo_sync" / "src"))
+sys.path.insert(0, str(Path(__file__).parent / "src" / "iphoto_downloader" / "src"))
 
 
 # Setup logging
@@ -170,7 +170,7 @@ def test_end_to_end_deletion_prevention():
         mock_icloud.list_photos_from_filtered_albums.return_value = [test_photo_info]
         mock_icloud.download_photo.return_value = True
 
-        with patch('icloud_photo_sync.sync.iCloudClient', return_value=mock_icloud):
+        with patch('iphoto_downloader.sync.iCloudClient', return_value=mock_icloud):
             syncer = PhotoSyncer(config)
 
             # Create the photo file to simulate successful download

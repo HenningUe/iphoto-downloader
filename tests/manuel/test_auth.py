@@ -2,9 +2,9 @@
 import pytest
 """Simple authentication test to check if 2FA is required."""
 
-from icloud_photo_sync.logger import setup_logging
-from icloud_photo_sync.icloud_client import iCloudClient
-from icloud_photo_sync.config import get_config, KEYRING_AVAILABLE
+from iphoto_downloader.logger import setup_logging
+from iphoto_downloader.icloud_client import iCloudClient
+from iphoto_downloader.config import get_config, KEYRING_AVAILABLE
 import sys
 from pathlib import Path
 

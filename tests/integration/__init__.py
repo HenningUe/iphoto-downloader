@@ -1,1 +1,1 @@
-"""Integration tests for iCloud Photo Sync Tool."""
+"""Integration tests for iPhoto Downloader Tool."""

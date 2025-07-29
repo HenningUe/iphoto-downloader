@@ -46,7 +46,7 @@ jobs:
     - name: Create Windows artifacts directory
       run: |
         mkdir windows-artifacts
-        copy dist\icloud_photo_sync.exe windows-artifacts\
+        copy dist\iphoto_downloader.exe windows-artifacts\
         copy dist\manage_credentials.exe windows-artifacts\
 
     - name: Upload Windows build artifacts
@@ -96,7 +96,7 @@ jobs:
     - name: Create Linux artifacts directory
       run: |
         mkdir linux-artifacts
-        cp dist/icloud_photo_sync linux-artifacts/
+        cp dist/iphoto_downloader linux-artifacts/
         cp dist/manage_credentials linux-artifacts/
 
     - name: Upload Linux build artifacts
@@ -134,7 +134,7 @@ jobs:
 
     - name: Copy executables to package
       run: |
-        cp linux-executables/icloud_photo_sync debian-package/iphoto-downloader/usr/bin/
+        cp linux-executables/iphoto_downloader debian-package/iphoto-downloader/usr/bin/
         cp linux-executables/manage_credentials debian-package/iphoto-downloader/usr/bin/iphoto-downloader-credentials
         chmod +x debian-package/iphoto-downloader/usr/bin/*
 
@@ -146,8 +146,8 @@ jobs:
         Section: utils
         Priority: optional
         Architecture: amd64
-        Maintainer: Foto Pool Team <team@fotopool.example.com>
-        Description: iCloud Photo Sync Tool
+        Maintainer: iPhoto Downloader Team <team@iPhotoDownloader.example.com>
+        Description: iPhoto Downloader Tool
          A tool for synchronizing photos from iCloud to local storage with
          intelligent deletion tracking and album filtering capabilities.
          .
@@ -165,9 +165,9 @@ jobs:
       run: |
         cat > debian-package/iphoto-downloader/usr/share/applications/iphoto-downloader.desktop << EOF
         [Desktop Entry]
-        Name=Foto Pool
-        Comment=iCloud Photo Sync Tool
-        Exec=/usr/bin/icloud_photo_sync
+        Name=iPhoto Downloader
+        Comment=iPhoto Downloader Tool
+        Exec=/usr/bin/iphoto_downloader
         Icon=iphoto-downloader
         Terminal=true
         Type=Application
@@ -216,7 +216,7 @@ jobs:
         $version = $version -replace '^v', ''  # Remove 'v' prefix if present
         
         # Create installer for main executable
-        $mainSize = (Get-Item windows-executables/icloud_photo_sync.exe).Length
+        $mainSize = (Get-Item windows-executables/iphoto_downloader.exe).Length
         $credSize = (Get-Item windows-executables/manage_credentials.exe).Length
         
         # Create manifest directory
@@ -224,7 +224,7 @@ jobs:
         
         # Create version manifest
         $versionManifest = @"
-        PackageIdentifier: HenningUe.FotoPool
+        PackageIdentifier: HenningUe.iPhotoDownloader
         PackageVersion: $version
         DefaultLocale: en-US
         ManifestType: version
@@ -233,12 +233,12 @@ jobs:
         
         # Create installer manifest
         $installerManifest = @"
-        PackageIdentifier: HenningUe.FotoPool
+        PackageIdentifier: HenningUe.iPhotoDownloader
         PackageVersion: $version
         Installers:
         - Architecture: x64
           InstallerType: exe
-          InstallerUrl: https://github.com/HenningUe/iphoto-downloader/releases/download/${{ github.event.release.tag_name || github.event.inputs.version }}/icloud_photo_sync.exe
+          InstallerUrl: https://github.com/HenningUe/iphoto-downloader/releases/download/${{ github.event.release.tag_name || github.event.inputs.version }}/iphoto_downloader.exe
           InstallerSha256: # Will be calculated by WinGet team
           InstallerSwitches:
             Silent: ""
@@ -249,19 +249,19 @@ jobs:
         
         # Create locale manifest
         $localeManifest = @"
-        PackageIdentifier: HenningUe.FotoPool
+        PackageIdentifier: HenningUe.iPhotoDownloader
         PackageVersion: $version
         PackageLocale: en-US
         Publisher: HenningUe
         PublisherUrl: https://github.com/HenningUe
         PublisherSupportUrl: https://github.com/HenningUe/iphoto-downloader/issues
         Author: HenningUe
-        PackageName: Foto Pool
+        PackageName: iPhoto Downloader
         PackageUrl: https://github.com/HenningUe/iphoto-downloader
         License: MIT
         LicenseUrl: https://github.com/HenningUe/iphoto-downloader/blob/main/LICENSE
         Copyright: Copyright (c) HenningUe
-        ShortDescription: iCloud Photo Sync Tool with intelligent deletion tracking
+        ShortDescription: iPhoto Downloader Tool with intelligent deletion tracking
         Description: A comprehensive tool for synchronizing photos from iCloud to local storage with smart deletion tracking, album filtering, and 2FA support.
         Moniker: iphoto-downloader
         Tags:
@@ -275,9 +275,9 @@ jobs:
         "@
         
         # Save manifests
-        $versionManifest | Out-File -FilePath "winget-manifests/HenningUe.FotoPool.yaml" -Encoding UTF8
-        $installerManifest | Out-File -FilePath "winget-manifests/HenningUe.FotoPool.installer.yaml" -Encoding UTF8
-        $localeManifest | Out-File -FilePath "winget-manifests/HenningUe.FotoPool.locale.en-US.yaml" -Encoding UTF8
+        $versionManifest | Out-File -FilePath "winget-manifests/HenningUe.iPhotoDownloader.yaml" -Encoding UTF8
+        $installerManifest | Out-File -FilePath "winget-manifests/HenningUe.iPhotoDownloader.installer.yaml" -Encoding UTF8
+        $localeManifest | Out-File -FilePath "winget-manifests/HenningUe.iPhotoDownloader.locale.en-US.yaml" -Encoding UTF8
 
     - name: Upload WinGet manifests
       uses: actions/upload-artifact@v4
@@ -383,9 +383,9 @@ jobs:
         cd ..
         
         # Copy individual executables with versioned names
-        cp windows-executables/icloud_photo_sync.exe release-assets/
+        cp windows-executables/iphoto_downloader.exe release-assets/
         cp windows-executables/manage_credentials.exe release-assets/
-        cp linux-executables/icloud_photo_sync release-assets/
+        cp linux-executables/iphoto_downloader release-assets/
         cp linux-executables/manage_credentials release-assets/iphoto-downloader-credentials
 
     - name: Upload release assets
@@ -400,19 +400,19 @@ jobs:
           
           **Windows:**
           - 📦 [Complete Windows Package](./iphoto-downloader-windows-x64.zip) - Both executables in one ZIP
-          - 🖼️ [Main Application (icloud_photo_sync.exe)](./icloud_photo_sync.exe)
+          - 🖼️ [Main Application (iphoto_downloader.exe)](./iphoto_downloader.exe)
           - 🔐 [Credentials Manager (manage_credentials.exe)](./manage_credentials.exe)
           
           **Linux:**
           - 📦 [Complete Linux Package](./iphoto-downloader-linux-x64.tar.gz) - Both executables in one archive
-          - 🖼️ [Main Application (icloud_photo_sync)](./icloud_photo_sync)
+          - 🖼️ [Main Application (iphoto_downloader)](./iphoto_downloader)
           - 🔐 [Credentials Manager (iphoto-downloader-credentials)](./iphoto-downloader-credentials)
           
           ### Installation
           
           **Windows (via WinGet):**
           ```powershell
-          winget install HenningUe.FotoPool
+          winget install HenningUe.iPhotoDownloader
           ```
           
           **Linux (via APT):**
@@ -421,7 +421,7 @@ jobs:
           # Manual installation for now:
           wget https://github.com/HenningUe/iphoto-downloader/releases/download/${{ github.event.release.tag_name }}/iphoto-downloader-linux-x64.tar.gz
           tar -xzf iphoto-downloader-linux-x64.tar.gz
-          sudo mv icloud_photo_sync /usr/local/bin/
+          sudo mv iphoto_downloader /usr/local/bin/
           sudo mv manage_credentials /usr/local/bin/iphoto-downloader-credentials
           ```
           

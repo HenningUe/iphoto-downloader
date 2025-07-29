@@ -1,1 +1,1 @@
-"""Unit tests for iCloud Photo Sync Tool."""
+"""Unit tests for iPhoto Downloader Tool."""

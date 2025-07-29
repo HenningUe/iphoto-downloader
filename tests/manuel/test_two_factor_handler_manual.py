@@ -19,8 +19,8 @@ from typing import Optional
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "shared"))
 
-from icloud_photo_sync.config import KeyringConfig
-from icloud_photo_sync.logger import setup_logging
+from iphoto_downloader.config import KeyringConfig
+from iphoto_downloader.logger import setup_logging
 from auth2fa import TwoFactorAuthHandler, handle_2fa_authentication
 
 
@@ -182,7 +182,7 @@ def test_web_server_integration():
         print("🌐 Testing web server startup...")
         
         # Create a web server directly for testing
-        from icloud_photo_sync.auth2fa.web_server import TwoFAWebServer
+        from iphoto_downloader.auth2fa.web_server import TwoFAWebServer
         test_server = TwoFAWebServer()
         test_server.set_callbacks(
             request_2fa_callback=on_request_2fa,

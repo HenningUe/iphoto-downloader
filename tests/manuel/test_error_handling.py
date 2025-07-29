@@ -4,9 +4,9 @@ import pytest
 Test script to verify the global exception handling implementation.
 """
 
-from icloud_photo_sync.main import sanitize_error_message
+from iphoto_downloader.main import sanitize_error_message
 import sys
-sys.path.append('src/icloud_photo_sync/src')
+sys.path.append('src/iphoto_downloader/src')
 
 
 @pytest.mark.manual

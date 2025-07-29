@@ -11,10 +11,10 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from src.icloud_photo_sync.src.icloud_photo_sync.icloud_client import iCloudClient
-from src.icloud_photo_sync.src.icloud_photo_sync.sync import PhotoSyncer
-from src.icloud_photo_sync.src.icloud_photo_sync.config import KeyringConfig
-from src.icloud_photo_sync.src.icloud_photo_sync.logger import setup_logging
+from src.iphoto_downloader.src.iphoto_downloader.icloud_client import iCloudClient
+from src.iphoto_downloader.src.iphoto_downloader.sync import PhotoSyncer
+from src.iphoto_downloader.src.iphoto_downloader.config import KeyringConfig
+from src.iphoto_downloader.src.iphoto_downloader.logger import setup_logging
 
 
 def create_test_config(temp_dir, **env_vars):

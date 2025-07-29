@@ -45,7 +45,7 @@ def temp_dir():
 @pytest.fixture
 def mock_config(temp_dir):
     """Create a mock configuration for testing."""
-    from icloud_photo_sync.config import BaseConfig
+    from iphoto_downloader.config import BaseConfig
 
     config = Mock(spec=BaseConfig)
     config.icloud_username = "test@example.com"

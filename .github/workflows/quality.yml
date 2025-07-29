@@ -230,10 +230,10 @@ jobs:
         fi
         
         # Check PyInstaller specs exist
-        if [ -f icloud_photo_sync.spec ]; then
-          echo "✓ icloud_photo_sync.spec exists"
+        if [ -f iphoto_downloader.spec ]; then
+          echo "✓ iphoto_downloader.spec exists"
         else
-          echo "✗ icloud_photo_sync.spec is missing"
+          echo "✗ iphoto_downloader.spec is missing"
         fi
         
         if [ -f manage_credentials.spec ]; then

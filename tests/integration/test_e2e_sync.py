@@ -1,5 +1,5 @@
 """
-End-to-end tests for iCloud Photo Sync Tool.
+End-to-end tests for iPhoto Downloader Tool.
 These tests require a dummy or sandbox iCloud account and will perform real 
 sync operations in a temp directory.
 """
@@ -77,7 +77,7 @@ MAX_DOWNLOADS=5
     python_executable = sys.executable
 
     result = subprocess.run([
-        python_executable, "-m", "icloud_photo_sync.main", "--config", str(env_file)
+        python_executable, "-m", "iphoto_downloader.main", "--config", str(env_file)
     ], cwd=Path(__file__).parents[2], capture_output=True, text=True, timeout=120)
 
     print("STDOUT:\n", result.stdout)
@@ -117,7 +117,7 @@ MAX_DOWNLOADS=2
     python_executable = sys.executable
 
     result = subprocess.run([
-        python_executable, "-m", "icloud_photo_sync.main", "--config", str(env_file)
+        python_executable, "-m", "iphoto_downloader.main", "--config", str(env_file)
     ], cwd=Path(__file__).parents[2], capture_output=True, text=True, timeout=120)
 
     print("STDOUT:\n", result.stdout)
@@ -150,7 +150,7 @@ MAX_DOWNLOADS=1
     python_executable = sys.executable
 
     result = subprocess.run([
-        python_executable, "-m", "icloud_photo_sync.main", "--config", str(env_file)
+        python_executable, "-m", "iphoto_downloader.main", "--config", str(env_file)
     ], cwd=Path(__file__).parents[2], capture_output=True, text=True, timeout=60)
 
     print("STDOUT:\n", result.stdout)

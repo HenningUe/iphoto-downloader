@@ -1,19 +1,19 @@
-"""Main entry point for iCloud Photo Sync Tool."""
+"""Main entry point for iPhoto Downloader Tool."""
 
 import sys
 
 from auth2fa.pushover_service import PushoverService
-from icloud_photo_sync.config import get_config, BaseConfig
-from icloud_photo_sync.continuous_runner import run_execution_mode
-from icloud_photo_sync.delivery_artifacts import DeliveryArtifactsManager
-from icloud_photo_sync.instance_manager import InstanceManager
-from icloud_photo_sync.logger import setup_logging, get_logger
-from icloud_photo_sync import manage_credentials
+from iphoto_downloader.config import get_config, BaseConfig
+from iphoto_downloader.continuous_runner import run_execution_mode
+from iphoto_downloader.delivery_artifacts import DeliveryArtifactsManager
+from iphoto_downloader.instance_manager import InstanceManager
+from iphoto_downloader.logger import setup_logging, get_logger
+from iphoto_downloader import manage_credentials
 
 
 def main() -> None:
     """Main entry point for the application."""
-    print("🌟 iCloud Photo Sync Tool v0.1.0")
+    print("🌟 iPhoto Downloader Tool v0.1.0")
     print("==================================")
 
     config = None
@@ -52,7 +52,7 @@ def main() -> None:
 
             config.validate()
 
-            logger.info("Starting iCloud Photo Sync Tool")
+            logger.info("Starting iPhoto Downloader Tool")
             logger.info(f"Configuration: {config}")
             logger.info(f"Execution mode: {config.execution_mode}")
             logger.info(f"Operating mode: {config.operating_mode}")

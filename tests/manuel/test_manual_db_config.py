@@ -5,8 +5,8 @@ from pathlib import Path
 import logging
 import os
 
-from src.icloud_photo_sync.src.icloud_photo_sync.config import BaseConfig
-from src.icloud_photo_sync.src.icloud_photo_sync.logger import setup_logging
+from src.iphoto_downloader.src.iphoto_downloader.config import BaseConfig
+from src.iphoto_downloader.src.iphoto_downloader.logger import setup_logging
 
 # Set up logging
 setup_logging(log_level=logging.INFO)

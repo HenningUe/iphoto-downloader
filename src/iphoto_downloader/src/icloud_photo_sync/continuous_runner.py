@@ -1,4 +1,4 @@
-"""Continuous execution mode implementation for iCloud Photo Sync Tool."""
+"""Continuous execution mode implementation for iPhoto Downloader Tool."""
 
 import signal
 import time

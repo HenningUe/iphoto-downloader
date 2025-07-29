@@ -6,8 +6,8 @@ from pathlib import Path
 from unittest.mock import patch, Mock
 import pytest
 
-from icloud_photo_sync.deletion_tracker import DeletionTracker
-from icloud_photo_sync.logger import setup_logging
+from iphoto_downloader.deletion_tracker import DeletionTracker
+from iphoto_downloader.logger import setup_logging
 
 
 class TestDeletionTracker:
@@ -16,7 +16,7 @@ class TestDeletionTracker:
     @pytest.fixture(autouse=True)
     def setup_logger(self):
         """Setup logging for tests."""
-        from icloud_photo_sync.config import get_config
+        from iphoto_downloader.config import get_config
         config = get_config()
         setup_logging(config.get_log_level())
 
@@ -191,7 +191,7 @@ class TestDeletionTracker:
         tracker.add_deleted_photo("test_photo", "test.jpg")
         assert tracker.is_photo_deleted("test.jpg") is True
 
-    @patch('icloud_photo_sync.deletion_tracker.get_logger')
+    @patch('iphoto_downloader.deletion_tracker.get_logger')
     def test_logging_on_operations(self, mock_get_logger, temp_db):
         """Test that operations are logged."""
         mock_logger = Mock()

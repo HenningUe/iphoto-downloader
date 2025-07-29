@@ -1,6 +1,6 @@
 # GitHub Configuration
 
-This directory contains GitHub-specific configuration files for the Foto Pool project.
+This directory contains GitHub-specific configuration files for the iPhoto Downloader project.
 
 ## 📁 Directory Structure
 

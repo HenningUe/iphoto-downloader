@@ -14,8 +14,8 @@ import webbrowser
 from pathlib import Path
 import sys
 
-from icloud_photo_sync.config import get_config
-from icloud_photo_sync.logger import setup_logging
+from iphoto_downloader.config import get_config
+from iphoto_downloader.logger import setup_logging
 from auth2fa.web_server import TwoFAWebServer
 
 # Add src to path for imports

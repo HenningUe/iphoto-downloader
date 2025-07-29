@@ -7,11 +7,11 @@ import sqlite3
 from pathlib import Path
 
 # Add src to Python path
-sys.path.insert(0, str(Path(__file__).parent / "src" / "icloud_photo_sync" / "src"))
+sys.path.insert(0, str(Path(__file__).parent / "src" / "iphoto_downloader" / "src"))
 
 try:
-    from icloud_photo_sync.deletion_tracker import DeletionTracker
-    from icloud_photo_sync.logger import setup_logging
+    from iphoto_downloader.deletion_tracker import DeletionTracker
+    from iphoto_downloader.logger import setup_logging
     import logging
 except ImportError as e:
     print(f"Import error: {e}")

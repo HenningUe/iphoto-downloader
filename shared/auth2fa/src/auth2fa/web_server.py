@@ -62,7 +62,7 @@ class TwoFAHandler(BaseHTTPRequestHandler):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iCloud Photo Sync - 2FA Authentication</title>
+    <title>iPhoto Downloader - 2FA Authentication</title>
     <link rel="stylesheet" href="/styles.css">
     <script>
         let statusCheckInterval;
@@ -174,7 +174,7 @@ class TwoFAHandler(BaseHTTPRequestHandler):
 </head>
 <body>
     <div class="container">
-        <h1>🔐 iCloud Photo Sync</h1>
+        <h1>🔐 iPhoto Downloader</h1>
         <h2>Two-Factor Authentication</h2>
 
         <div class="status-section">
@@ -364,7 +364,7 @@ button:hover {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iCloud Photo Sync - 2FA Authentication Successful</title>
+    <title>iPhoto Downloader - 2FA Authentication Successful</title>
     <link rel="stylesheet" href="/styles.css">
     <style>
         .success-container {
@@ -571,7 +571,7 @@ button:hover {
             <div class="success-icon">✅</div>
             <h1 class="success-title">Authentication Successful!</h1>
             <p class="success-message">
-                Your iCloud Photo Sync 2FA authentication has been completed successfully.
+                Your iPhoto Downloader 2FA authentication has been completed successfully.
                 <br>
                 The sync process will now continue automatically.
             </p>

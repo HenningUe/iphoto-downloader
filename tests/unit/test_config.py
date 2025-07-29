@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 import pytest
 
-from icloud_photo_sync.config import (
+from iphoto_downloader.config import (
     get_config, BaseConfig, KeyringConfig,
 )
 
@@ -60,7 +60,7 @@ class TestConfigFactory:
 @pytest.fixture
 def mock_keyring():
     """Mock keyring module."""
-    with patch('icloud_photo_sync.config.keyring') as mock_keyring:
+    with patch('iphoto_downloader.config.keyring') as mock_keyring:
         yield mock_keyring
 
 

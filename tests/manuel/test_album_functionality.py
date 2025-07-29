@@ -13,8 +13,8 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from src.icloud_photo_sync.src.icloud_photo_sync.icloud_client import iCloudClient
-from src.icloud_photo_sync.src.icloud_photo_sync.sync import PhotoSyncer
+from src.iphoto_downloader.src.iphoto_downloader.icloud_client import iCloudClient
+from src.iphoto_downloader.src.iphoto_downloader.sync import PhotoSyncer
 
 
 class MockConfig:

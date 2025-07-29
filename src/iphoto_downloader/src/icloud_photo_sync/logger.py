@@ -1,4 +1,4 @@
-"""Centralized logging configuration for iCloud Photo Sync Tool."""
+"""Centralized logging configuration for iPhoto Downloader Tool."""
 
 import sys
 import logging
@@ -41,7 +41,7 @@ def setup_logging(log_level: int = logging.INFO) -> None:
     )
 
     # Set up the global logger
-    _logger = logging.getLogger("icloud_photo_sync")
+    _logger = logging.getLogger("iphoto_downloader")
 
 
 def get_log_dir_path() -> Path:

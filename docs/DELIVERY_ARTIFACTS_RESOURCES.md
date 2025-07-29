@@ -2,7 +2,7 @@
 
 ## Overview
 
-The iCloud Photo Sync Tool uses a delivery artifacts management system that includes actual repository files (README.md and .env.example) as resources in the PyInstaller executable, avoiding code duplication.
+The iPhoto Downloader Tool uses a delivery artifacts management system that includes actual repository files (README.md and .env.example) as resources in the PyInstaller executable, avoiding code duplication.
 
 ## Resource Files
 
@@ -14,7 +14,7 @@ The following files are included as resources in the executable:
 ## Resource Directory Structure
 
 ```
-src/icloud_photo_sync/src/icloud_photo_sync/resources/
+src/iphoto_downloader/src/iphoto_downloader/resources/
 ├── __init__.py
 ├── README.md (copy of repository README.md)
 └── settings.ini.template (copy of repository .env.example)
@@ -24,7 +24,7 @@ src/icloud_photo_sync/src/icloud_photo_sync/resources/
 
 ### Development Mode
 When running from source code (`OPERATING_MODE=InDevelopment`):
-- Resource files are read from `src/icloud_photo_sync/src/icloud_photo_sync/resources/`
+- Resource files are read from `src/iphoto_downloader/src/iphoto_downloader/resources/`
 - If resource files are missing, fallback content is generated programmatically
 
 ### Delivered Mode
@@ -49,17 +49,17 @@ Add the following to your build process before running PyInstaller:
 python update_resources.py
 
 # Build executable
-pyinstaller icloud_photo_sync.spec
+pyinstaller iphoto_downloader.spec
 ```
 
 ## PyInstaller Configuration
 
-The `icloud_photo_sync.spec` file includes the resource files in the `datas` section:
+The `iphoto_downloader.spec` file includes the resource files in the `datas` section:
 
 ```python
 datas = [
-    ('src/icloud_photo_sync/src/icloud_photo_sync/resources/README.md', 'icloud_photo_sync/resources'),
-    ('src/icloud_photo_sync/src/icloud_photo_sync/resources/settings.ini.template', 'icloud_photo_sync/resources')
+    ('src/iphoto_downloader/src/iphoto_downloader/resources/README.md', 'iphoto_downloader/resources'),
+    ('src/iphoto_downloader/src/iphoto_downloader/resources/settings.ini.template', 'iphoto_downloader/resources')
 ]
 ```
 

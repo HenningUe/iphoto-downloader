@@ -1,4 +1,4 @@
-# iCloud Photo Sync
+# iPhoto Downloader
 
 A tool to sync photos from iCloud to local storage with deletion tracking.
 

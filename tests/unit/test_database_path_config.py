@@ -6,9 +6,9 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from src.icloud_photo_sync.src.icloud_photo_sync.config import BaseConfig
-from src.icloud_photo_sync.src.icloud_photo_sync.deletion_tracker import DeletionTracker
-from src.icloud_photo_sync.src.icloud_photo_sync.logger import setup_logging
+from src.iphoto_downloader.src.iphoto_downloader.config import BaseConfig
+from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import DeletionTracker
+from src.iphoto_downloader.src.iphoto_downloader.logger import setup_logging
 
 
 class TestDatabasePathConfiguration(unittest.TestCase):

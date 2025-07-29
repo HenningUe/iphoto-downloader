@@ -2,14 +2,14 @@
 import pytest
 """Simple test script to verify deletion tracking functionality works."""
 
-from icloud_photo_sync.logger import setup_logging
-from icloud_photo_sync.deletion_tracker import DeletionTracker
+from iphoto_downloader.logger import setup_logging
+from iphoto_downloader.deletion_tracker import DeletionTracker
 import sys
 import logging
 from pathlib import Path
 
 # Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent / "src" / "icloud_photo_sync" / "src"))
+sys.path.insert(0, str(Path(__file__).parent / "src" / "iphoto_downloader" / "src"))
 
 
 # Setup logging

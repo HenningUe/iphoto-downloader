@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-E2E Test Runner for iCloud Photo Sync with 2FA Support
+E2E Test Runner for iPhoto Downloader with 2FA Support
 
 This script helps run end-to-end integration tests that require real iCloud credentials
 and handles 2FA authentication requirements.
 """
 
-from icloud_photo_sync.config import get_config
+from iphoto_downloader.config import get_config
 import sys
 import os
 import subprocess
@@ -92,7 +92,7 @@ def get_python_executable():
 def print_usage():
     """Print usage information."""
     print("""
-E2E Test Runner for iCloud Photo Sync
+E2E Test Runner for iPhoto Downloader
 
 Usage: python run_e2e_tests.py [options]
 
@@ -148,7 +148,7 @@ def main():
         test_filter = "dry_run"
 
     print("\n" + "="*60)
-    print("🧪 iCloud Photo Sync - E2E Integration Tests")
+    print("🧪 iPhoto Downloader - E2E Integration Tests")
     print("="*60)
 
     if interactive:
@@ -171,7 +171,7 @@ def main():
 
     if exit_code == 0:
         print("\n✅ All E2E tests completed successfully!")
-        print("🎉 Your iCloud Photo Sync integration is working!")
+        print("🎉 Your iPhoto Downloader integration is working!")
     else:
         print(f"\n❌ E2E tests failed with exit code: {exit_code}")
         print("💡 Check the test output above for details")

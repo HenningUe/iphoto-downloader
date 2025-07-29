@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch, MagicMock
 
 import pytest
 
-from icloud_photo_sync.delivery_artifacts import DeliveryArtifactsManager
+from iphoto_downloader.delivery_artifacts import DeliveryArtifactsManager
 
 
 class TestDeliveryArtifactsManager(unittest.TestCase):
@@ -20,8 +20,8 @@ class TestDeliveryArtifactsManager(unittest.TestCase):
         self.settings_folder = Path(self.temp_dir) / 'test_settings'
         
         # Create manager with mocked dependencies
-        with patch('icloud_photo_sync.delivery_artifacts.get_logger'), \
-             patch('icloud_photo_sync.delivery_artifacts.get_settings_folder_path', return_value=self.settings_folder):
+        with patch('iphoto_downloader.delivery_artifacts.get_logger'), \
+             patch('iphoto_downloader.delivery_artifacts.get_settings_folder_path', return_value=self.settings_folder):
             self.manager = DeliveryArtifactsManager()
 
     def tearDown(self):
@@ -34,7 +34,7 @@ class TestDeliveryArtifactsManager(unittest.TestCase):
         self.assertIsNotNone(self.manager)
         self.assertEqual(self.manager.settings_folder, self.settings_folder)
 
-    @patch('icloud_photo_sync.delivery_artifacts.get_operating_mode')
+    @patch('iphoto_downloader.delivery_artifacts.get_operating_mode')
     def test_development_default_mode_behavior(self, mock_get_mode):
         """Test behavior in development mode (default)."""
         mock_get_mode.return_value = 'development'
@@ -43,7 +43,7 @@ class TestDeliveryArtifactsManager(unittest.TestCase):
         result = self.manager.handle_delivered_mode_startup()
         self.assertTrue(result)
 
-    @patch('icloud_photo_sync.delivery_artifacts.get_operating_mode')
+    @patch('iphoto_downloader.delivery_artifacts.get_operating_mode')
     def test_executable_default_mode_behavior(self, mock_get_mode):
         """Test behavior in executable mode."""
         mock_get_mode.return_value = 'executable'
@@ -52,7 +52,7 @@ class TestDeliveryArtifactsManager(unittest.TestCase):
         result = self.manager.handle_delivered_mode_startup()
         self.assertTrue(result)
 
-    @patch('icloud_photo_sync.delivery_artifacts.get_operating_mode')
+    @patch('iphoto_downloader.delivery_artifacts.get_operating_mode')
     def test_automatic_file_updates_in_delivered_mode(self, mock_get_mode):
         """Test automatic file updates in delivered mode."""
         mock_get_mode.return_value = 'delivered'
@@ -82,7 +82,7 @@ class TestDeliveryArtifactsManager(unittest.TestCase):
     def test_required_files_existence_checking(self):
         """Test checking for required files existence."""
         # Test operation files checking
-        with patch('icloud_photo_sync.delivery_artifacts.get_operating_mode') as mock_mode, \
+        with patch('iphoto_downloader.delivery_artifacts.get_operating_mode') as mock_mode, \
              patch.object(self.manager, '_get_repository_readme_path') as mock_readme, \
              patch.object(self.manager, '_get_repository_env_example_path') as mock_env:
             
@@ -120,7 +120,7 @@ class TestDeliveryArtifactsManager(unittest.TestCase):
 
     def test_graceful_program_termination(self):
         """Test graceful program termination on critical errors."""
-        with patch('icloud_photo_sync.delivery_artifacts.get_operating_mode') as mock_mode, \
+        with patch('iphoto_downloader.delivery_artifacts.get_operating_mode') as mock_mode, \
              patch.object(self.manager, '_ensure_settings_folder_exists') as mock_ensure:
             
             mock_mode.return_value = 'delivered'
@@ -139,7 +139,7 @@ class TestDeliveryArtifactsManager(unittest.TestCase):
         env_path = self.manager._get_repository_env_example_path()
         self.assertIsInstance(env_path, Path)
 
-    @patch('icloud_photo_sync.delivery_artifacts.get_operating_mode')
+    @patch('iphoto_downloader.delivery_artifacts.get_operating_mode')
     def test_operating_mode_detection_delivered(self, mock_get_mode):
         """Test operating mode detection for delivered mode."""
         mock_get_mode.return_value = 'delivered'
@@ -151,7 +151,7 @@ class TestDeliveryArtifactsManager(unittest.TestCase):
             result = self.manager.handle_delivered_mode_startup()
             self.assertTrue(result)
 
-    @patch('icloud_photo_sync.delivery_artifacts.get_operating_mode')
+    @patch('iphoto_downloader.delivery_artifacts.get_operating_mode')
     def test_operating_mode_detection_development(self, mock_get_mode):
         """Test operating mode detection for development mode."""
         mock_get_mode.return_value = 'development'
@@ -162,24 +162,24 @@ class TestDeliveryArtifactsManager(unittest.TestCase):
     def test_settings_folder_detection_windows(self):
         """Test settings folder detection on Windows."""
         with patch('platform.system', return_value='Windows'), \
-             patch('icloud_photo_sync.delivery_artifacts.get_settings_folder_path') as mock_path:
+             patch('iphoto_downloader.delivery_artifacts.get_settings_folder_path') as mock_path:
             
             mock_path.return_value = Path('C:/Users/Test/AppData/Local/icloud-photo-sync/settings')
             
             # Create new manager to test folder detection
-            with patch('icloud_photo_sync.delivery_artifacts.get_logger'):
+            with patch('iphoto_downloader.delivery_artifacts.get_logger'):
                 manager = DeliveryArtifactsManager()
                 self.assertIsInstance(manager.settings_folder, Path)
 
     def test_settings_folder_detection_linux(self):
         """Test settings folder detection on Linux."""
         with patch('platform.system', return_value='Linux'), \
-             patch('icloud_photo_sync.delivery_artifacts.get_settings_folder_path') as mock_path:
+             patch('iphoto_downloader.delivery_artifacts.get_settings_folder_path') as mock_path:
             
             mock_path.return_value = Path('/home/test/.config/icloud-photo-sync/settings')
             
             # Create new manager to test folder detection
-            with patch('icloud_photo_sync.delivery_artifacts.get_logger'):
+            with patch('iphoto_downloader.delivery_artifacts.get_logger'):
                 manager = DeliveryArtifactsManager()
                 self.assertIsInstance(manager.settings_folder, Path)
 

@@ -1,6 +1,6 @@
-# 📖 iCloud Photo Sync Tool - User Guide
+# 📖 iPhoto Downloader Tool - User Guide
 
-Complete guide for installing, configuring, and using the iCloud Photo Sync Tool.
+Complete guide for installing, configuring, and using the iPhoto Downloader Tool.
 
 ## 📋 Table of Contents
 
@@ -23,13 +23,13 @@ Complete guide for installing, configuring, and using the iCloud Photo Sync Tool
 
 #### Option 1: Download Executable (Recommended)
 1. Go to the [Releases page](https://github.com/HenningUe/iphoto-downloader/releases)
-2. Download the latest `icloud_photo_sync.exe` and `manage_credentials.exe`
-3. Place both files in a dedicated folder (e.g., `C:\FotoPool\`)
-4. Run `icloud_photo_sync.exe` for the first time to set up configuration files
+2. Download the latest `iphoto_downloader.exe` and `manage_credentials.exe`
+3. Place both files in a dedicated folder (e.g., `C:\iPhotoDownloader\`)
+4. Run `iphoto_downloader.exe` for the first time to set up configuration files
 
 #### Option 2: Install via WinGet
 ```powershell
-winget install HenningUe.FotoPool
+winget install HenningUe.iPhotoDownloader
 ```
 
 #### Option 3: From Source
@@ -46,12 +46,12 @@ cd iphoto-downloader
 
 #### Option 1: Download Executable (Recommended)
 1. Go to the [Releases page](https://github.com/HenningUe/iphoto-downloader/releases)
-2. Download the latest `icloud_photo_sync` and `manage_credentials` binaries
+2. Download the latest `iphoto_downloader` and `manage_credentials` binaries
 3. Make them executable:
    ```bash
-   chmod +x icloud_photo_sync manage_credentials
+   chmod +x iphoto_downloader manage_credentials
    ```
-4. Run `./icloud_photo_sync` for the first time to set up configuration files
+4. Run `./iphoto_downloader` for the first time to set up configuration files
 
 #### Option 2: Install via APT (Ubuntu/Debian)
 ```bash
@@ -81,7 +81,7 @@ cd iphoto-downloader
 
 When you run the application for the first time, it will create a settings folder and copy configuration files:
 
-**Windows**: `%USERPROFILE%\AppData\Local\FotoPool\`
+**Windows**: `%USERPROFILE%\AppData\Local\iPhotoDownloader\`
 **Linux**: `~/.local/share/iphoto-downloader/`
 
 The following files will be created:
@@ -155,7 +155,7 @@ The credential manager will guide you through:
 1. Go to [Apple ID account page](https://appleid.apple.com/)
 2. Sign in with your iCloud credentials
 3. Navigate to "Security" → "App-Specific Passwords"
-4. Generate a new password with label "iCloud Photo Sync"
+4. Generate a new password with label "iPhoto Downloader"
 5. Use this password (not your regular iCloud password)
 
 ### Method 2: Environment Variables
@@ -265,7 +265,7 @@ Creates: `SYNC_DIRECTORY/.data/deletion_tracker.db`
 #### Option 2: Absolute Path
 **Windows:**
 ```ini
-DATABASE_PARENT_DIRECTORY=C:\Users\YourName\AppData\Local\FotoPool\Database
+DATABASE_PARENT_DIRECTORY=C:\Users\YourName\AppData\Local\iPhotoDownloader\Database
 ```
 
 **Linux:**
@@ -277,7 +277,7 @@ DATABASE_PARENT_DIRECTORY=/home/username/.local/share/iphoto-downloader/database
 
 **Windows:**
 ```ini
-DATABASE_PARENT_DIRECTORY=%LOCALAPPDATA%\FotoPool\Database
+DATABASE_PARENT_DIRECTORY=%LOCALAPPDATA%\iPhotoDownloader\Database
 ```
 
 **Linux:**
@@ -313,7 +313,7 @@ For convenient 2FA notifications, set up Pushover:
 
 1. **Create Pushover Account**: Go to [pushover.net](https://pushover.net)
 2. **Get User Key**: Found on your dashboard
-3. **Create Application**: Create a new application for "iCloud Photo Sync"
+3. **Create Application**: Create a new application for "iPhoto Downloader"
 4. **Get API Token**: Copy the API token for your application
 
 **Configuration:**
@@ -361,10 +361,10 @@ EXECUTION_MODE=single
 
 ```bash
 # Windows
-icloud_photo_sync.exe
+iphoto_downloader.exe
 
 # Linux
-./icloud_photo_sync
+./iphoto_downloader
 ```
 
 #### Continuous Mode
@@ -401,21 +401,21 @@ ALLOW_MULTI_INSTANCE=true
 **Basic Sync:**
 ```bash
 # Windows
-icloud_photo_sync.exe
+iphoto_downloader.exe
 
 # Linux  
-./icloud_photo_sync
+./iphoto_downloader
 ```
 
 **With Custom Config Location:**
 ```bash
 # Place settings.ini in current directory
-./icloud_photo_sync
+./iphoto_downloader
 ```
 
 **Monitor Logs:**
 Logs are written to:
-- **Windows**: `%USERPROFILE%\AppData\Local\FotoPool\logs\`
+- **Windows**: `%USERPROFILE%\AppData\Local\iPhotoDownloader\logs\`
 - **Linux**: `~/.local/share/iphoto-downloader/logs/`
 
 ---
@@ -495,11 +495,11 @@ OPERATING_MODE=InDevelopment
 ### Log Analysis
 
 **Log Locations**:
-- **Windows**: `%USERPROFILE%\AppData\Local\FotoPool\logs\`
+- **Windows**: `%USERPROFILE%\AppData\Local\iPhotoDownloader\logs\`
 - **Linux**: `~/.local/share/iphoto-downloader/logs/`
 
 **Important Log Files**:
-- `icloud_photo_sync.log` - Main application log
+- `iphoto_downloader.log` - Main application log
 - `2fa_session.log` - 2FA authentication events
 - `database.log` - Database operations and recovery
 

@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 def check_imports():
     """Check if all required modules can be imported."""
     try:
-        from icloud_photo_sync.config import KeyringConfig  # noqa
+        from iphoto_downloader.config import KeyringConfig  # noqa
         from auth2fa.authenticator import TwoFactorAuthHandler  # noqa
         print("✅ All imports successful")
         return True

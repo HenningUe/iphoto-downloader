@@ -219,7 +219,7 @@ wheels = [
 [[package]]
 name = "icloud-photo-sync"
 version = "0.1.0"
-source = { editable = "src/icloud_photo_sync" }
+source = { editable = "src/iphoto_downloader" }
 dependencies = [
     { name = "auth2fa" },
     { name = "keyring" },
@@ -282,7 +282,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "auth2fa", editable = "shared/auth2fa" },
-    { name = "icloud-photo-sync", editable = "src/icloud_photo_sync" },
+    { name = "icloud-photo-sync", editable = "src/iphoto_downloader" },
     { name = "uv" },
 ]
 

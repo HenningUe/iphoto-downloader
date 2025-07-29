@@ -2,8 +2,8 @@
 import pytest
 """Quick test script to verify database safety methods integration."""
 
-from icloud_photo_sync.deletion_tracker import DeletionTracker
-from icloud_photo_sync.logger import setup_logging
+from iphoto_downloader.deletion_tracker import DeletionTracker
+from iphoto_downloader.logger import setup_logging
 import logging
 import tempfile
 from pathlib import Path
@@ -11,7 +11,7 @@ import sys
 import os
 
 # Add the source directory to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'icloud_photo_sync', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'iphoto_downloader', 'src'))
 
 
 @pytest.mark.manual

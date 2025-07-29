@@ -6,8 +6,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch, Mock
 
-from icloud_photo_sync.config import BaseConfig
-from icloud_photo_sync.instance_manager import InstanceManager
+from iphoto_downloader.config import BaseConfig
+from iphoto_downloader.instance_manager import InstanceManager
 
 
 class TestMultiInstanceConfigIntegration(unittest.TestCase):
@@ -32,7 +32,7 @@ class TestMultiInstanceConfigIntegration(unittest.TestCase):
         """Create a .env file with given content."""
         self.temp_env_file.write_text(content)
 
-    @patch('icloud_photo_sync.config.get_operating_mode')
+    @patch('iphoto_downloader.config.get_operating_mode')
     def test_config_default_multi_instance_false(self, mock_get_operating_mode):
         """Test that default multi-instance setting is False."""
         mock_get_operating_mode.return_value = "InDevelopment"
@@ -46,7 +46,7 @@ DRY_RUN=false
         
         self.assertFalse(config.allow_multi_instance)
 
-    @patch('icloud_photo_sync.config.get_operating_mode')
+    @patch('iphoto_downloader.config.get_operating_mode')
     def test_config_multi_instance_true(self, mock_get_operating_mode):
         """Test multi-instance setting when explicitly set to true."""
         mock_get_operating_mode.return_value = "InDevelopment"
@@ -61,7 +61,7 @@ ALLOW_MULTI_INSTANCE=true
         
         self.assertTrue(config.allow_multi_instance)
 
-    @patch('icloud_photo_sync.config.get_operating_mode')
+    @patch('iphoto_downloader.config.get_operating_mode')
     def test_config_multi_instance_false_explicit(self, mock_get_operating_mode):
         """Test multi-instance setting when explicitly set to false."""
         mock_get_operating_mode.return_value = "InDevelopment"
@@ -76,7 +76,7 @@ ALLOW_MULTI_INSTANCE=false
         
         self.assertFalse(config.allow_multi_instance)
 
-    @patch('icloud_photo_sync.config.get_operating_mode')
+    @patch('iphoto_downloader.config.get_operating_mode')
     def test_config_multi_instance_case_insensitive(self, mock_get_operating_mode):
         """Test that multi-instance setting is case insensitive."""
         mock_get_operating_mode.return_value = "InDevelopment"
@@ -95,7 +95,7 @@ ALLOW_MULTI_INSTANCE={value}
                 config = BaseConfig(self.temp_env_file)
                 self.assertEqual(config.allow_multi_instance, expected)
 
-    @patch('icloud_photo_sync.config.get_operating_mode')
+    @patch('iphoto_downloader.config.get_operating_mode')
     @patch('keyring.get_password')
     def test_config_validation_includes_multi_instance(self, mock_keyring, mock_get_operating_mode):
         """Test that configuration validation includes multi-instance validation."""
@@ -124,9 +124,9 @@ ENABLE_PUSHOVER=false
                 # If there's a validation error, it shouldn't be about multi-instance
                 self.assertNotIn("ALLOW_MULTI_INSTANCE", str(e))
 
-    @patch('icloud_photo_sync.instance_manager.get_logger')
-    @patch('icloud_photo_sync.instance_manager.get_app_data_folder_path')
-    @patch('icloud_photo_sync.config.get_operating_mode')
+    @patch('iphoto_downloader.instance_manager.get_logger')
+    @patch('iphoto_downloader.instance_manager.get_app_data_folder_path')
+    @patch('iphoto_downloader.config.get_operating_mode')
     def test_instance_manager_integration_with_config(self, mock_get_operating_mode, mock_get_app_data, mock_get_logger):
         """Test InstanceManager integration with configuration."""
         mock_get_operating_mode.return_value = "InDevelopment"
@@ -155,9 +155,9 @@ ALLOW_MULTI_INSTANCE=true
         
         self.assertTrue(instance_manager.allow_multi_instance)
 
-    @patch('icloud_photo_sync.instance_manager.get_logger')
-    @patch('icloud_photo_sync.instance_manager.get_app_data_folder_path')
-    @patch('icloud_photo_sync.config.get_operating_mode')
+    @patch('iphoto_downloader.instance_manager.get_logger')
+    @patch('iphoto_downloader.instance_manager.get_app_data_folder_path')
+    @patch('iphoto_downloader.config.get_operating_mode')
     def test_multi_instance_logging_behavior(self, mock_get_operating_mode, mock_get_app_data, mock_get_logger):
         """Test that multi-instance behavior is properly logged."""
         mock_get_operating_mode.return_value = "InDevelopment"
@@ -181,7 +181,7 @@ ALLOW_MULTI_INSTANCE=true
             "Multi-instance mode enabled - not checking for existing instances"
         )
 
-    @patch('icloud_photo_sync.config.get_operating_mode')  
+    @patch('iphoto_downloader.config.get_operating_mode')  
     def test_invalid_multi_instance_values(self, mock_get_operating_mode):
         """Test that invalid multi-instance values default to False."""
         mock_get_operating_mode.return_value = "InDevelopment"

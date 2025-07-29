@@ -2,7 +2,7 @@
 
 ## 🎯 Overview
 
-Successfully implemented a comprehensive CI/CD pipeline for the Foto Pool project using GitHub Actions. The pipeline covers continuous integration, automated testing, cross-platform building, package management, and automated publishing.
+Successfully implemented a comprehensive CI/CD pipeline for the iPhoto Downloader project using GitHub Actions. The pipeline covers continuous integration, automated testing, cross-platform building, package management, and automated publishing.
 
 ## 📁 Files Created
 

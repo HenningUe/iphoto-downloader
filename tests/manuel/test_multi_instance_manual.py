@@ -7,14 +7,14 @@ from pathlib import Path
 import tempfile
 
 # Add the src directory to the path so we can import our modules
-sys.path.insert(0, str(Path(__file__).parent / "src" / "icloud_photo_sync" / "src"))
+sys.path.insert(0, str(Path(__file__).parent / "src" / "iphoto_downloader" / "src"))
 
-from icloud_photo_sync.instance_manager import (
+from iphoto_downloader.instance_manager import (
     InstanceManager,
     validate_multi_instance_config,
     enforce_single_instance,
 )
-from icloud_photo_sync.config import BaseConfig
+from iphoto_downloader.config import BaseConfig
 
 
 @pytest.mark.manual
@@ -108,7 +108,7 @@ def test_instance_manager_basic():
     
     # Test lock file path generation
     manager = InstanceManager(allow_multi_instance=False)
-    assert "icloud_photo_sync.lock" in str(manager.lock_file_path)
+    assert "iphoto_downloader.lock" in str(manager.lock_file_path)
     print("✅ Lock file path is generated correctly")
 
 

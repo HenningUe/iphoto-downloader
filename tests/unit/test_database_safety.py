@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from src.icloud_photo_sync.src.icloud_photo_sync.deletion_tracker import DeletionTracker
-from src.icloud_photo_sync.src.icloud_photo_sync.logger import setup_logging
+from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import DeletionTracker
+from src.iphoto_downloader.src.iphoto_downloader.logger import setup_logging
 
 
 @pytest.fixture(autouse=True)
