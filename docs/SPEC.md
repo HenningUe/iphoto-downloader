@@ -220,7 +220,7 @@ automatically using **GitHub Actions**.
 - The Linux build must be statically linked if possible, or provide clear
   runtime requirements.
 
-6.1. **Credentials Manager Executable Packaging**
+6.2. **Credentials Manager Executable Packaging**
 - Build a standalone (single file) Windows .exe and a Linux executable using PyInstaller for the manage_credentials executable, which is based on #manage_credentials.py as first entry point. 
 - The app shall have the image #foto-pool-credentials.png as App icon
 - The Linux build must be statically linked if possible, or provide clear
@@ -236,6 +236,8 @@ automatically using **GitHub Actions**.
   - the release workflow shall be trigger, whenever a new release is requested in github for this repo, i.e. link "https://github.com/.../releases/new" is called
   - The release workflow shall created executables for windows and linux
   - Before the creation of the executables start the full test-suite shall be executed. Any error shall cause an aboration.
+  - The windows executable shall be published automatically to winget, i.e. the Windows Package Manager.
+  - The linux executable shall be published automatically to APT (Advanced Packaging Tool), i.e. the ubuntu package manager
 
 ---
 

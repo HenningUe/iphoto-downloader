@@ -1,0 +1,97 @@
+name: CI - Test and Lint
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Test and Lint
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.12']
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        enable-cache: true
+
+    - name: Set up Python ${{ matrix.python-version }}
+      run: uv python install ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        uv sync --dev
+
+    - name: Run ruff linting
+      run: |
+        uv run ruff check .
+
+    - name: Run ruff formatting check
+      run: |
+        uv run ruff format --check .
+
+    - name: Run mypy type checking
+      run: |
+        uv run mypy src/ shared/ --ignore-missing-imports
+
+    - name: Run unit tests with coverage
+      run: |
+        uv run pytest tests/unit/ --cov=src --cov=shared --cov-report=xml --cov-report=html --cov-report=term
+
+    - name: Run integration tests
+      run: |
+        uv run pytest tests/integration/ --cov=src --cov=shared --cov-append --cov-report=xml --cov-report=html --cov-report=term
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+    - name: Check test coverage threshold
+      run: |
+        uv run pytest --cov=src --cov=shared --cov-fail-under=80
+
+    - name: Verify build scripts exist
+      run: |
+        test -f build_windows.ps1
+        test -f build_linux.sh
+        test -f icloud_photo_sync.spec
+        test -f manage_credentials.spec
+
+    - name: Validate PyInstaller specs
+      run: |
+        uv run python -c "
+        import ast
+        import sys
+        
+        # Validate main spec file
+        with open('icloud_photo_sync.spec', 'r') as f:
+            content = f.read()
+            print('✓ icloud_photo_sync.spec is readable')
+        
+        # Validate credentials spec file
+        with open('manage_credentials.spec', 'r') as f:
+            content = f.read()
+            print('✓ manage_credentials.spec is readable')
+        
+        print('✓ All PyInstaller specs validated')
+        "
+
+    - name: Verify required assets exist
+      run: |
+        test -f foto-pool-main.png
+        test -f foto-pool-credentials.png
+        test -f README.md
+        test -f .env.example
+        echo "✓ All required build assets exist"

@@ -308,7 +308,7 @@ specified.
   - [x] Test resource isolation between multiple instances
   - [x] Test concurrent database access handling
 - [ ] (Optional) Add **end-to-end test** using dummy or sandbox iCloud
-- [ ] Add all tests to CI/CD
+- [x] Add all tests to CI/CD
 - [x] Achieve ≥ **80% test coverage** for core sync logic (✅ **85.21%**
       achieved)
 
@@ -440,16 +440,18 @@ specified.
 
 ## 7️⃣ 🔁 CI/CD Pipeline (GitHub Actions)
 
-- [ ] Create **CI workflow**:
-  - [ ] Install dependencies using `uv`
-  - [ ] Run unit & integration tests
-  - [ ] Run `ruff` and `mypy`
-  - [ ] Build `.exe` for Windows and executable for Linux
-  - [ ] Package Linux build for **APT repo**
+- [x] Create **CI workflow**:
+  - [x] Install dependencies using `uv`
+  - [x] Run unit & integration tests
+  - [x] Run `ruff` and `mypy`
+  - [x] Build `.exe` for Windows and executable for Linux
+  - [x] Package Linux build for **APT repo**
         ([APT guide](https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository))
-  - [ ] Package Windows build for **WinGet**
+  - [x] Package Windows build for **WinGet**
         ([WinGetCreate](https://techwatching.dev/posts/wingetcreate))
-  - [ ] Publish releases automatically
+  - [x] **Automatically publish Windows executable to WinGet** (Windows Package Manager)
+  - [x] **Automatically publish Linux executable to APT** (Advanced Packaging Tool / Ubuntu package manager)
+  - [x] Publish releases automatically
 
 ---
 

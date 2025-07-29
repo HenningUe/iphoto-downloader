@@ -1,0 +1,303 @@
+name: Code Quality and Documentation
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history for SonarCloud
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        enable-cache: true
+
+    - name: Set up Python 3.12
+      run: uv python install 3.12
+
+    - name: Install dependencies
+      run: uv sync --dev
+
+    - name: Run ruff with detailed output
+      run: |
+        uv run ruff check . --output-format=github
+
+    - name: Run mypy with detailed output
+      run: |
+        uv run mypy src/ shared/ --show-error-codes --show-error-context
+
+    - name: Generate test coverage
+      run: |
+        uv run pytest tests/ --cov=src --cov=shared --cov-report=xml --cov-report=html
+
+    - name: Check documentation coverage
+      run: |
+        uv run python -c "
+        import ast
+        import os
+        from pathlib import Path
+        
+        def check_docstrings(file_path):
+            with open(file_path, 'r', encoding='utf-8') as f:
+                tree = ast.parse(f.read())
+            
+            missing_docs = []
+            for node in ast.walk(tree):
+                if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
+                    if not ast.get_docstring(node):
+                        missing_docs.append(f'{file_path}:{node.lineno} - {node.name}')
+            return missing_docs
+        
+        all_missing = []
+        for py_file in Path('src').rglob('*.py'):
+            if py_file.name != '__init__.py':
+                missing = check_docstrings(py_file)
+                all_missing.extend(missing)
+        
+        for py_file in Path('shared').rglob('*.py'):
+            if py_file.name != '__init__.py':
+                missing = check_docstrings(py_file)
+                all_missing.extend(missing)
+        
+        if all_missing:
+            print('Missing docstrings:')
+            for item in all_missing:
+                print(f'  {item}')
+            print(f'Total missing docstrings: {len(all_missing)}')
+        else:
+            print('All functions and classes have docstrings!')
+        "
+
+    - name: Check file formatting
+      run: |
+        uv run ruff format --check --diff .
+
+    - name: Analyze imports
+      run: |
+        uv run python -c "
+        import ast
+        import os
+        from collections import defaultdict
+        from pathlib import Path
+        
+        imports = defaultdict(list)
+        
+        for py_file in Path('src').rglob('*.py'):
+            with open(py_file, 'r', encoding='utf-8') as f:
+                try:
+                    tree = ast.parse(f.read())
+                    for node in ast.walk(tree):
+                        if isinstance(node, ast.Import):
+                            for alias in node.names:
+                                imports[alias.name].append(str(py_file))
+                        elif isinstance(node, ast.ImportFrom):
+                            module = node.module or ''
+                            for alias in node.names:
+                                full_name = f'{module}.{alias.name}' if module else alias.name
+                                imports[full_name].append(str(py_file))
+                except SyntaxError:
+                    print(f'Syntax error in {py_file}')
+        
+        print('Most frequently imported modules:')
+        sorted_imports = sorted(imports.items(), key=lambda x: len(x[1]), reverse=True)
+        for module, files in sorted_imports[:10]:
+            print(f'  {module}: {len(files)} imports')
+        "
+
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        enable-cache: true
+
+    - name: Set up Python 3.12
+      run: uv python install 3.12
+
+    - name: Install dependencies
+      run: uv sync --dev
+
+    - name: Run bandit security scan
+      run: |
+        uv run pip install bandit
+        uv run bandit -r src/ shared/ -f json -o bandit-report.json || true
+        uv run bandit -r src/ shared/
+
+    - name: Run safety check
+      run: |
+        uv run pip install safety
+        uv run safety check --json --output safety-report.json || true
+        uv run safety check
+
+    - name: Upload security scan results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-scan-results
+        path: |
+          bandit-report.json
+          safety-report.json
+
+  documentation-check:
+    name: Documentation Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Check README links
+      run: |
+        # Check that all linked files exist
+        if [ -f README.md ]; then
+          echo "Checking README.md for broken links..."
+          
+          # Extract file references from README
+          grep -oE '\[.*\]\([^)]+\)' README.md | grep -oE '\([^)]+\)' | tr -d '()' | while read -r link; do
+            if [[ "$link" == http* ]]; then
+              echo "Skipping external link: $link"
+            elif [[ "$link" == "#"* ]]; then
+              echo "Skipping anchor link: $link"
+            elif [ -f "$link" ] || [ -d "$link" ]; then
+              echo "✓ Found: $link"
+            else
+              echo "✗ Missing: $link"
+              exit 1
+            fi
+          done
+        fi
+
+    - name: Check TODO.md consistency
+      run: |
+        if [ -f docs/TODO.md ]; then
+          echo "Checking TODO.md for completion status..."
+          
+          # Count completed vs pending tasks
+          completed=$(grep -c '^\s*- \[x\]' docs/TODO.md || echo 0)
+          pending=$(grep -c '^\s*- \[ \]' docs/TODO.md || echo 0)
+          total=$((completed + pending))
+          
+          if [ $total -gt 0 ]; then
+            percentage=$((completed * 100 / total))
+            echo "Task completion: $completed/$total ($percentage%)"
+            
+            if [ $percentage -ge 80 ]; then
+              echo "✓ Project is well advanced ($percentage% complete)"
+            elif [ $percentage -ge 50 ]; then
+              echo "⚠ Project is in progress ($percentage% complete)"
+            else
+              echo "ℹ Project is in early stages ($percentage% complete)"
+            fi
+          fi
+        fi
+
+    - name: Validate configuration files
+      run: |
+        echo "Checking configuration files..."
+        
+        # Check .env.example exists and has required fields
+        if [ -f .env.example ]; then
+          echo "✓ .env.example exists"
+          
+          # Check for required fields
+          required_fields=("ICLOUD_USERNAME" "SYNC_DIRECTORY" "PUSHOVER_API_TOKEN" "PUSHOVER_USER_KEY")
+          for field in "${required_fields[@]}"; do
+            if grep -q "^#\?$field=" .env.example; then
+              echo "✓ $field is documented"
+            else
+              echo "✗ $field is missing from .env.example"
+            fi
+          done
+        else
+          echo "✗ .env.example is missing"
+        fi
+        
+        # Check PyInstaller specs exist
+        if [ -f icloud_photo_sync.spec ]; then
+          echo "✓ icloud_photo_sync.spec exists"
+        else
+          echo "✗ icloud_photo_sync.spec is missing"
+        fi
+        
+        if [ -f manage_credentials.spec ]; then
+          echo "✓ manage_credentials.spec exists"
+        else
+          echo "✗ manage_credentials.spec is missing"
+        fi
+
+    - name: Check build assets
+      run: |
+        echo "Checking build assets..."
+        
+        assets=("foto-pool-main.png" "foto-pool-credentials.png")
+        for asset in "${assets[@]}"; do
+          if [ -f "$asset" ]; then
+            echo "✓ $asset exists"
+            # Check file size (should be reasonable for an icon)
+            size=$(stat -f%z "$asset" 2>/dev/null || stat -c%s "$asset" 2>/dev/null || echo 0)
+            if [ "$size" -gt 1048576 ]; then  # 1MB
+              echo "⚠ $asset is quite large (${size} bytes)"
+            else
+              echo "  Size: ${size} bytes"
+            fi
+          else
+            echo "✗ $asset is missing"
+          fi
+        done
+
+  dependency-analysis:
+    name: Dependency Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        enable-cache: true
+
+    - name: Set up Python 3.12
+      run: uv python install 3.12
+
+    - name: Install dependencies
+      run: uv sync --dev
+
+    - name: Analyze dependency tree
+      run: |
+        uv tree
+
+    - name: Check for outdated dependencies
+      run: |
+        uv run pip list --outdated || echo "No outdated dependencies or pip list --outdated not available"
+
+    - name: License compliance check
+      run: |
+        uv run pip install pip-licenses
+        uv run pip-licenses --format=json --output-file=licenses.json
+        uv run pip-licenses
+
+    - name: Upload dependency analysis
+      uses: actions/upload-artifact@v4
+      with:
+        name: dependency-analysis
+        path: |
+          licenses.json

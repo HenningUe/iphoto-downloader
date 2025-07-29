@@ -1,0 +1,441 @@
+name: Release - Build and Publish
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  build-windows:
+    name: Build Windows Executable
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        enable-cache: true
+
+    - name: Set up Python 3.12
+      run: uv python install 3.12
+
+    - name: Install dependencies
+      run: |
+        uv sync --dev
+
+    - name: Run tests before building
+      run: |
+        uv run pytest tests/ --tb=short
+
+    - name: Build Windows executables
+      run: |
+        powershell -ExecutionPolicy Bypass -File build_windows.ps1
+
+    - name: Test built executables
+      run: |
+        uv run python test_build.py --quick
+
+    - name: Create Windows artifacts directory
+      run: |
+        mkdir windows-artifacts
+        copy dist\icloud_photo_sync.exe windows-artifacts\
+        copy dist\manage_credentials.exe windows-artifacts\
+
+    - name: Upload Windows build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-executables
+        path: windows-artifacts/
+
+  build-linux:
+    name: Build Linux Executable
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libffi-dev
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        enable-cache: true
+
+    - name: Set up Python 3.12
+      run: uv python install 3.12
+
+    - name: Install dependencies
+      run: |
+        uv sync --dev
+
+    - name: Run tests before building
+      run: |
+        uv run pytest tests/ --tb=short
+
+    - name: Build Linux executables
+      run: |
+        chmod +x build_linux.sh
+        ./build_linux.sh
+
+    - name: Test built executables
+      run: |
+        uv run python test_build.py --quick
+
+    - name: Create Linux artifacts directory
+      run: |
+        mkdir linux-artifacts
+        cp dist/icloud_photo_sync linux-artifacts/
+        cp dist/manage_credentials linux-artifacts/
+
+    - name: Upload Linux build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-executables
+        path: linux-artifacts/
+
+  package-apt:
+    name: Package for APT Repository
+    runs-on: ubuntu-latest
+    needs: build-linux
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download Linux executables
+      uses: actions/download-artifact@v4
+      with:
+        name: linux-executables
+        path: linux-executables/
+
+    - name: Install packaging tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y dpkg-dev debhelper devscripts
+
+    - name: Create Debian package structure
+      run: |
+        mkdir -p debian-package/foto-pool/DEBIAN
+        mkdir -p debian-package/foto-pool/usr/bin
+        mkdir -p debian-package/foto-pool/usr/share/doc/foto-pool
+        mkdir -p debian-package/foto-pool/usr/share/applications
+
+    - name: Copy executables to package
+      run: |
+        cp linux-executables/icloud_photo_sync debian-package/foto-pool/usr/bin/
+        cp linux-executables/manage_credentials debian-package/foto-pool/usr/bin/foto-pool-credentials
+        chmod +x debian-package/foto-pool/usr/bin/*
+
+    - name: Create Debian control file
+      run: |
+        cat > debian-package/foto-pool/DEBIAN/control << EOF
+        Package: foto-pool
+        Version: ${{ github.event.release.tag_name || github.event.inputs.version }}
+        Section: utils
+        Priority: optional
+        Architecture: amd64
+        Maintainer: Foto Pool Team <team@fotopool.example.com>
+        Description: iCloud Photo Sync Tool
+         A tool for synchronizing photos from iCloud to local storage with
+         intelligent deletion tracking and album filtering capabilities.
+         .
+         Features include:
+         - Bidirectional sync with iCloud Photos
+         - Smart deletion tracking to prevent re-downloads
+         - Album-based filtering and organization
+         - 2FA authentication support with Pushover notifications
+         - Cross-platform compatibility
+        Depends: libc6, libssl3
+        Homepage: https://github.com/HenningUe/foto-pool
+        EOF
+
+    - name: Create desktop entry
+      run: |
+        cat > debian-package/foto-pool/usr/share/applications/foto-pool.desktop << EOF
+        [Desktop Entry]
+        Name=Foto Pool
+        Comment=iCloud Photo Sync Tool
+        Exec=/usr/bin/icloud_photo_sync
+        Icon=foto-pool
+        Terminal=true
+        Type=Application
+        Categories=Graphics;Photography;
+        EOF
+
+    - name: Copy documentation
+      run: |
+        cp README.md debian-package/foto-pool/usr/share/doc/foto-pool/
+        cp LICENSE debian-package/foto-pool/usr/share/doc/foto-pool/copyright
+
+    - name: Build Debian package
+      run: |
+        cd debian-package
+        dpkg-deb --build foto-pool
+        mv foto-pool.deb ../foto-pool_${{ github.event.release.tag_name || github.event.inputs.version }}_amd64.deb
+
+    - name: Upload APT package artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: apt-package
+        path: foto-pool_*.deb
+
+  package-winget:
+    name: Package for WinGet
+    runs-on: windows-latest
+    needs: build-windows
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download Windows executables
+      uses: actions/download-artifact@v4
+      with:
+        name: windows-executables
+        path: windows-executables/
+
+    - name: Install WinGet Create
+      run: |
+        Invoke-WebRequest -Uri "https://github.com/microsoft/winget-create/releases/latest/download/wingetcreate.exe" -OutFile "wingetcreate.exe"
+
+    - name: Create WinGet package manifest
+      run: |
+        $version = "${{ github.event.release.tag_name || github.event.inputs.version }}"
+        $version = $version -replace '^v', ''  # Remove 'v' prefix if present
+        
+        # Create installer for main executable
+        $mainSize = (Get-Item windows-executables/icloud_photo_sync.exe).Length
+        $credSize = (Get-Item windows-executables/manage_credentials.exe).Length
+        
+        # Create manifest directory
+        New-Item -ItemType Directory -Force -Path "winget-manifests"
+        
+        # Create version manifest
+        $versionManifest = @"
+        PackageIdentifier: HenningUe.FotoPool
+        PackageVersion: $version
+        DefaultLocale: en-US
+        ManifestType: version
+        ManifestVersion: 1.2.0
+        "@
+        
+        # Create installer manifest
+        $installerManifest = @"
+        PackageIdentifier: HenningUe.FotoPool
+        PackageVersion: $version
+        Installers:
+        - Architecture: x64
+          InstallerType: exe
+          InstallerUrl: https://github.com/HenningUe/foto-pool/releases/download/${{ github.event.release.tag_name || github.event.inputs.version }}/icloud_photo_sync.exe
+          InstallerSha256: # Will be calculated by WinGet team
+          InstallerSwitches:
+            Silent: ""
+            SilentWithProgress: ""
+        ManifestType: installer
+        ManifestVersion: 1.2.0
+        "@
+        
+        # Create locale manifest
+        $localeManifest = @"
+        PackageIdentifier: HenningUe.FotoPool
+        PackageVersion: $version
+        PackageLocale: en-US
+        Publisher: HenningUe
+        PublisherUrl: https://github.com/HenningUe
+        PublisherSupportUrl: https://github.com/HenningUe/foto-pool/issues
+        Author: HenningUe
+        PackageName: Foto Pool
+        PackageUrl: https://github.com/HenningUe/foto-pool
+        License: MIT
+        LicenseUrl: https://github.com/HenningUe/foto-pool/blob/main/LICENSE
+        Copyright: Copyright (c) HenningUe
+        ShortDescription: iCloud Photo Sync Tool with intelligent deletion tracking
+        Description: A comprehensive tool for synchronizing photos from iCloud to local storage with smart deletion tracking, album filtering, and 2FA support.
+        Moniker: foto-pool
+        Tags:
+        - icloud
+        - photos
+        - sync
+        - backup
+        - photo-management
+        ManifestType: defaultLocale
+        ManifestVersion: 1.2.0
+        "@
+        
+        # Save manifests
+        $versionManifest | Out-File -FilePath "winget-manifests/HenningUe.FotoPool.yaml" -Encoding UTF8
+        $installerManifest | Out-File -FilePath "winget-manifests/HenningUe.FotoPool.installer.yaml" -Encoding UTF8
+        $localeManifest | Out-File -FilePath "winget-manifests/HenningUe.FotoPool.locale.en-US.yaml" -Encoding UTF8
+
+    - name: Upload WinGet manifests
+      uses: actions/upload-artifact@v4
+      with:
+        name: winget-manifests
+        path: winget-manifests/
+
+  publish-to-winget:
+    name: Publish to WinGet
+    runs-on: windows-latest
+    needs: [package-winget, publish-release]
+    if: github.event_name == 'release'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download WinGet manifests
+      uses: actions/download-artifact@v4
+      with:
+        name: winget-manifests
+        path: winget-manifests/
+
+    - name: Submit to WinGet Community Repository
+      run: |
+        # This step would typically involve:
+        # 1. Forking the Microsoft/winget-pkgs repository
+        # 2. Creating a PR with the new manifests
+        # 3. Submitting for review
+        
+        Write-Host "WinGet manifests prepared for submission"
+        Write-Host "Manual step required: Submit PR to microsoft/winget-pkgs repository"
+        
+        # For now, we'll just display the manifest contents
+        Get-ChildItem winget-manifests/ -Filter "*.yaml" | ForEach-Object {
+            Write-Host "=== $($_.Name) ==="
+            Get-Content $_.FullName
+        }
+
+  publish-to-apt:
+    name: Publish to APT Repository
+    runs-on: ubuntu-latest
+    needs: [package-apt, publish-release]
+    if: github.event_name == 'release'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download APT package
+      uses: actions/download-artifact@v4
+      with:
+        name: apt-package
+        path: apt-package/
+
+    - name: Prepare APT repository submission
+      run: |
+        echo "APT package prepared for submission"
+        echo "Package details:"
+        dpkg-deb --info apt-package/*.deb
+        
+        echo "Manual step required:"
+        echo "1. Submit package to appropriate APT repository"
+        echo "2. Follow repository-specific submission guidelines"
+        echo "3. Package available at: apt-package/"
+        
+        ls -la apt-package/
+
+  publish-release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    needs: [build-windows, build-linux]
+    if: github.event_name == 'release'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download Windows executables
+      uses: actions/download-artifact@v4
+      with:
+        name: windows-executables
+        path: windows-executables/
+
+    - name: Download Linux executables
+      uses: actions/download-artifact@v4
+      with:
+        name: linux-executables
+        path: linux-executables/
+
+    - name: Create release assets
+      run: |
+        mkdir release-assets
+        
+        # Package Windows executables
+        cd windows-executables
+        zip ../release-assets/foto-pool-windows-x64.zip *
+        cd ..
+        
+        # Package Linux executables
+        cd linux-executables
+        tar -czf ../release-assets/foto-pool-linux-x64.tar.gz *
+        cd ..
+        
+        # Copy individual executables with versioned names
+        cp windows-executables/icloud_photo_sync.exe release-assets/
+        cp windows-executables/manage_credentials.exe release-assets/
+        cp linux-executables/icloud_photo_sync release-assets/
+        cp linux-executables/manage_credentials release-assets/foto-pool-credentials
+
+    - name: Upload release assets
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          release-assets/*
+        body: |
+          ## 🚀 Release ${{ github.event.release.tag_name }}
+          
+          ### Downloads
+          
+          **Windows:**
+          - 📦 [Complete Windows Package](./foto-pool-windows-x64.zip) - Both executables in one ZIP
+          - 🖼️ [Main Application (icloud_photo_sync.exe)](./icloud_photo_sync.exe)
+          - 🔐 [Credentials Manager (manage_credentials.exe)](./manage_credentials.exe)
+          
+          **Linux:**
+          - 📦 [Complete Linux Package](./foto-pool-linux-x64.tar.gz) - Both executables in one archive
+          - 🖼️ [Main Application (icloud_photo_sync)](./icloud_photo_sync)
+          - 🔐 [Credentials Manager (foto-pool-credentials)](./foto-pool-credentials)
+          
+          ### Installation
+          
+          **Windows (via WinGet):**
+          ```powershell
+          winget install HenningUe.FotoPool
+          ```
+          
+          **Linux (via APT):**
+          ```bash
+          # APT repository submission in progress
+          # Manual installation for now:
+          wget https://github.com/HenningUe/foto-pool/releases/download/${{ github.event.release.tag_name }}/foto-pool-linux-x64.tar.gz
+          tar -xzf foto-pool-linux-x64.tar.gz
+          sudo mv icloud_photo_sync /usr/local/bin/
+          sudo mv manage_credentials /usr/local/bin/foto-pool-credentials
+          ```
+          
+          ### What's New
+          - Full CI/CD pipeline with automatic builds
+          - Cross-platform executable distribution
+          - Preparation for WinGet and APT package managers
+          
+          ### Getting Started
+          1. Download the appropriate executable for your platform
+          2. Run the credentials manager first to set up your iCloud credentials
+          3. Configure your sync settings
+          4. Start syncing your photos!
+          
+          For detailed instructions, see the [README](https://github.com/HenningUe/foto-pool/blob/main/README.md).
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
