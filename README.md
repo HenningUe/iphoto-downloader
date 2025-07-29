@@ -14,6 +14,17 @@ A uv monorepo workspace for iCloud photo download tools and utilities.
 - **🔧 Configurable**: Customizable sync directory and settings
 - **🔐 2FA Support**: Integrated two-factor authentication for iCloud
 
+## 🏗️ Why another tool?
+- Apple's notorious icloud windows app downloads fotos only with weird names
+- pycloud downloader comes with various limitations, that I 
+   - missing possibility to download shared albums
+   - missing notification via pushover
+   - missing configuration via setting-file
+   - missing continuous execution mode
+
+## 🏗️ Disclaimer
+ - I honor democracy
+
 ## 🏗️ Workspace Structure
 
 This workspace contains the following packages:
