@@ -158,7 +158,7 @@ jobs:
          - 2FA authentication support with Pushover notifications
          - Cross-platform compatibility
         Depends: libc6, libssl3
-        Homepage: https://github.com/HenningUe/foto-pool
+        Homepage: https://github.com/HenningUe/iphoto-downloader
         EOF
 
     - name: Create desktop entry
@@ -183,13 +183,13 @@ jobs:
       run: |
         cd debian-package
         dpkg-deb --build iphoto-downloader
-        mv iphoto-downloader.deb ../foto-pool_${{ github.event.release.tag_name || github.event.inputs.version }}_amd64.deb
+        mv iphoto-downloader.deb ../iphoto-downloader_${{ github.event.release.tag_name || github.event.inputs.version }}_amd64.deb
 
     - name: Upload APT package artifact
       uses: actions/upload-artifact@v4
       with:
         name: apt-package
-        path: foto-pool_*.deb
+        path: iphoto-downloader_*.deb
 
   package-winget:
     name: Package for WinGet
@@ -238,7 +238,7 @@ jobs:
         Installers:
         - Architecture: x64
           InstallerType: exe
-          InstallerUrl: https://github.com/HenningUe/foto-pool/releases/download/${{ github.event.release.tag_name || github.event.inputs.version }}/icloud_photo_sync.exe
+          InstallerUrl: https://github.com/HenningUe/iphoto-downloader/releases/download/${{ github.event.release.tag_name || github.event.inputs.version }}/icloud_photo_sync.exe
           InstallerSha256: # Will be calculated by WinGet team
           InstallerSwitches:
             Silent: ""
@@ -254,12 +254,12 @@ jobs:
         PackageLocale: en-US
         Publisher: HenningUe
         PublisherUrl: https://github.com/HenningUe
-        PublisherSupportUrl: https://github.com/HenningUe/foto-pool/issues
+        PublisherSupportUrl: https://github.com/HenningUe/iphoto-downloader/issues
         Author: HenningUe
         PackageName: Foto Pool
-        PackageUrl: https://github.com/HenningUe/foto-pool
+        PackageUrl: https://github.com/HenningUe/iphoto-downloader
         License: MIT
-        LicenseUrl: https://github.com/HenningUe/foto-pool/blob/main/LICENSE
+        LicenseUrl: https://github.com/HenningUe/iphoto-downloader/blob/main/LICENSE
         Copyright: Copyright (c) HenningUe
         ShortDescription: iCloud Photo Sync Tool with intelligent deletion tracking
         Description: A comprehensive tool for synchronizing photos from iCloud to local storage with smart deletion tracking, album filtering, and 2FA support.
@@ -419,7 +419,7 @@ jobs:
           ```bash
           # APT repository submission in progress
           # Manual installation for now:
-          wget https://github.com/HenningUe/foto-pool/releases/download/${{ github.event.release.tag_name }}/iphoto-downloader-linux-x64.tar.gz
+          wget https://github.com/HenningUe/iphoto-downloader/releases/download/${{ github.event.release.tag_name }}/iphoto-downloader-linux-x64.tar.gz
           tar -xzf iphoto-downloader-linux-x64.tar.gz
           sudo mv icloud_photo_sync /usr/local/bin/
           sudo mv manage_credentials /usr/local/bin/iphoto-downloader-credentials
@@ -436,6 +436,6 @@ jobs:
           3. Configure your sync settings
           4. Start syncing your photos!
           
-          For detailed instructions, see the [README](https://github.com/HenningUe/foto-pool/blob/main/README.md).
+          For detailed instructions, see the [README](https://github.com/HenningUe/iphoto-downloader/blob/main/README.md).
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

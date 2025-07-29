@@ -12,19 +12,19 @@ This directory contains manual testing tools for the 2FA web server implementati
 
 ### Run All Tests
 ```bash
-cd "c:\Users\henningue\Documents\Privat\vscode\foto-pool\foto-pool"
+cd "c:\Users\henningue\Documents\Privat\vscode\iphoto-downloader\iphoto-downloader"
 uv run python tests/manuel/test_web_server_manual.py
 ```
 
 ### Interactive Testing Menu
 ```bash
-cd "c:\Users\henningue\Documents\Privat\vscode\foto-pool\foto-pool"
+cd "c:\Users\henningue\Documents\Privat\vscode\iphoto-downloader\iphoto-downloader"
 uv run python tests/manuel/run_web_server_tests.py
 ```
 
 ### Run Individual Test
 ```bash
-cd "c:\Users\henningue\Documents\Privat\vscode\foto-pool\foto-pool"
+cd "c:\Users\henningue\Documents\Privat\vscode\iphoto-downloader\iphoto-downloader"
 uv run python -c "from tests.manuel.test_web_server_manual import test_basic_server_startup; print(test_basic_server_startup())"
 ```
 

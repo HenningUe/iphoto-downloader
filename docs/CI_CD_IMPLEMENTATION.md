@@ -129,8 +129,8 @@ Successfully implemented a comprehensive CI/CD pipeline for the Foto Pool projec
 6. **Distribution**: Package manager submission preparation
 
 ### Release Assets
-- **Windows Package**: `foto-pool-windows-x64.zip`
-- **Linux Package**: `foto-pool-linux-x64.tar.gz`
+- **Windows Package**: `iphoto-downloader-windows-x64.zip`
+- **Linux Package**: `iphoto-downloader-linux-x64.tar.gz`
 - **Individual Executables**: Platform-specific binaries
 - **Package Manager Files**: APT .deb and WinGet manifests
 

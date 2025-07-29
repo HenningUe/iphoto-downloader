@@ -90,8 +90,8 @@ jobs:
 
     - name: Verify required assets exist
       run: |
-        test -f foto-pool-main.png
-        test -f foto-pool-credentials.png
+        test -f iphoto-downloader-main.png
+        test -f iphoto-downloader-credentials.png
         test -f README.md
         test -f .env.example
         echo "✓ All required build assets exist"

@@ -43,26 +43,26 @@ python run_all_tests.py --help
 
 ```powershell
 # Run all tests
-C:/Users/uekoe/Repos/foto-pool/foto-pool/.venv/Scripts/python.exe -m pytest tests/ -v
+C:/Users/uekoe/Repos/iphoto-downloader/iphoto-downloader/.venv/Scripts/python.exe -m pytest tests/ -v
 
 # Run unit tests only
-C:/Users/uekoe/Repos/foto-pool/foto-pool/.venv/Scripts/python.exe -m pytest tests/unit/ -v
+C:/Users/uekoe/Repos/iphoto-downloader/iphoto-downloader/.venv/Scripts/python.exe -m pytest tests/unit/ -v
 
 # Run integration tests only
-C:/Users/uekoe/Repos/foto-pool/foto-pool/.venv/Scripts/python.exe -m pytest tests/integration/ -v
+C:/Users/uekoe/Repos/iphoto-downloader/iphoto-downloader/.venv/Scripts/python.exe -m pytest tests/integration/ -v
 
 # Run with coverage
-C:/Users/uekoe/Repos/foto-pool/foto-pool/.venv/Scripts/python.exe -m pytest tests/ --cov=src --cov-report=term-missing --cov-report=html
+C:/Users/uekoe/Repos/iphoto-downloader/iphoto-downloader/.venv/Scripts/python.exe -m pytest tests/ --cov=src --cov-report=term-missing --cov-report=html
 
 # Run specific test file
-C:/Users/uekoe/Repos/foto-pool/foto-pool/.venv/Scripts/python.exe -m pytest tests/unit/test_config.py -v
+C:/Users/uekoe/Repos/iphoto-downloader/iphoto-downloader/.venv/Scripts/python.exe -m pytest tests/unit/test_config.py -v
 ```
 
 ### 3. Using the Original Test Runner
 
 ```powershell
 # Run using the existing run_tests.py script
-C:/Users/uekoe/Repos/foto-pool/foto-pool/.venv/Scripts/python.exe tests/run_tests.py
+C:/Users/uekoe/Repos/iphoto-downloader/iphoto-downloader/.venv/Scripts/python.exe tests/run_tests.py
 ```
 
 ### 4. Using VS Code Tasks

@@ -246,7 +246,7 @@ jobs:
       run: |
         echo "Checking build assets..."
         
-        assets=("foto-pool-main.png" "foto-pool-credentials.png")
+        assets=("iphoto-downloader-main.png" "iphoto-downloader-credentials.png")
         for asset in "${assets[@]}"; do
           if [ -f "$asset" ]; then
             echo "✓ $asset exists"

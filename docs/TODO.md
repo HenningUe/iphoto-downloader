@@ -324,10 +324,10 @@ specified.
   - [x] Configure hiddenimports for keyring backends (Windows, macOS, Linux)
   - [x] Set up proper pathex and binaries configuration
   - [x] Ensure delivery artifacts resources are accessible in executable
-  - [x] Configure app icon using `foto-pool-main.png` for cross-platform executable branding
+  - [x] Configure app icon using `iphoto-downloader-main.png` for cross-platform executable branding
 - [x] Write **Credentials Manager PyInstaller spec** for cross-platform builds:
   - [x] Create `manage_credentials.spec` with proper configuration
-  - [x] Configure app icon using `foto-pool-credentials.png` for credentials manager branding
+  - [x] Configure app icon using `iphoto-downloader-credentials.png` for credentials manager branding
   - [x] Set up proper pathex and binaries configuration for credentials manager
   - [x] Configure hiddenimports for keyring backends (Windows, macOS, Linux)
   - [x] Ensure static linking where possible for Linux builds
@@ -375,7 +375,7 @@ specified.
   - [x] Create automated testing tools (`test_build.py`)
   - [ ] Verify executable runs on Ubuntu/Debian
   - [ ] Test delivery artifacts creation on first run
-  - [ ] Verify settings folder detection (~/.local/share/foto-pool)
+  - [ ] Verify settings folder detection (~/.local/share/iphoto-downloader)
   - [ ] Test file copying and user notifications
   - [ ] Test credentials manager executable functionality on Linux
 - [ ] Test **cross-platform compatibility**:

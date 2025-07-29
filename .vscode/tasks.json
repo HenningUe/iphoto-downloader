@@ -4,7 +4,7 @@
 		{
 			"label": "Run All Tests",
 			"type": "shell",
-			"command": "C:/Users/uekoe/Repos/foto-pool/foto-pool/.venv/Scripts/python.exe",
+			"command": "C:/Users/uekoe/Repos/iphoto-downloader/iphoto-downloader/.venv/Scripts/python.exe",
 			"args": [
 				"-m",
 				"pytest",
@@ -18,7 +18,7 @@
 		{
 			"label": "Run Unit Tests",
 			"type": "shell",
-			"command": "C:/Users/uekoe/Repos/foto-pool/foto-pool/.venv/Scripts/python.exe",
+			"command": "C:/Users/uekoe/Repos/iphoto-downloader/iphoto-downloader/.venv/Scripts/python.exe",
 			"args": [
 				"-m",
 				"pytest",
@@ -32,7 +32,7 @@
 		{
 			"label": "Run Tests with Coverage",
 			"type": "shell",
-			"command": "C:/Users/uekoe/Repos/foto-pool/foto-pool/.venv/Scripts/python.exe",
+			"command": "C:/Users/uekoe/Repos/iphoto-downloader/iphoto-downloader/.venv/Scripts/python.exe",
 			"args": [
 				"-m",
 				"pytest",
@@ -48,7 +48,7 @@
 		{
 			"label": "Run Integration Tests",
 			"type": "shell",
-			"command": "C:/Users/uekoe/Repos/foto-pool/foto-pool/.venv/Scripts/python.exe",
+			"command": "C:/Users/uekoe/Repos/iphoto-downloader/iphoto-downloader/.venv/Scripts/python.exe",
 			"args": [
 				"-m",
 				"pytest",

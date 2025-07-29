@@ -6,14 +6,14 @@
 All tasks have been successfully implemented:
 
 #### Main Application PyInstaller Spec
-- ✅ **App Icon**: Added `foto-pool-main.png` icon to `icloud_photo_sync.spec`
+- ✅ **App Icon**: Added `iphoto-downloader-main.png` icon to `icloud_photo_sync.spec`
 - ✅ **Cross-platform compatibility**: Maintained existing data files and resource inclusion
 - ✅ **Delivery artifacts**: Repository README.md and .env.example embedded as resources
 - ✅ **Keyring backends**: Comprehensive hiddenimports for Windows, macOS, Linux
 
 #### Credentials Manager PyInstaller Spec
 - ✅ **New spec file**: Created `manage_credentials.spec` from scratch
-- ✅ **App Icon**: Configured `foto-pool-credentials.png` icon 
+- ✅ **App Icon**: Configured `iphoto-downloader-credentials.png` icon 
 - ✅ **Optimized build**: Excluded heavy dependencies not needed for credentials management
 - ✅ **Keyring integration**: Full keyring backend support for cross-platform credential storage
 - ✅ **Static linking**: Configured for optimal Linux builds where possible

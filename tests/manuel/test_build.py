@@ -149,7 +149,7 @@ class BuildTester:
                     if self.platform == 'windows':
                         settings_path = Path(temp_dir) / 'AppData' / 'Local' / 'FotoPool'
                     else:
-                        settings_path = Path(temp_dir) / '.local' / 'share' / 'foto-pool'
+                        settings_path = Path(temp_dir) / '.local' / 'share' / 'iphoto-downloader'
                     
                     if settings_path.exists():
                         print(f"   Settings folder created: {settings_path}")

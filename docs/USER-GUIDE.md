@@ -22,7 +22,7 @@ Complete guide for installing, configuring, and using the iCloud Photo Sync Tool
 ### Windows Installation
 
 #### Option 1: Download Executable (Recommended)
-1. Go to the [Releases page](https://github.com/HenningUe/foto-pool/releases)
+1. Go to the [Releases page](https://github.com/HenningUe/iphoto-downloader/releases)
 2. Download the latest `icloud_photo_sync.exe` and `manage_credentials.exe`
 3. Place both files in a dedicated folder (e.g., `C:\FotoPool\`)
 4. Run `icloud_photo_sync.exe` for the first time to set up configuration files
@@ -35,8 +35,8 @@ winget install HenningUe.FotoPool
 #### Option 3: From Source
 ```powershell
 # Clone the repository
-git clone https://github.com/HenningUe/foto-pool.git
-cd foto-pool
+git clone https://github.com/HenningUe/iphoto-downloader.git
+cd iphoto-downloader
 
 # Build the executable
 .\build_windows.ps1
@@ -45,7 +45,7 @@ cd foto-pool
 ### Linux Installation
 
 #### Option 1: Download Executable (Recommended)
-1. Go to the [Releases page](https://github.com/HenningUe/foto-pool/releases)
+1. Go to the [Releases page](https://github.com/HenningUe/iphoto-downloader/releases)
 2. Download the latest `icloud_photo_sync` and `manage_credentials` binaries
 3. Make them executable:
    ```bash
@@ -56,18 +56,18 @@ cd foto-pool
 #### Option 2: Install via APT (Ubuntu/Debian)
 ```bash
 # Add the repository
-sudo add-apt-repository ppa:henningue/foto-pool
+sudo add-apt-repository ppa:henningue/iphoto-downloader
 sudo apt update
 
 # Install the package
-sudo apt install foto-pool
+sudo apt install iphoto-downloader
 ```
 
 #### Option 3: From Source
 ```bash
 # Clone the repository
-git clone https://github.com/HenningUe/foto-pool.git
-cd foto-pool
+git clone https://github.com/HenningUe/iphoto-downloader.git
+cd iphoto-downloader
 
 # Build the executable
 ./build_linux.sh
@@ -82,7 +82,7 @@ cd foto-pool
 When you run the application for the first time, it will create a settings folder and copy configuration files:
 
 **Windows**: `%USERPROFILE%\AppData\Local\FotoPool\`
-**Linux**: `~/.local/share/foto-pool/`
+**Linux**: `~/.local/share/iphoto-downloader/`
 
 The following files will be created:
 - `settings.ini` - Your configuration file (edit this)
@@ -270,7 +270,7 @@ DATABASE_PARENT_DIRECTORY=C:\Users\YourName\AppData\Local\FotoPool\Database
 
 **Linux:**
 ```ini
-DATABASE_PARENT_DIRECTORY=/home/username/.local/share/foto-pool/database
+DATABASE_PARENT_DIRECTORY=/home/username/.local/share/iphoto-downloader/database
 ```
 
 #### Option 3: Environment Variables
@@ -282,7 +282,7 @@ DATABASE_PARENT_DIRECTORY=%LOCALAPPDATA%\FotoPool\Database
 
 **Linux:**
 ```ini
-DATABASE_PARENT_DIRECTORY=$HOME/.local/share/foto-pool/database
+DATABASE_PARENT_DIRECTORY=$HOME/.local/share/iphoto-downloader/database
 ```
 
 ### Cross-Platform Environment Variables
@@ -416,7 +416,7 @@ icloud_photo_sync.exe
 **Monitor Logs:**
 Logs are written to:
 - **Windows**: `%USERPROFILE%\AppData\Local\FotoPool\logs\`
-- **Linux**: `~/.local/share/foto-pool/logs/`
+- **Linux**: `~/.local/share/iphoto-downloader/logs/`
 
 ---
 
@@ -496,7 +496,7 @@ OPERATING_MODE=InDevelopment
 
 **Log Locations**:
 - **Windows**: `%USERPROFILE%\AppData\Local\FotoPool\logs\`
-- **Linux**: `~/.local/share/foto-pool/logs/`
+- **Linux**: `~/.local/share/iphoto-downloader/logs/`
 
 **Important Log Files**:
 - `icloud_photo_sync.log` - Main application log
@@ -588,7 +588,7 @@ A: Check your `SYNC_DIRECTORY` setting and ensure the path exists and is writabl
 If you encounter issues not covered in this guide:
 
 1. **Check the logs** in your application's log directory
-2. **Search existing issues** on the [GitHub Issues page](https://github.com/HenningUe/foto-pool/issues)
+2. **Search existing issues** on the [GitHub Issues page](https://github.com/HenningUe/iphoto-downloader/issues)
 3. **Create a new issue** with:
    - Your operating system
    - Application version
