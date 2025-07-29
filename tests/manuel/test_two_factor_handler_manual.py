@@ -16,10 +16,11 @@ from typing import Optional
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "shared"))
 
 from icloud_photo_sync.config import KeyringConfig
 from icloud_photo_sync.logger import setup_logging
-from icloud_photo_sync.auth2fa.two_factor_handler import TwoFactorAuthHandler, handle_2fa_authentication
+from auth2fa import TwoFactorAuthHandler, handle_2fa_authentication
 
 
 def test_complete_2fa_flow():

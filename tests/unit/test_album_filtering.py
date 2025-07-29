@@ -8,6 +8,8 @@ from unittest.mock import Mock
 import logging
 
 from src.icloud_photo_sync.src.icloud_photo_sync.logger import setup_logging
+from src.icloud_photo_sync.src.icloud_photo_sync.icloud_client import iCloudClient
+from src.icloud_photo_sync.src.icloud_photo_sync.config import BaseConfig
 
 
 class TestAlbumFiltering(unittest.TestCase):

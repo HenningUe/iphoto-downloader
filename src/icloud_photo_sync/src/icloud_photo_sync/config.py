@@ -12,6 +12,13 @@ import keyring
 if TYPE_CHECKING:
     from auth2fa.pushover_service import PushoverConfig
 
+# Check if keyring is available and functional
+try:
+    keyring.get_password("test", "test")
+    KEYRING_AVAILABLE = True
+except Exception:
+    KEYRING_AVAILABLE = False
+
 
 class BaseConfig(ABC):
     """Base configuration class with common functionality."""

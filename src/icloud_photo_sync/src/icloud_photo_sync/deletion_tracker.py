@@ -430,9 +430,36 @@ class DeletionTracker:
                         self.logger.error(f"Failed to recreate database: {e2}")
                         return False
 
+        # Check if database has proper schema (even if integrity is OK)
+        if not self._has_required_tables():
+            self.logger.info("Database exists but missing required tables, initializing schema")
+            self._init_database()
+
         # Create backup before operations
         self.create_backup()
         return True
+
+    def _has_required_tables(self) -> bool:
+        """Check if database has the required tables.
+        
+        Returns:
+            True if all required tables exist, False otherwise
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='deleted_photos'")
+                if not cursor.fetchone():
+                    return False
+                    
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='downloaded_photos'")
+                if not cursor.fetchone():
+                    return False
+                    
+                return True
+        except Exception as e:
+            self.logger.error(f"Error checking database tables: {e}")
+            return False
 
     def add_deleted_photo(
         self,
@@ -540,7 +567,7 @@ class DeletionTracker:
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.execute(
-                    "SELECT 1 FROM deleted_photos WHERE filename = ? LIMIT 1",
+                    "SELECT 1 FROM deleted_photos WHERE photo_name = ? LIMIT 1",
                     (filename,)
                 )
                 return cursor.fetchone() is not None
