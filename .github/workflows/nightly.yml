@@ -30,6 +30,11 @@ jobs:
     - name: Install dependencies
       run: uv sync --dev
 
+    - name: Create .env file for testing
+      run: |
+        cp .env.example .env
+        echo "✓ Created .env file from .env.example for testing"
+
     - name: Run extended test suite
       run: |
         uv run pytest -m "not manual" --tb=long --verbose
@@ -70,6 +75,11 @@ jobs:
 
     - name: Install dependencies
       run: uv sync --dev
+
+    - name: Create .env file for testing
+      run: |
+        cp .env.example .env
+        echo "✓ Created .env file from .env.example for testing"
 
     - name: Run performance tests
       run: |
@@ -117,6 +127,11 @@ jobs:
 
     - name: Install dependencies
       run: uv sync --dev
+
+    - name: Create .env file for testing
+      run: |
+        cp .env.example .env
+        echo "✓ Created .env file from .env.example for testing"
 
     - name: Run compatibility tests
       run: |

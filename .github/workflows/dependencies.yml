@@ -27,6 +27,11 @@ jobs:
       run: |
         uv sync --upgrade
 
+    - name: Create .env file for testing
+      run: |
+        cp .env.example .env
+        echo "✓ Created .env file from .env.example for testing"
+
     - name: Run tests with updated dependencies
       run: |
         uv run pytest -m "not manual" --tb=short

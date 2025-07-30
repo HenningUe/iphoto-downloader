@@ -101,6 +101,11 @@ jobs:
         echo "${{ needs.version-validation.outputs.version }}" > VERSION
         echo "Building Windows version: ${{ needs.version-validation.outputs.version }}"
 
+    - name: Create .env file for testing
+      run: |
+        copy .env.example .env
+        echo "✓ Created .env file from .env.example for testing"
+
     - name: Run tests before building
       run: |
         uv run pytest -m "not manual" --tb=short
@@ -155,6 +160,11 @@ jobs:
       run: |
         echo "${{ needs.version-validation.outputs.version }}" > VERSION
         echo "Building Linux version: ${{ needs.version-validation.outputs.version }}"
+
+    - name: Create .env file for testing
+      run: |
+        cp .env.example .env
+        echo "✓ Created .env file from .env.example for testing"
 
     - name: Run tests before building
       run: |
