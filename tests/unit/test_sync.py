@@ -58,7 +58,7 @@ class TestPhotoSyncer:
     def syncer(self, mock_config):
         """Create a PhotoSyncer instance for testing."""
         with (
-            patch("iphoto_downloader.sync.iCloudClient") as mock_client_class,
+            patch("iphoto_downloader.sync.ICloudClient") as mock_client_class,
             patch("iphoto_downloader.sync.DeletionTracker") as mock_tracker_class,
         ):
             mock_client_class.return_value = Mock()
@@ -69,7 +69,7 @@ class TestPhotoSyncer:
     def test_init_creates_components(self, mock_config):
         """Test that initialization creates all required components."""
         with (
-            patch("iphoto_downloader.sync.iCloudClient") as mock_client_class,
+            patch("iphoto_downloader.sync.ICloudClient") as mock_client_class,
             patch("iphoto_downloader.sync.DeletionTracker") as mock_tracker_class,
         ):
             syncer = PhotoSyncer(mock_config)

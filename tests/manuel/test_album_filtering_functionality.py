@@ -98,7 +98,7 @@ def test_album_filtering_configuration():
 
 @pytest.mark.manual
 def test_album_filtering_logic():
-    """Test the album filtering logic in iCloudClient."""
+    """Test the album filtering logic in ICloudClient."""
 
     print("\n🧪 Testing album filtering logic...")
 

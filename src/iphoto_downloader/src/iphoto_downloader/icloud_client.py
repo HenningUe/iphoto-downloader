@@ -607,7 +607,7 @@ class ICloudClient:
 def cleanup_sessions(max_age_days: int = 30, session_dir: Path | None = None) -> None:
     """Standalone utility to clean up expired session files.
 
-    This can be used independently of the iCloudClient class.
+    This can be used independently of the ICloudClient class.
 
     Args:
         max_age_days: Maximum age in days for session files (default: 30)

@@ -123,9 +123,9 @@ def test_album_sync_functionality():
 
 @pytest.mark.manual
 def test_album_client_methods():
-    """Test the new album methods in iCloudClient."""
+    """Test the new album methods in ICloudClient."""
 
-    print("🧪 Testing iCloudClient album methods...")
+    print("🧪 Testing ICloudClient album methods...")
 
     # Create mock config
     config = MockConfig2(
@@ -172,7 +172,7 @@ def test_album_client_methods():
     missing = client.verify_albums_exist(["My Album", "Nonexistent Album"])
     assert missing == ["Nonexistent Album"], f"Expected ['Nonexistent Album'], got {missing}"
 
-    print("✅ iCloudClient album methods test passed!")
+    print("✅ ICloudClient album methods test passed!")
 
     return True
 

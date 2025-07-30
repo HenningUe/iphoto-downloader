@@ -413,7 +413,7 @@ class BaseConfig(ABC):  # noqa
         """Validate that specified album names actually exist in iCloud.
 
         Args:
-            icloud_client: Authenticated iCloudClient instance
+            icloud_client: Authenticated ICloudClient instance
 
         Raises:
             ValueError: If any specified albums don't exist

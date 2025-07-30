@@ -70,7 +70,7 @@ class TestSyncIntegration:
             },
         ]
 
-    @patch("iphoto_downloader.sync.iCloudClient")
+    @patch("iphoto_downloader.sync.ICloudClient")
     def test_integration_sync_new_photos(self, mock_icloud_client_class, mock_config, mock_photos):
         """Integration test: Sync new photos from empty local directory."""
         # Setup mock iCloud client
@@ -113,7 +113,7 @@ class TestSyncIntegration:
             if hasattr(syncer, "deletion_tracker"):
                 syncer.deletion_tracker.close()
 
-    @patch("iphoto_downloader.sync.iCloudClient")
+    @patch("iphoto_downloader.sync.ICloudClient")
     def test_integration_sync_with_existing_photos(
         self, mock_icloud_client_class, mock_config, mock_photos
     ):
@@ -156,7 +156,7 @@ class TestSyncIntegration:
             if hasattr(syncer, "deletion_tracker"):
                 syncer.deletion_tracker.close()
 
-    @patch("iphoto_downloader.sync.iCloudClient")
+    @patch("iphoto_downloader.sync.ICloudClient")
     def test_integration_sync_dry_run_mode(
         self, mock_icloud_client_class, mock_config, mock_photos
     ):
@@ -204,7 +204,7 @@ class TestSyncIntegration:
             if hasattr(syncer, "deletion_tracker"):
                 syncer.deletion_tracker.close()
 
-    @patch("iphoto_downloader.sync.iCloudClient")
+    @patch("iphoto_downloader.sync.ICloudClient")
     def test_integration_sync_authentication_failure(self, mock_icloud_client_class, mock_config):
         """Integration test: Handle authentication failure gracefully."""
         # Setup mock iCloud client with auth failure

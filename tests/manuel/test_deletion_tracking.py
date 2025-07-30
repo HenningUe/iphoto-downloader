@@ -172,7 +172,7 @@ def test_end_to_end_deletion_prevention():
         mock_icloud.list_photos_from_filtered_albums.return_value = [test_photo_info]
         mock_icloud.download_photo.return_value = True
 
-        with patch("iphoto_downloader.sync.iCloudClient", return_value=mock_icloud):
+        with patch("iphoto_downloader.sync.ICloudClient", return_value=mock_icloud):
             syncer = PhotoSyncer(config)
 
             # Create the photo file to simulate successful download

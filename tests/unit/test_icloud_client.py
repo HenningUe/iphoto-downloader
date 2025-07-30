@@ -9,8 +9,8 @@ from iphoto_downloader.icloud_client import ICloudClient
 from iphoto_downloader.logger import setup_logging
 
 
-class TestiCloudClient:
-    """Test the iCloudClient class."""
+class TestICloudClient:
+    """Test the ICloudClient class."""
 
     @pytest.fixture(autouse=True)
     def setup_logger(self):

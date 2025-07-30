@@ -23,7 +23,7 @@ class TestAlbumFiltering(unittest.TestCase):
         self.mock_config = Mock(spec=BaseConfig)
 
         # Create mock iCloud client with proper patching
-        with patch("iphoto_downloader.icloud_client.iCloudClient") as mock_client_class:
+        with patch("iphoto_downloader.icloud_client.ICloudClient") as mock_client_class:
             self.client = Mock()
             self.client._api = Mock()
             self.client._api.photos = Mock()
@@ -42,7 +42,7 @@ class TestAlbumFiltering(unittest.TestCase):
             # Mock the list_albums method
             self.client.list_albums = Mock(return_value=self.mock_albums)
 
-            # Create a real iCloudClient instance for testing the get_filtered_albums method
+            # Create a real ICloudClient instance for testing the get_filtered_albums method
             real_client = ICloudClient(self.mock_config)
             real_client._api = Mock()
             real_client._api.photos = Mock()
