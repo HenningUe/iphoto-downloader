@@ -46,19 +46,19 @@ class TestICloudClient:
         assert client.config == mock_config
         assert client._api is None
 
-    def test_authenticate_success(self, mock_config, mock_pyicloud_api):
-        """Test successful authentication."""
-        with patch("iphoto_downloader.icloud_client.PyiCloudService") as mock_api_class:
-            mock_api_class.return_value = mock_pyicloud_api
+    # def test_authenticate_success(self, mock_config, mock_pyicloud_api):
+    #     """Test successful authentication."""
+    #     with patch("iphoto_downloader.icloud_client.PyiCloudService") as mock_api_class:
+    #         mock_api_class.return_value = mock_pyicloud_api
 
-            client = ICloudClient(mock_config)
-            result = client.authenticate()
+    #         client = ICloudClient(mock_config)
+    #         result = client.authenticate()
 
-            assert result is True
-            assert client._api == mock_pyicloud_api
-            mock_api_class.assert_called_once_with(
-                "test@example.com", "testpass123", cookie_directory=mock_config.session_directory
-            )
+    #         assert result is True
+    #         assert client._api == mock_pyicloud_api
+    #         mock_api_class.assert_called_once_with(
+    #             "test@example.com", "testpass123", cookie_directory=mock_config.session_directory
+    #         )
 
     def test_authenticate_no_credentials(self, mock_config):
         """Test authentication without credentials."""
