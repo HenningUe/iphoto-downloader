@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
+import gc
+import tempfile
+from pathlib import Path
+from unittest.mock import MagicMock
+
 import pytest
+from src.iphoto_downloader.src.iphoto_downloader.config import KeyringConfig
+from src.iphoto_downloader.src.iphoto_downloader.icloud_client import ICloudClient
+from src.iphoto_downloader.src.iphoto_downloader.logger import setup_logging
+from src.iphoto_downloader.src.iphoto_downloader.sync import PhotoSyncer
 
 """
 Test script to verify album filtering functionality implementation.
@@ -7,15 +16,6 @@ Test script to verify album filtering functionality implementation.
 This script tests the album filtering and selection functionality that was requested
 in the TODO.md requirements.
 """
-
-import tempfile
-from pathlib import Path
-from unittest.mock import MagicMock
-
-from src.iphoto_downloader.src.iphoto_downloader.config import KeyringConfig
-from src.iphoto_downloader.src.iphoto_downloader.icloud_client import ICloudClient
-from src.iphoto_downloader.src.iphoto_downloader.logger import setup_logging
-from src.iphoto_downloader.src.iphoto_downloader.sync import PhotoSyncer
 
 
 def create_test_config(temp_dir, **env_vars):
@@ -102,6 +102,9 @@ def test_album_filtering_logic():
 
     print("\n🧪 Testing album filtering logic...")
 
+    # Set up logging first
+    setup_logging()
+
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create test config
         config = create_test_config(
@@ -116,24 +119,46 @@ def test_album_filtering_logic():
         # Mock albums - mix of personal and shared
         mock_allowed_personal = MagicMock()
         mock_allowed_personal.title = "Allowed Album"
+        mock_allowed_personal.name = "Allowed Album"
         mock_allowed_personal.id = "personal1"
         mock_allowed_personal.photos = []
         mock_allowed_personal.isShared = False
+        mock_allowed_personal.list_type = "personal"
+        mock_allowed_personal.__len__ = lambda: 0
 
         mock_denied_personal = MagicMock()
         mock_denied_personal.title = "Denied Album"
+        mock_denied_personal.name = "Denied Album"
         mock_denied_personal.id = "personal2"
         mock_denied_personal.photos = []
         mock_denied_personal.isShared = False
+        mock_denied_personal.list_type = "personal"
+        mock_denied_personal.__len__ = lambda: 0
 
         mock_shared = MagicMock()
         mock_shared.title = "Shared Album"
+        mock_shared.name = "Shared Album"
         mock_shared.id = "shared1"
         mock_shared.photos = []
         mock_shared.isShared = True
+        mock_shared.list_type = "sharedstream"
+        mock_shared.__len__ = lambda: 0
+
+        # Create mock library album for shared streams
+        mock_library = MagicMock()
+        mock_library.name = "Library"
+        mock_library.service = MagicMock()
+        mock_library.service.shared_streams = {"shared1": mock_shared}
+
+        # Create albums container mock
+        mock_albums_container = {
+            "personal1": mock_allowed_personal,
+            "personal2": mock_denied_personal,
+            "Library": mock_library,
+        }
 
         mock_photos_service = MagicMock()
-        mock_photos_service.albums = [mock_allowed_personal, mock_denied_personal, mock_shared]
+        mock_photos_service.albums = mock_albums_container
 
         client._api = MagicMock()
         client._api.photos = mock_photos_service
@@ -186,6 +211,9 @@ def test_end_to_end_album_filtering():
     """Test end-to-end album filtering in sync process."""
 
     print("\n🧪 Testing end-to-end album filtering...")
+
+    # Set up logging first
+    setup_logging()
 
     with tempfile.TemporaryDirectory() as temp_dir:
         sync_dir = Path(temp_dir) / "sync"
@@ -241,9 +269,7 @@ def test_end_to_end_album_filtering():
         assert result is True
 
         # Verify that album filtering was used
-        mock_client.list_photos_from_filtered_albums.assert_called_once_with(
-            config, include_main_library=True
-        )
+        mock_client.list_photos_from_filtered_albums.assert_called_once_with(config)
 
         # Check statistics
         stats = syncer.get_stats()
@@ -254,6 +280,15 @@ def test_end_to_end_album_filtering():
         print(f"   - Total photos processed: {stats['total_photos']}")
         print("   - Photos from personal albums: ✅")
         print("   - Shared albums excluded: ✅")
+
+        # Clean up database connections before temp directory cleanup
+        try:
+            if hasattr(syncer, "deletion_tracker"):
+                syncer.deletion_tracker.close()
+        except Exception as e:
+            print(f"Warning: Database cleanup error: {e}")
+            # Force garbage collection to close any lingering connections
+            gc.collect()
 
 
 if __name__ == "__main__":

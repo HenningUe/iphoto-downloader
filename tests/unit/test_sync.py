@@ -1,24 +1,17 @@
-"""Unit tests for sync module."""
+"""Tests for sync module."""
 
+import os
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 import pytest
 
-from iphoto_downloader.config import get_config
-from iphoto_downloader.logger import setup_logging
 from iphoto_downloader.sync import PhotoSyncer
 
 
 class TestPhotoSyncer:
     """Test the PhotoSyncer class."""
-
-    @pytest.fixture(autouse=True)
-    def setup_logger(self):
-        """Setup logging for tests."""
-        config = get_config()
-        setup_logging(config.get_log_level())
 
     @pytest.fixture
     def temp_dir(self):
@@ -175,7 +168,6 @@ class TestPhotoSyncer:
 
         # Should include image files but not text files
         # Files in subdirectories should include the relative path
-        import os
 
         expected_subdirectory_file = f"subdir{os.sep}test5.jpg"
         expected_files = {"test1.jpg", "test2.png", "test3.jpeg", expected_subdirectory_file}
@@ -260,7 +252,6 @@ class TestPhotoSyncer:
             # Mock download success and create fake file
             def mock_download_photo(photo_info, local_path):
                 # Create a fake file with the right size
-                from pathlib import Path
 
                 Path(local_path).parent.mkdir(parents=True, exist_ok=True)
                 Path(local_path).write_bytes(b"x" * photo_info["size"])

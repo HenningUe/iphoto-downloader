@@ -8,7 +8,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from iphoto_downloader.logger import setup_logging
 from iphoto_downloader.sync import PhotoSyncer
 
 
@@ -16,33 +15,34 @@ from iphoto_downloader.sync import PhotoSyncer
 class TestSyncIntegration:
     """Integration tests for complete sync workflows."""
 
-    @pytest.fixture(autouse=True)
-    def setup_logging(self):
-        """Setup logging for all tests."""
-        from iphoto_downloader.config import BaseConfig
-
-        # Create a minimal config for logging setup
-        mock_log_config = Mock(spec=BaseConfig)
-        mock_log_config.get_log_level.return_value = 20  # INFO level
-
-        setup_logging(mock_log_config)
-
     @pytest.fixture
     def mock_config(self, tmp_path):
         """Create a mock configuration for integration testing."""
         config = Mock()
         config.icloud_username = "test@example.com"
         config.icloud_password = "test-password"
-        config.sync_directory = tmp_path / "photos"
+
+        # Use real Path objects for directories
+        sync_dir = tmp_path / "photos"
+        sync_dir.mkdir(parents=True, exist_ok=True)
+        config.sync_directory = sync_dir
+
+        db_path = tmp_path / "test_database.db"
+        config.database_path = db_path
+
         config.dry_run = False
         config.log_level = "INFO"
         config.max_downloads = 0
         config.max_file_size_mb = 0
+        config.personal_album_names_to_include = []  # Add empty list
+        config.shared_album_names_to_include = []  # Add empty list
         config.ensure_sync_directory.return_value = None
         config.get_log_level.return_value = 20  # INFO level
+        config.validate_albums_exist.return_value = None  # Add this method
+        config.get_pushover_config.return_value = None  # Add this method
 
-        # Ensure the sync directory exists
-        config.sync_directory.mkdir(parents=True, exist_ok=True)
+        # Ensure the database directory exists
+        config.database_path.parent.mkdir(parents=True, exist_ok=True)
 
         return config
 
@@ -70,6 +70,21 @@ class TestSyncIntegration:
             },
         ]
 
+    def create_deletion_tracker_mock(self):
+        """Create a properly configured DeletionTracker mock."""
+        mock_tracker = Mock()
+        mock_tracker.get_deleted_photos.return_value = set()
+        mock_tracker.detect_locally_deleted_photos.return_value = set()
+        mock_tracker.mark_photos_as_deleted.return_value = None
+        mock_tracker.get_downloaded_photos.return_value = {}
+        mock_tracker.remove_deleted_photo.return_value = None
+        mock_tracker.track_download.return_value = None
+        mock_tracker.get_stats.return_value = {"total_deleted": 0}
+        mock_tracker.is_photo_deleted.return_value = False  # Add this
+        mock_tracker.is_photo_downloaded.return_value = False  # Add this
+        mock_tracker.close.return_value = None
+        return mock_tracker
+
     @patch("iphoto_downloader.sync.ICloudClient")
     def test_integration_sync_new_photos(self, mock_icloud_client_class, mock_config, mock_photos):
         """Integration test: Sync new photos from empty local directory."""
@@ -79,6 +94,7 @@ class TestSyncIntegration:
         mock_client.authenticate.return_value = True
         mock_client.requires_2fa.return_value = False
         mock_client.list_photos.return_value = mock_photos
+        mock_client.list_photos_from_filtered_albums.return_value = iter(mock_photos)  # Add this
 
         # Mock successful downloads with file creation
         def mock_download_photo(photo_info, local_path):
@@ -89,8 +105,11 @@ class TestSyncIntegration:
         mock_client.download_photo.side_effect = mock_download_photo
 
         # Run sync
-        syncer = PhotoSyncer(mock_config)
-        try:
+        with patch("iphoto_downloader.sync.DeletionTracker") as mock_deletion_tracker_class:
+            mock_tracker = self.create_deletion_tracker_mock()
+            mock_deletion_tracker_class.return_value = mock_tracker
+
+            syncer = PhotoSyncer(mock_config)
             result = syncer.sync()
 
             # Verify results
@@ -108,10 +127,6 @@ class TestSyncIntegration:
             assert (photos_dir / "vacation_01.jpg").exists()
             assert (photos_dir / "vacation_02.jpg").exists()
             assert (photos_dir / "family_portrait.png").exists()
-        finally:
-            # Cleanup
-            if hasattr(syncer, "deletion_tracker"):
-                syncer.deletion_tracker.close()
 
     @patch("iphoto_downloader.sync.ICloudClient")
     def test_integration_sync_with_existing_photos(
@@ -129,6 +144,7 @@ class TestSyncIntegration:
         mock_client.authenticate.return_value = True
         mock_client.requires_2fa.return_value = False
         mock_client.list_photos.return_value = mock_photos
+        mock_client.list_photos_from_filtered_albums.return_value = iter(mock_photos)  # Add this
 
         # Mock successful downloads for new photos only
         def mock_download_photo(photo_info, local_path):
@@ -139,8 +155,11 @@ class TestSyncIntegration:
         mock_client.download_photo.side_effect = mock_download_photo
 
         # Run sync
-        syncer = PhotoSyncer(mock_config)
-        try:
+        with patch("iphoto_downloader.sync.DeletionTracker") as mock_deletion_tracker_class:
+            mock_tracker = self.create_deletion_tracker_mock()
+            mock_deletion_tracker_class.return_value = mock_tracker
+
+            syncer = PhotoSyncer(mock_config)
             result = syncer.sync()
 
             # Verify results
@@ -151,10 +170,6 @@ class TestSyncIntegration:
             assert stats["already_exists"] == 1  # vacation_01.jpg already existed
             assert stats["deleted_skipped"] == 0
             assert stats["errors"] == 0
-        finally:
-            # Cleanup
-            if hasattr(syncer, "deletion_tracker"):
-                syncer.deletion_tracker.close()
 
     @patch("iphoto_downloader.sync.ICloudClient")
     def test_integration_sync_dry_run_mode(
@@ -170,13 +185,17 @@ class TestSyncIntegration:
         mock_client.authenticate.return_value = True
         mock_client.requires_2fa.return_value = False
         mock_client.list_photos.return_value = mock_photos
+        mock_client.list_photos_from_filtered_albums.return_value = iter(mock_photos)  # Add this
 
         # Download should not be called in dry-run mode
         mock_client.download_photo = Mock()
 
         # Run sync
-        syncer = PhotoSyncer(mock_config)
-        try:
+        with patch("iphoto_downloader.sync.DeletionTracker") as mock_deletion_tracker_class:
+            mock_tracker = self.create_deletion_tracker_mock()
+            mock_deletion_tracker_class.return_value = mock_tracker
+
+            syncer = PhotoSyncer(mock_config)
             result = syncer.sync()
 
             # Verify results
@@ -199,10 +218,6 @@ class TestSyncIntegration:
 
             # Verify download_photo was not called
             mock_client.download_photo.assert_not_called()
-        finally:
-            # Cleanup
-            if hasattr(syncer, "deletion_tracker"):
-                syncer.deletion_tracker.close()
 
     @patch("iphoto_downloader.sync.ICloudClient")
     def test_integration_sync_authentication_failure(self, mock_icloud_client_class, mock_config):
@@ -212,19 +227,15 @@ class TestSyncIntegration:
         mock_icloud_client_class.return_value = mock_client
         mock_client.authenticate.return_value = False
 
-        # Run sync
+        # Run sync - should handle auth failure gracefully
         syncer = PhotoSyncer(mock_config)
-        try:
-            result = syncer.sync()
+        result = syncer.sync()
 
-            # Verify failure
-            assert result is False
-            stats = syncer.get_stats()
-            # Authentication failure is not counted as an error in stats,
-            # it's a precondition failure that prevents the sync from starting
-            assert stats["errors"] == 0  # No processing errors occurred
-            assert stats["total_photos"] == 0  # No photos were processed
-        finally:
-            # Cleanup
-            if hasattr(syncer, "deletion_tracker"):
-                syncer.deletion_tracker.close()
+        # Verify authentication failure is handled
+        assert result is False  # Sync should fail gracefully
+        stats = syncer.get_stats()
+        assert stats["total_photos"] == 0
+        assert stats["new_downloads"] == 0
+        assert stats["already_exists"] == 0
+        assert stats["deleted_skipped"] == 0
+        assert stats["errors"] == 0  # Auth failure shouldn't be counted as an error

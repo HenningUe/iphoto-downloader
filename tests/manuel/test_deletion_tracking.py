@@ -3,6 +3,7 @@ import pytest
 
 """Test script to verify deletion tracking functionality."""
 
+import contextlib
 import logging
 import os
 import sys
@@ -145,6 +146,7 @@ def test_end_to_end_deletion_prevention():
         # Create mock config
         config = Mock(spec=BaseConfig)
         config.sync_directory = sync_dir
+        config.database_path = sync_dir / "test.db"
         config.max_downloads = 100
         config.dry_run = False
         config.personal_album_names_to_include = []
@@ -227,6 +229,11 @@ def test_end_to_end_deletion_prevention():
             # Verify the photo was NOT re-downloaded
             mock_icloud.download_photo.assert_not_called()
             logger.info("✅ Photo was NOT re-downloaded (correct behavior)")
+
+            # Ensure database is closed before cleanup
+            if hasattr(syncer, "deletion_tracker") and syncer.deletion_tracker:
+                with contextlib.suppress(Exception):
+                    syncer.deletion_tracker.close()
 
             assert skip_count == 1, "Photo should have been skipped due to deletion tracking"
 

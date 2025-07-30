@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-import pytest
 
 """Test script to verify enhanced photo tracking with album-aware schema."""
 
+import builtins
+import contextlib
 import sqlite3
 import sys
+import time
 from pathlib import Path
+
+import pytest
 
 # Add src to Python path
 sys.path.insert(0, str(Path(__file__).parent / "src" / "iphoto_downloader" / "src"))
@@ -127,9 +131,21 @@ def test_album_aware_tracking():
         print(f"❌ Test failed with error: {e}")
         return False
     finally:
-        # Cleanup
+        # Ensure tracker is closed before cleanup
+        if "tracker" in locals():
+            tracker = locals()["tracker"]
+            with contextlib.suppress(builtins.BaseException):
+                tracker.close()
+        # Cleanup with retry for Windows
         if Path(test_db_path).exists():
-            Path(test_db_path).unlink()
+            import time
+
+            for _ in range(5):
+                try:
+                    Path(test_db_path).unlink()
+                    break
+                except PermissionError:
+                    time.sleep(0.1)
 
 
 @pytest.mark.manual
@@ -194,9 +210,20 @@ def test_legacy_migration():
         print(f"❌ Migration test failed: {e}")
         return False
     finally:
-        # Cleanup
+        # Ensure tracker is closed before cleanup
+        if "tracker" in locals():
+            tracker = locals()["tracker"]
+            with contextlib.suppress(Exception):
+                tracker.close()
+        # Cleanup with retry for Windows
         if Path(test_db_path).exists():
-            Path(test_db_path).unlink()
+
+            for _ in range(5):
+                try:
+                    Path(test_db_path).unlink()
+                    break
+                except PermissionError:
+                    time.sleep(0.1)
 
 
 if __name__ == "__main__":

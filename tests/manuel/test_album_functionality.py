@@ -27,9 +27,33 @@ class MockConfig:
         self.max_downloads = 0
         self.max_file_size_mb = 0
         self.log_level = "INFO"
+        # Album filtering properties
+        self.include_personal_albums = True
+        self.include_shared_albums = False
+        self.personal_album_names_to_include = []
+        self.shared_album_names_to_include = []
 
     def get_log_level(self):
         return 30  # INFO level
+
+    def ensure_sync_directory(self):
+        """Ensure sync directory exists."""
+        if hasattr(self.sync_directory, "mkdir"):
+            self.sync_directory.mkdir(exist_ok=True)
+        return self.sync_directory
+
+    @property
+    def database_path(self):
+        """Database path property."""
+        return self.sync_directory / "test.db"
+
+    def get_pushover_config(self):
+        """Get pushover config."""
+        return None
+
+    def validate_albums_exist(self, client):
+        """Mock validate albums exist."""
+        return []
 
 
 class MockConfig2(MockConfig):
@@ -46,6 +70,11 @@ def test_album_sync_functionality():
     """Test that album-based sync creates proper subfolder structure."""
 
     print("🧪 Testing album-based photo sync functionality...")
+
+    # Set up logging first
+    from src.iphoto_downloader.src.iphoto_downloader.logger import setup_logging
+
+    setup_logging()
 
     # Create temporary directory for testing
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -99,6 +128,13 @@ def test_album_sync_functionality():
         # Run sync
         result = syncer.sync()
 
+        # Ensure database is closed before cleanup
+        if hasattr(syncer, "deletion_tracker") and syncer.deletion_tracker:
+            try:
+                syncer.deletion_tracker.close()
+            except Exception:
+                pass
+
         # Verify the sync completed successfully
         assert result is True, "Sync should complete successfully"
 
@@ -127,6 +163,11 @@ def test_album_client_methods():
 
     print("🧪 Testing ICloudClient album methods...")
 
+    # Set up logging first
+    from src.iphoto_downloader.src.iphoto_downloader.logger import setup_logging
+
+    setup_logging()
+
     # Create mock config
     config = MockConfig2(
         sync_directory=Path("/tmp"),
@@ -144,18 +185,33 @@ def test_album_client_methods():
     # Mock API for authenticated tests
     mock_album1 = MagicMock()
     mock_album1.title = "My Album"
+    mock_album1.name = "My Album"
     mock_album1.id = "album1"
     mock_album1.photos = []
     mock_album1.isShared = False
+    mock_album1.list_type = "personal"
+    mock_album1.__len__ = lambda: 0
 
     mock_album2 = MagicMock()
     mock_album2.title = "Shared Album"
+    mock_album2.name = "Shared Album"
     mock_album2.id = "album2"
     mock_album2.photos = []
     mock_album2.isShared = True
+    mock_album2.list_type = "sharedstream"
+    mock_album2.__len__ = lambda: 0
+
+    # Create mock library album for shared streams
+    mock_library = MagicMock()
+    mock_library.name = "Library"
+    mock_library.service = MagicMock()
+    mock_library.service.shared_streams = {"album2": mock_album2}
+
+    # Create albums container mock
+    mock_albums_container = {"album1": mock_album1, "Library": mock_library}
 
     mock_photos_service = MagicMock()
-    mock_photos_service.albums = [mock_album1, mock_album2]
+    mock_photos_service.albums = mock_albums_container
 
     client._api = MagicMock()
     client._api.photos = mock_photos_service
@@ -169,8 +225,9 @@ def test_album_client_methods():
     assert albums[1]["is_shared"] is True
 
     # Test verify_albums_exist
-    missing = client.verify_albums_exist(["My Album", "Nonexistent Album"])
+    all_albums, existing, missing = client.verify_albums_exist(["My Album", "Nonexistent Album"])
     assert missing == ["Nonexistent Album"], f"Expected ['Nonexistent Album'], got {missing}"
+    assert existing == ["My Album"], f"Expected ['My Album'], got {existing}"
 
     print("✅ ICloudClient album methods test passed!")
 

@@ -173,7 +173,7 @@ the appropriate configuration class:
 
 1. **Store credentials securely:**
    ```bash
-   uv run python manage_credentials.py
+   uv run python iphoto_downloader_credentials.py
    ```
 
 2. **Update your .env file to only include sync settings:**

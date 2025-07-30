@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import pytest
 
 """Quick test script to verify database safety methods integration."""
 
@@ -8,6 +7,8 @@ import os
 import sys
 import tempfile
 from pathlib import Path
+
+import pytest
 
 from iphoto_downloader.deletion_tracker import DeletionTracker
 from iphoto_downloader.logger import setup_logging
@@ -104,7 +105,7 @@ def test_database_safety_integration():
     all_passed = all(test_results.values())
 
     # Write results to file
-    with open("test_results.txt", "w") as f:
+    with open("test_results.txt", "w", encoding="utf-8") as f:
         f.write("Database Safety Methods Integration Test Results\n")
         f.write("=" * 50 + "\n\n")
 

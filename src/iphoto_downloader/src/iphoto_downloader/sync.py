@@ -1,5 +1,7 @@
 """Core sync logic for iPhoto Downloader Tool."""
 
+import contextlib
+import re
 import typing as t
 
 from auth2fa.pushover_service import PushoverService as PushoverNotificationService
@@ -406,7 +408,6 @@ class PhotoSyncer:
             Sanitized folder name
         """
         # Remove or replace invalid characters for folder names
-        import re
 
         # Replace invalid characters with underscores
         sanitized = re.sub(r'[<>:"/\\|?*]', "_", album_name)
@@ -481,10 +482,13 @@ class PhotoSyncer:
         try:
             if hasattr(self, "deletion_tracker") and self.deletion_tracker:
                 self.deletion_tracker.close()
-                self.logger.debug("✅ Deletion tracker database connections closed")
+                # Only log if logger is available
+                with contextlib.suppress(RuntimeError):
+                    self.logger.debug("✅ Deletion tracker database connections closed")
         except Exception as e:
             # Log but don't raise - cleanup should be best effort
-            self.logger.warning(f"⚠️ Error during cleanup: {e}")
+            with contextlib.suppress(RuntimeError):
+                self.logger.warning(f"⚠️ Error during cleanup: {e}")
 
     def __del__(self):
         """Destructor to ensure cleanup happens even if not called explicitly."""
