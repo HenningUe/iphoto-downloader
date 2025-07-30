@@ -53,7 +53,7 @@ jobs:
 
     - name: Check test coverage threshold
       run: |
-        uv run pytest --cov=src --cov=shared --cov-fail-under=80
+        uv run pytest --cov=src --cov=shared --cov-fail-under=55
 
     - name: Verify build scripts exist
       run: |

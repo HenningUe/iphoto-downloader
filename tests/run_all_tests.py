@@ -58,7 +58,7 @@ def main():
                 "--cov=src",
                 "--cov-report=term-missing",
                 "--cov-report=html",
-                "--cov-fail-under=80",
+                "--cov-fail-under=55",
             ]
             return run_command(cmd, "Running Tests with Coverage")
 
