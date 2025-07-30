@@ -16,7 +16,9 @@ def main() -> None:
     """Main entry point for the application."""
     version = get_version()
     print(f"🌟 iPhoto Downloader Tool v{version}")
-    print("==================================")
+    print("=" * 60)
+    print(" ")
+    print("For help, visit: https://github.com/HenningUe/iphoto-downloader/blob/main/USER-GUIDE.md")
 
     config = None
     logger = None

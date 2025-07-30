@@ -17,6 +17,8 @@ def main():
     version = get_version()
     print(f"🔑 iPhoto Downloader - Credential Manager v{version}")
     print("=" * 60)
+    print(" ")
+    print("For help, visit: https://github.com/HenningUe/iphoto-downloader/blob/main/USER-GUIDE.md")
 
     logger.setup_logging()
     # Handle delivery artifacts for 'Delivered' mode
