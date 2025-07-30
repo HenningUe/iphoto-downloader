@@ -13,7 +13,12 @@
 			],
 			"group": "test",
 			"isBackground": false,
-			"problemMatcher": []
+			"problemMatcher": [],
+			"options": {
+				"env": {
+					"PYTHONPATH": "${workspaceFolder}/src/iphoto_downloader/src;${workspaceFolder}/shared/auth2fa/src;${workspaceFolder}/tests;${workspaceFolder}"
+				}
+			}
 		},
 		{
 			"label": "Run Unit Tests",
@@ -27,7 +32,12 @@
 			],
 			"group": "test",
 			"isBackground": false,
-			"problemMatcher": []
+			"problemMatcher": [],
+			"options": {
+				"env": {
+					"PYTHONPATH": "${workspaceFolder}/src/iphoto_downloader/src;${workspaceFolder}/shared/auth2fa/src;${workspaceFolder}/tests;${workspaceFolder}"
+				}
+			}
 		},
 		{
 			"label": "Run Tests with Coverage",
@@ -43,7 +53,12 @@
 			],
 			"group": "test",
 			"isBackground": false,
-			"problemMatcher": []
+			"problemMatcher": [],
+			"options": {
+				"env": {
+					"PYTHONPATH": "${workspaceFolder}/src/iphoto_downloader/src;${workspaceFolder}/shared/auth2fa/src;${workspaceFolder}/tests;${workspaceFolder}"
+				}
+			}
 		},
 		{
 			"label": "Run Integration Tests",
@@ -57,7 +72,29 @@
 			],
 			"group": "test",
 			"isBackground": false,
-			"problemMatcher": []
+			"problemMatcher": [],
+			"options": {
+				"env": {
+					"PYTHONPATH": "${workspaceFolder}/src/iphoto_downloader/src;${workspaceFolder}/shared/auth2fa/src;${workspaceFolder}/tests;${workspaceFolder}"
+				}
+			}
+		},
+		{
+			"label": "Test auth2fa Import",
+			"type": "shell",
+			"command": "C:/Users/uekoe/Repos/iphoto-downloader/iphoto-downloader/.venv/Scripts/python.exe",
+			"args": [
+				"-c",
+				"import sys; sys.path.insert(0, 'shared/auth2fa/src'); from auth2fa.pushover_service import PushoverService; print('✅ auth2fa import successful')"
+			],
+			"group": "test",
+			"isBackground": false,
+			"problemMatcher": [],
+			"options": {
+				"env": {
+					"PYTHONPATH": "${workspaceFolder}/src/iphoto_downloader/src;${workspaceFolder}/shared/auth2fa/src;${workspaceFolder}/tests;${workspaceFolder}"
+				}
+			}
 		}
 	]
 }

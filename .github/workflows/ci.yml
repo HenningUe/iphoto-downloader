@@ -92,6 +92,6 @@ jobs:
       run: |
         test -f iphoto-downloader-main.png
         test -f iphoto-downloader-credentials.png
-        test -f README.md
+        test -f USER-GUIDE.md
         test -f .env.example
         echo "✓ All required build assets exist"

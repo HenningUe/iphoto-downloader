@@ -85,7 +85,7 @@ class TestDeliveryArtifactsManager(unittest.TestCase):
         with patch.object(self.manager, '_get_repository_readme_path') as mock_readme, \
              patch.object(self.manager, '_get_repository_env_example_path') as mock_env:
             
-            mock_readme.return_value = Path('fake_readme.md')
+            mock_readme.return_value = Path('fake_USER-GUIDE.md')
             mock_env.return_value = Path('fake_env.example')
             
             missing_files = self.manager._check_required_files('operation')
@@ -96,8 +96,8 @@ class TestDeliveryArtifactsManager(unittest.TestCase):
         # Create test missing files structure with real supported file names
         missing_files = [
             {
-                'src': 'README.md',
-                'dest': self.settings_folder / 'README.md'
+                'src': 'USER-GUIDE.md',
+                'dest': self.settings_folder / 'USER-GUIDE.md'
             }
         ]
         
@@ -106,7 +106,7 @@ class TestDeliveryArtifactsManager(unittest.TestCase):
             self.manager._copy_missing_files(missing_files)
             
             # Verify the copy method was called with correct arguments
-            mock_copy.assert_called_once_with('README.md', self.settings_folder / 'README.md')
+            mock_copy.assert_called_once_with('USER-GUIDE.md', self.settings_folder / 'USER-GUIDE.md')
 
     def test_graceful_program_termination(self):
         """Test graceful program termination on critical errors."""

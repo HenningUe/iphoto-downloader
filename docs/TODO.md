@@ -11,7 +11,7 @@ specified.
 - [x] Add `pyicloud` dependency
 - [x] Add linting tools: `ruff`, `mypy`
 - [x] Add `.gitignore` for Python, build outputs, and virtual environments
-- [x] Add `README.md` with project overview
+- [x] Add `USER-GUIDE.md` with project overview
 
 ---
 
@@ -123,14 +123,14 @@ specified.
   - [x] Add mode-specific behavior switching in main application logic
 - [x] Implement **"Delivered" mode functionality**:
   - [x] Add settings folder path detection based on user directory structure
-  - [x] Implement required files existence check (README.md,
+  - [x] Implement required files existence check (USER-GUIDE.md,
         settings.ini.template, settings.ini)
   - [x] Create file copying mechanism for missing delivery artifacts
   - [x] Add user notification system for copied files with detailed location
         info
   - [x] Implement graceful program termination after file copying
 - [x] Implement **automatic file management in "Delivered" mode**:
-  - [x] Copy README.md to settings folder on every startup (overwrite existing)
+  - [x] Copy USER-GUIDE.md to settings folder on every startup (overwrite existing)
   - [x] Copy .env.example to settings folder on every startup (overwrite
         existing). Change target file name depending on the context. I.e. either
         ".env" or "settings.ini".
@@ -259,22 +259,22 @@ specified.
 
 ## 3️⃣ 📦 Versioning
 
-- [ ] Implement **semver-based versioning**:
-  - [ ] Set up semantic versioning scheme (MAJOR.MINOR.PATCH)
-  - [ ] Define version increment rules for different change types
-- [ ] Implement **VERSION file management**:
-  - [ ] Create VERSION file generation during release process
-  - [ ] Store release version as plain text in VERSION file
-  - [ ] Include VERSION file as artifact in PyInstaller executable builds
-- [ ] Implement **version display in applications**:
-  - [ ] Add version reading from VERSION file in startup message
-  - [ ] Implement fallback to "dev" version when VERSION file doesn't exist
-  - [ ] Add version display for both iphoto_downloader and
+- [x] Implement **semver-based versioning**:
+  - [x] Set up semantic versioning scheme (MAJOR.MINOR.PATCH)
+  - [x] Define version increment rules for different change types
+- [x] Implement **VERSION file management**:
+  - [x] Create VERSION file generation during release process
+  - [x] Store release version as plain text in VERSION file
+  - [x] Include VERSION file as artifact in PyInstaller executable builds
+- [x] Implement **version display in applications**:
+  - [x] Add version reading from VERSION file in startup message
+  - [x] Implement fallback to "dev" version when VERSION file doesn't exist
+  - [x] Add version display for both iphoto_downloader and
         iphoto_downloader_credentials apps
-- [ ] Integrate **versioning with CI/CD pipeline**:
-  - [ ] Automate VERSION file creation during release builds
-  - [ ] Ensure version consistency across release artifacts
-  - [ ] Add version validation in build process
+- [x] Integrate **versioning with CI/CD pipeline**:
+  - [x] Automate VERSION file creation during release builds
+  - [x] Ensure version consistency across release artifacts
+  - [x] Add version validation in build process
 
 ---
 
@@ -321,7 +321,7 @@ specified.
   - [x] Test file copying mechanism for missing artifacts
   - [x] Test user notification system for copied files
   - [x] Test graceful program termination after file operations
-  - [x] Test automatic file updates in "Delivered" mode (README.md,
+  - [x] Test automatic file updates in "Delivered" mode (USER-GUIDE.md,
         settings.ini.template)
   - [x] Test settings.ini preservation in "Delivered" mode
   - [x] Test executable default mode behavior (should be "Delivered")
@@ -347,7 +347,7 @@ specified.
 
 - [x] Write **PyInstaller spec** for cross-platform builds:
   - [x] Create `iphoto_downloader.spec` with proper data files inclusion
-  - [x] Include repository `README.md` and `.env.example` as embedded resources
+  - [x] Include repository `USER-GUIDE.md` and `.env.example` as embedded resources
   - [x] Configure hiddenimports for keyring backends (Windows, macOS, Linux)
   - [x] Set up proper pathex and binaries configuration
   - [x] Ensure delivery artifacts resources are accessible in executable
@@ -387,7 +387,7 @@ specified.
 ### 6.3 Resource Management in Builds
 
 - [x] Implement **delivery artifacts integration**:
-  - [x] Ensure repository `README.md` is embedded in executable
+  - [x] Ensure repository `USER-GUIDE.md` is embedded in executable
   - [x] Ensure repository `.env.example` is embedded as template source
   - [x] Configure path resolution for PyInstaller frozen mode vs development
   - [x] Test resource access in both development and packaged modes
@@ -493,12 +493,12 @@ specified.
   - [x] Set default operating mode to "InDevelopment" for development
         environment
   - [x] Implement settings folder detection for "Delivered" mode
-  - [x] Implement required files check (README.md, settings.ini.template,
+  - [x] Implement required files check (USER-GUIDE.md, settings.ini.template,
         settings.ini)
   - [x] Add file copying mechanism for missing delivery artifacts
   - [x] Implement program termination with user notification when files are
         missing
-  - [x] Add automatic copying of README.md and settings.ini.template on each
+  - [x] Add automatic copying of USER-GUIDE.md and settings.ini.template on each
         "Delivered" mode startup
   - [x] Ensure settings.ini is never overwritten in "Delivered" mode
   - [x] Set "Delivered" mode as default for executable packages (PyInstaller)
@@ -559,12 +559,12 @@ specified.
   - [x] **Delivery artifacts management** works correctly:
     - [x] Executable defaults to "Delivered" mode
     - [x] Settings folder is created/detected correctly
-    - [x] Required files (README.md, settings.ini.template, settings.ini) are
+    - [x] Required files (USER-GUIDE.md, settings.ini.template, settings.ini) are
           copied when missing
     - [x] User receives clear notification about copied files and their purpose
     - [x] Program terminates gracefully after copying files with instruction to
           adjust settings.ini
-    - [x] README.md and settings.ini.template are updated on each startup
+    - [x] USER-GUIDE.md and settings.ini.template are updated on each startup
     - [x] Existing settings.ini is preserved and never overwritten
   - [ ] No credentials leaked in binary
   - [ ] Handles credential failures gracefully

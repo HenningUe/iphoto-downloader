@@ -12,8 +12,15 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "Building iPhoto Downloader Tool for Windows" -ForegroundColor Green
-Write-Host "================================================" -ForegroundColor Green
+# Display version information
+$versionFile = "VERSION"
+$version = "dev"
+if (Test-Path $versionFile) {
+    $version = (Get-Content $versionFile -Raw).Trim()
+}
+
+Write-Host "Building iPhoto Downloader Tool v$version for Windows" -ForegroundColor Green
+Write-Host "======================================================" -ForegroundColor Green
 
 # Check if running in correct directory
 if (-not (Test-Path "pyproject.toml")) {
@@ -113,7 +120,7 @@ catch {
 
 # Verify required files exist
 Write-Host "Verifying required files..." -ForegroundColor Yellow
-$RequiredFiles = @("README.md", ".env.example", "iphoto_downloader.spec")
+$RequiredFiles = @("USER-GUIDE.md", ".env.example", "iphoto_downloader.spec")
 foreach ($file in $RequiredFiles) {
     if (-not (Test-Path $file)) {
         Write-Error "Required file missing: $file"

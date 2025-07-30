@@ -166,11 +166,11 @@ jobs:
     - name: Check README links
       run: |
         # Check that all linked files exist
-        if [ -f README.md ]; then
-          echo "Checking README.md for broken links..."
+        if [ -f USER-GUIDE.md ]; then
+          echo "Checking USER-GUIDE.md for broken links..."
           
           # Extract file references from README
-          grep -oE '\[.*\]\([^)]+\)' README.md | grep -oE '\([^)]+\)' | tr -d '()' | while read -r link; do
+          grep -oE '\[.*\]\([^)]+\)' USER-GUIDE.md | grep -oE '\([^)]+\)' | tr -d '()' | while read -r link; do
             if [[ "$link" == http* ]]; then
               echo "Skipping external link: $link"
             elif [[ "$link" == "#"* ]]; then

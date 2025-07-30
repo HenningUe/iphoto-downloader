@@ -9,11 +9,13 @@ from iphoto_downloader.delivery_artifacts import DeliveryArtifactsManager
 from iphoto_downloader.instance_manager import InstanceManager
 from iphoto_downloader.logger import setup_logging, get_logger
 from iphoto_downloader.manage_credentials import icloud_store_credentials, pushover_store_credentials
+from iphoto_downloader.version import get_version
 
 
 def main() -> None:
     """Main entry point for the application."""
-    print("🌟 iPhoto Downloader Tool v0.1.0")
+    version = get_version()
+    print(f"🌟 iPhoto Downloader Tool v{version}")
     print("==================================")
 
     config = None

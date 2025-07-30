@@ -8,7 +8,7 @@ All tasks have been successfully implemented:
 #### Main Application PyInstaller Spec
 - ✅ **App Icon**: Added `iphoto-downloader-main.png` icon to `iphoto_downloader.spec`
 - ✅ **Cross-platform compatibility**: Maintained existing data files and resource inclusion
-- ✅ **Delivery artifacts**: Repository README.md and .env.example embedded as resources
+- ✅ **Delivery artifacts**: Repository USER-GUIDE.md and .env.example embedded as resources
 - ✅ **Keyring backends**: Comprehensive hiddenimports for Windows, macOS, Linux
 
 #### Credentials Manager PyInstaller Spec

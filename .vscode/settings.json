@@ -1,7 +1,22 @@
 {
     "python.analysis.typeCheckingMode": "standard",
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.completeFunctionParens": true,
+    "python.analysis.autoSearchPaths": true,
+    "python.analysis.diagnosticMode": "workspace",
+    "python.analysis.stubPath": "./typings",
+    "python.analysis.indexing": true,
+    "python.analysis.packageIndexDepths": [
+        {
+            "name": "auth2fa",
+            "depth": 10
+        }
+    ],
+    "python.defaultInterpreterPath": "./.venv/Scripts/python",
+    "python.terminal.activateEnvironment": true,
+    "python.envFile": "${workspaceFolder}/.env",
     "[python]": {
-        "editor.defaultFormatter": "ms-python.autopep8",
+        "editor.defaultFormatter": "ms-python.python",
         "editor.formatOnSave": true
     },
     "editor.formatOnSave": true,
@@ -12,11 +27,45 @@
         "--max-line-length=100"
     ],
     "python.autoComplete.extraPaths": [
+        "${workspaceFolder}/iphoto-downloader/src/iphoto_downloader/src",
+        "${workspaceFolder}/iphoto-downloader/shared/auth2fa/src",
+        "${workspaceFolder}/iphoto-downloader/tests",
+        "${workspaceFolder}/src/iphoto_downloader/src",
+        "${workspaceFolder}/shared/auth2fa/src",
+        "${workspaceFolder}/tests",
+        "${workspaceFolder}",
+        "./src/iphoto_downloader/src",
         "./shared/auth2fa/src",
-        "./src/iphoto_downloader/src"
+        "./tests",
+        ".",
+        "./iphoto-downloader/src/iphoto_downloader/src",
+        "./iphoto-downloader/shared/auth2fa/src",
+        "./iphoto-downloader/tests",
+        "./iphoto-downloader",
+        "src/iphoto_downloader/src",
+        "shared/auth2fa/src",
+        "iphoto-downloader/src/iphoto_downloader/src",
+        "iphoto-downloader/shared/auth2fa/src"
     ],
     "python.analysis.extraPaths": [
+        "${workspaceFolder}/iphoto-downloader/src/iphoto_downloader/src",
+        "${workspaceFolder}/iphoto-downloader/shared/auth2fa/src",
+        "${workspaceFolder}/iphoto-downloader/tests",
+        "${workspaceFolder}/src/iphoto_downloader/src",
+        "${workspaceFolder}/shared/auth2fa/src",
+        "${workspaceFolder}/tests",
+        "${workspaceFolder}",
+        "./src/iphoto_downloader/src",
         "./shared/auth2fa/src",
-        "./src/iphoto_downloader/src"
+        "./tests",
+        ".",
+        "./iphoto-downloader/src/iphoto_downloader/src",
+        "./iphoto-downloader/shared/auth2fa/src",
+        "./iphoto-downloader/tests",
+        "./iphoto-downloader",
+        "src/iphoto_downloader/src",
+        "shared/auth2fa/src",
+        "iphoto-downloader/src/iphoto_downloader/src",
+        "iphoto-downloader/shared/auth2fa/src"
     ]
 }

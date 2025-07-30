@@ -50,8 +50,15 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-echo "🚀 Building iPhoto Downloader Tool for Linux"
-echo "=============================================="
+# Display version information
+VERSION_FILE="VERSION"
+VERSION="dev"
+if [ -f "$VERSION_FILE" ]; then
+    VERSION=$(cat "$VERSION_FILE" | tr -d '\n\r')
+fi
+
+echo "🚀 Building iPhoto Downloader Tool v$VERSION for Linux"
+echo "======================================================="
 
 # Check if running in correct directory
 if [ ! -f "pyproject.toml" ]; then
@@ -85,7 +92,7 @@ echo "✅ Dependencies installed"
 
 # Verify required files exist
 echo "🔍 Verifying required files..."
-REQUIRED_FILES=("README.md" ".env.example" "iphoto_downloader.spec")
+REQUIRED_FILES=("USER-GUIDE.md" ".env.example" "iphoto_downloader.spec")
 for file in "${REQUIRED_FILES[@]}"; do
     if [ ! -f "$file" ]; then
         echo "❌ Required file missing: $file"

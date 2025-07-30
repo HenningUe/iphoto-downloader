@@ -73,7 +73,7 @@ build/                         # Temporary build files (can be deleted)
 ### Embedded Resources
 
 Both executables include the following embedded resources for delivery artifacts:
-- `README.md` - Repository documentation
+- `USER-GUIDE.md` - Repository documentation
 - `.env.example` - Configuration template (becomes `settings.ini.template`)
 
 These resources are automatically copied to the user's settings folder in "Delivered" mode.
@@ -87,7 +87,7 @@ The build process uses `iphoto_downloader.spec` which includes:
 ```python
 # Data files included in executable
 datas = [
-    ('README.md', '.'),           # Repository README
+    ('USER-GUIDE.md', '.'),           # Repository README
     ('.env.example', '.'),        # Configuration template
 ]
 
@@ -170,7 +170,7 @@ After building, manually verify:
 - [ ] Executable starts without errors
 - [ ] Delivery artifacts are created in "Delivered" mode
 - [ ] Settings folder is created in correct location
-- [ ] README.md and settings.ini.template are copied correctly
+- [ ] USER-GUIDE.md and settings.ini.template are copied correctly
 - [ ] 2FA web server starts successfully
 - [ ] Pushover notifications work
 - [ ] Keyring integration functions properly
@@ -191,7 +191,7 @@ After building, manually verify:
 
 #### Both Platforms
 - **Build Failures**: Check `uv sync --dev` runs successfully
-- **Missing Resources**: Verify `README.md` and `.env.example` exist in repository root
+- **Missing Resources**: Verify `USER-GUIDE.md` and `.env.example` exist in repository root
 - **Import Errors**: Add missing modules to `hiddenimports` in spec file
 
 ### Debug Mode

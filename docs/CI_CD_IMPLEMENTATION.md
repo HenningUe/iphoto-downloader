@@ -20,7 +20,7 @@ Successfully implemented a comprehensive CI/CD pipeline for the iPhoto Downloade
 - `.github/pull_request_template.md` - Pull request template
 
 ### Documentation
-- `.github/README.md` - GitHub configuration documentation
+- `.github/USER-GUIDE.md` - GitHub configuration documentation
 
 ## 🔄 Workflow Details
 

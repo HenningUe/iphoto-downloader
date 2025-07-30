@@ -9,13 +9,14 @@ from iphoto_downloader import logger
 from iphoto_downloader.config import get_config, KeyringConfig
 from iphoto_downloader.delivery_artifacts import DeliveryArtifactsManager
 from iphoto_downloader.icloud_client import iCloudClient
+from iphoto_downloader.version import get_version
 
 
 def main():
     """Main function for credential management."""
-
-    print("🔑 iPhoto Downloader - Credential Manager")
-    print("=" * 45)
+    version = get_version()
+    print(f"🔑 iPhoto Downloader - Credential Manager v{version}")
+    print("=" * 60)
 
     logger.setup_logging()
     # Handle delivery artifacts for 'Delivered' mode

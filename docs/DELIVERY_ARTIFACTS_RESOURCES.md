@@ -2,13 +2,13 @@
 
 ## Overview
 
-The iPhoto Downloader Tool uses a delivery artifacts management system that includes actual repository files (README.md and .env.example) as resources in the PyInstaller executable, avoiding code duplication.
+The iPhoto Downloader Tool uses a delivery artifacts management system that includes actual repository files (USER-GUIDE.md and .env.example) as resources in the PyInstaller executable, avoiding code duplication.
 
 ## Resource Files
 
 The following files are included as resources in the executable:
 
-- **README.md** - Copied from repository root
+- **USER-GUIDE.md** - Copied from repository root
 - **settings.ini.template** - Copied from .env.example in repository root
 
 ## Resource Directory Structure
@@ -16,7 +16,7 @@ The following files are included as resources in the executable:
 ```
 src/iphoto_downloader/src/iphoto_downloader/resources/
 ├── __init__.py
-├── README.md (copy of repository README.md)
+├── USER-GUIDE.md (copy of repository USER-GUIDE.md)
 └── settings.ini.template (copy of repository .env.example)
 ```
 
@@ -58,7 +58,7 @@ The `iphoto_downloader.spec` file includes the resource files in the `datas` sec
 
 ```python
 datas = [
-    ('src/iphoto_downloader/src/iphoto_downloader/resources/README.md', 'iphoto_downloader/resources'),
+    ('src/iphoto_downloader/src/iphoto_downloader/resources/USER-GUIDE.md', 'iphoto_downloader/resources'),
     ('src/iphoto_downloader/src/iphoto_downloader/resources/settings.ini.template', 'iphoto_downloader/resources')
 ]
 ```

@@ -11,9 +11,74 @@ on:
         type: string
 
 jobs:
+  version-validation:
+    name: Validate and Prepare Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag_name: ${{ steps.version.outputs.tag_name }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        enable-cache: true
+    
+    - name: Set up Python
+      run: uv python install 3.12
+    
+    - name: Install dependencies
+      run: uv sync --dev
+    
+    - name: Determine version
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" = "release" ]; then
+          # Extract version from release tag
+          TAG_NAME="${{ github.event.release.tag_name }}"
+          VERSION="${TAG_NAME#v}"  # Remove 'v' prefix if present
+        elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          # Use manually provided version
+          TAG_NAME="${{ github.event.inputs.version }}"
+          VERSION="${TAG_NAME#v}"  # Remove 'v' prefix if present
+        else
+          echo "❌ Invalid trigger for release workflow"
+          exit 1
+        fi
+        
+        echo "Tag: $TAG_NAME"
+        echo "Version: $VERSION"
+        echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+    
+    - name: Validate version format
+      run: |
+        python -c "
+        import sys
+        sys.path.insert(0, 'src/iphoto_downloader/src')
+        from iphoto_downloader.version import parse_version
+        try:
+            parse_version('${{ steps.version.outputs.version }}')
+            print('✅ Version format is valid: ${{ steps.version.outputs.version }}')
+        except ValueError as e:
+            print(f'❌ Invalid version format: {e}')
+            sys.exit(1)
+        "
+    
+    - name: Update VERSION file
+      run: |
+        echo "${{ steps.version.outputs.version }}" > VERSION
+        echo "✅ VERSION file updated to: ${{ steps.version.outputs.version }}"
+
   build-windows:
     name: Build Windows Executable
     runs-on: windows-latest
+    needs: version-validation
     
     steps:
     - name: Checkout code
@@ -30,6 +95,11 @@ jobs:
     - name: Install dependencies
       run: |
         uv sync --dev
+
+    - name: Update VERSION file for Windows build
+      run: |
+        echo "${{ needs.version-validation.outputs.version }}" > VERSION
+        echo "Building Windows version: ${{ needs.version-validation.outputs.version }}"
 
     - name: Run tests before building
       run: |
@@ -58,6 +128,7 @@ jobs:
   build-linux:
     name: Build Linux Executable
     runs-on: ubuntu-latest
+    needs: version-validation
     
     steps:
     - name: Checkout code
@@ -79,6 +150,11 @@ jobs:
     - name: Install dependencies
       run: |
         uv sync --dev
+
+    - name: Update VERSION file for Linux build
+      run: |
+        echo "${{ needs.version-validation.outputs.version }}" > VERSION
+        echo "Building Linux version: ${{ needs.version-validation.outputs.version }}"
 
     - name: Run tests before building
       run: |
@@ -105,8 +181,8 @@ jobs:
         name: linux-executables
         path: linux-artifacts/
 
-  package-apt:
-    name: Package for APT Repository
+  package-snap:
+    name: Package for Snap Store
     runs-on: ubuntu-latest
     needs: build-linux
     
@@ -120,55 +196,78 @@ jobs:
         name: linux-executables
         path: linux-executables/
 
-    - name: Install packaging tools
+    - name: Install snapcraft
       run: |
-        sudo apt-get update
-        sudo apt-get install -y dpkg-dev debhelper devscripts
+        sudo snap install snapcraft --classic
 
-    - name: Create Debian package structure
+    - name: Create Snap package structure
       run: |
-        mkdir -p debian-package/iphoto-downloader/DEBIAN
-        mkdir -p debian-package/iphoto-downloader/usr/bin
-        mkdir -p debian-package/iphoto-downloader/usr/share/doc/iphoto-downloader
-        mkdir -p debian-package/iphoto-downloader/usr/share/applications
+        mkdir -p snap-package/bin
+        mkdir -p snap-package/share/applications
+        mkdir -p snap-package/share/doc/iphoto-downloader
 
     - name: Copy executables to package
       run: |
-        cp linux-executables/iphoto_downloader debian-package/iphoto-downloader/usr/bin/
-        cp linux-executables/iphoto_downloader_credentials debian-package/iphoto-downloader/usr/bin/iphoto-downloader-credentials
-        chmod +x debian-package/iphoto-downloader/usr/bin/*
+        cp linux-executables/iphoto_downloader snap-package/bin/
+        cp linux-executables/iphoto_downloader_credentials snap-package/bin/iphoto-downloader-credentials
+        chmod +x snap-package/bin/*
 
-    - name: Create Debian control file
+    - name: Create snapcraft.yaml
       run: |
-        cat > debian-package/iphoto-downloader/DEBIAN/control << EOF
-        Package: iphoto-downloader
-        Version: ${{ github.event.release.tag_name || github.event.inputs.version }}
-        Section: utils
-        Priority: optional
-        Architecture: amd64
-        Maintainer: iPhoto Downloader Team <team@iPhotoDownloader.example.com>
-        Description: iPhoto Downloader Tool
-         A tool for synchronizing photos from iCloud to local storage with
-         intelligent deletion tracking and album filtering capabilities.
-         .
-         Features include:
-         - Bidirectional sync with iCloud Photos
-         - Smart deletion tracking to prevent re-downloads
-         - Album-based filtering and organization
-         - 2FA authentication support with Pushover notifications
-         - Cross-platform compatibility
-        Depends: libc6, libssl3
-        Homepage: https://github.com/HenningUe/iphoto-downloader
+        VERSION="${{ github.event.release.tag_name || github.event.inputs.version }}"
+        VERSION=${VERSION#v}  # Remove 'v' prefix if present
+        
+        cat > snapcraft.yaml << EOF
+        name: iphoto-downloader
+        version: '${VERSION}'
+        summary: iCloud Photo Synchronization Tool
+        description: |
+          A tool for synchronizing photos from iCloud to local storage with
+          intelligent deletion tracking and album filtering capabilities.
+          
+          Features include:
+          - Bidirectional sync with iCloud Photos
+          - Smart deletion tracking to prevent re-downloads
+          - Album-based filtering and organization
+          - 2FA authentication support with Pushover notifications
+          - Cross-platform compatibility
+
+        grade: stable
+        confinement: strict
+        base: core22
+        architectures:
+          - build-on: amd64
+
+        apps:
+          iphoto-downloader:
+            command: bin/iphoto_downloader
+            plugs:
+              - home
+              - network
+              - removable-media
+          iphoto-downloader-credentials:
+            command: bin/iphoto-downloader-credentials
+            plugs:
+              - home
+              - network
+
+        parts:
+          iphoto-downloader:
+            plugin: dump
+            source: snap-package/
+            organize:
+              bin/*: bin/
+              share/*: share/
         EOF
 
     - name: Create desktop entry
       run: |
-        cat > debian-package/iphoto-downloader/usr/share/applications/iphoto-downloader.desktop << EOF
+        cat > snap-package/share/applications/iphoto-downloader.desktop << EOF
         [Desktop Entry]
         Name=iPhoto Downloader
-        Comment=iPhoto Downloader Tool
-        Exec=/usr/bin/iphoto_downloader
-        Icon=iphoto-downloader
+        Comment=iCloud Photo Synchronization Tool
+        Exec=iphoto-downloader.iphoto-downloader
+        Icon=\${SNAP}/share/pixmaps/iphoto-downloader.png
         Terminal=true
         Type=Application
         Categories=Graphics;Photography;
@@ -176,20 +275,18 @@ jobs:
 
     - name: Copy documentation
       run: |
-        cp README.md debian-package/iphoto-downloader/usr/share/doc/iphoto-downloader/
-        cp LICENSE debian-package/iphoto-downloader/usr/share/doc/iphoto-downloader/copyright
+        cp USER-GUIDE.md snap-package/share/doc/iphoto-downloader/
+        cp LICENSE snap-package/share/doc/iphoto-downloader/copyright
 
-    - name: Build Debian package
+    - name: Build Snap package
       run: |
-        cd debian-package
-        dpkg-deb --build iphoto-downloader
-        mv iphoto-downloader.deb ../iphoto-downloader_${{ github.event.release.tag_name || github.event.inputs.version }}_amd64.deb
+        snapcraft pack
 
-    - name: Upload APT package artifact
+    - name: Upload Snap package artifact
       uses: actions/upload-artifact@v4
       with:
-        name: apt-package
-        path: iphoto-downloader_*.deb
+        name: snap-package
+        path: iphoto-downloader_*.snap
 
   package-winget:
     name: Package for WinGet
@@ -317,34 +414,49 @@ jobs:
             Get-Content $_.FullName
         }
 
-  publish-to-apt:
-    name: Publish to APT Repository
+  publish-to-snap:
+    name: Publish to Snap Store
     runs-on: ubuntu-latest
-    needs: [package-apt, publish-release]
+    needs: [package-snap, publish-release]
     if: github.event_name == 'release'
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Download APT package
+    - name: Download Snap package
       uses: actions/download-artifact@v4
       with:
-        name: apt-package
-        path: apt-package/
+        name: snap-package
+        path: snap-package/
 
-    - name: Prepare APT repository submission
+    - name: Install snapcraft
       run: |
-        echo "APT package prepared for submission"
+        sudo snap install snapcraft --classic
+
+    - name: Prepare Snap Store submission
+      run: |
+        echo "Snap package prepared for submission"
         echo "Package details:"
-        dpkg-deb --info apt-package/*.deb
+        snap info snap-package/*.snap || echo "Package info not available (expected for unsigned snap)"
         
         echo "Manual step required:"
-        echo "1. Submit package to appropriate APT repository"
-        echo "2. Follow repository-specific submission guidelines"
-        echo "3. Package available at: apt-package/"
+        echo "1. Register app name: snapcraft register iphoto-downloader"
+        echo "2. Upload snap: snapcraft upload snap-package/*.snap"
+        echo "3. Release to appropriate channel (stable/candidate/beta/edge)"
+        echo "4. Package available at: snap-package/"
         
-        ls -la apt-package/
+        ls -la snap-package/
+
+    - name: Store submission info
+      run: |
+        echo "To complete Snap Store submission:"
+        echo "1. Authenticate: snapcraft login"
+        echo "2. Register name: snapcraft register iphoto-downloader"
+        echo "3. Upload package: snapcraft upload iphoto-downloader_*.snap"
+        echo "4. Release: snapcraft release iphoto-downloader <revision> stable"
+        echo ""
+        echo "Snap package is ready for manual submission to Snap Store"
 
   publish-release:
     name: Publish GitHub Release
@@ -436,6 +548,6 @@ jobs:
           3. Configure your sync settings
           4. Start syncing your photos!
           
-          For detailed instructions, see the [README](https://github.com/HenningUe/iphoto-downloader/blob/main/README.md).
+          For detailed instructions, see the [README](https://github.com/HenningUe/iphoto-downloader/blob/main/USER-GUIDE.md).
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

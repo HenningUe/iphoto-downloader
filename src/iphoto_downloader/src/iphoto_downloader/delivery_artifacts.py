@@ -14,7 +14,7 @@ class DeliveryArtifactsManager:
     """Manages delivery artifacts for 'Delivered' operating mode."""
     
     ARTEFACT_FILES = [
-        {'src': 'README.md'},
+        {'src': 'USER-GUIDE.md'},
         {'src': '.env.example',
          'dest': [
              {'operation_mode': 'delivered',
@@ -155,7 +155,7 @@ class DeliveryArtifactsManager:
         
         # Determine source file location from repository
         src_file_name = str(src_file_name)
-        if src_file_name == 'README.md':
+        if src_file_name == 'USER-GUIDE.md':
             source_file = self._get_repository_readme_path()
         elif src_file_name == '.env.example':
             source_file = self._get_repository_env_example_path()
@@ -171,21 +171,21 @@ class DeliveryArtifactsManager:
         self.logger.debug(f"Copied repository file {src_file_name} from {source_file}")
         
     def _get_repository_readme_path(self) -> Path:
-        """Get path to repository README.md file.
+        """Get path to repository USER-GUIDE.md file.
         
         Returns:
-            Path to the repository README.md
+            Path to the repository USER-GUIDE.md
         """
         # Check if we're running from PyInstaller executable
         if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
             # In PyInstaller executable, files are embedded in _MEIPASS
-            return Path(sys._MEIPASS) / 'README.md'  # type: ignore
+            return Path(sys._MEIPASS) / 'USER-GUIDE.md'  # type: ignore
         else:
             # In development, navigate to repository root
             current_dir = Path(__file__).parent
             # Navigate up from src/iphoto_downloader/src/iphoto_downloader/ to repository root
             repo_root = current_dir.parent.parent.parent.parent
-            return repo_root / 'README.md'
+            return repo_root / 'USER-GUIDE.md'
             
     def _get_repository_env_example_path(self) -> Path:
         """Get path to repository .env.example file.
@@ -223,7 +223,7 @@ class DeliveryArtifactsManager:
             print(f"   ✅ {file_def['dest'].name}")
             
         print(f"\n📋 NEXT STEPS:")
-        print(f"1. Read README.md :-)")
+        print(f"1. Read USER-GUIDE.md :-)")
         print(f"2. Edit 'settings.ini' to configure your sync preferences")
         print(f"3. Review 'settings.ini.template' for all available options")
         print(f"4. Run the application again to start syncing")

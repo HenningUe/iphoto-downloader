@@ -91,7 +91,7 @@ automatically using **GitHub Actions**.
    - It should be possible to define two operating modes in the settings:
      "InDevelopment" and "Delivered" - When the "Delivered" operating mode is
      activated, the system should check whether the settings folder (see section
-     **Photo Sync**) exists and whether the files README.md,
+     **Photo Sync**) exists and whether the files USER-GUIDE.md,
      settings.ini.template, and settings.ini are located there. If any of these
      files are missing, they should be copied there and the program should be
      terminated. In addition, the user should be informed that the files have

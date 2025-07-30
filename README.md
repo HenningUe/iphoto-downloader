@@ -22,6 +22,9 @@ A uv monorepo workspace for iCloud photo download tools and utilities.
    - missing configuration via setting-file
    - missing continuous execution mode
 
+## How to use?
+see [User Guide](./USER-GUIDE.md)
+
 ## 🏗️ Disclaimer
  - I honor democracy
 

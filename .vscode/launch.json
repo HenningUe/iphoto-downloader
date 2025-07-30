@@ -20,7 +20,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "env": {
-                "PYTHONPATH": "${workspaceFolder}${/}src;${workspaceFolder}${/}tests"
+                "PYTHONPATH": "${workspaceFolder}/src/iphoto_downloader/src;${workspaceFolder}/shared/auth2fa/src;${workspaceFolder}/tests;${workspaceFolder}"
             },
             "justMyCode":false
         }

@@ -87,7 +87,7 @@ class TestDeliveryArtifactsManager(unittest.TestCase):
              patch.object(self.manager, '_get_repository_env_example_path') as mock_env:
             
             mock_mode.return_value = 'delivered'
-            mock_readme.return_value = Path('fake_readme.md')
+            mock_readme.return_value = Path('fake_USER-GUIDE.md')
             mock_env.return_value = Path('fake_env.example')
             
             missing_files = self.manager._check_required_files('operation')
@@ -101,21 +101,21 @@ class TestDeliveryArtifactsManager(unittest.TestCase):
         # Use actual supported file names as Path objects (like the real implementation)
         missing_files = [
             {
-                'src': Path('README.md'),
-                'dest': self.settings_folder / 'README.md'
+                'src': Path('USER-GUIDE.md'),
+                'dest': self.settings_folder / 'USER-GUIDE.md'
             }
         ]
         
         # Mock the repository path methods to return actual files
         with patch.object(self.manager, '_get_repository_readme_path') as mock_readme:
-            readme_file = Path(self.temp_dir) / 'README.md'
+            readme_file = Path(self.temp_dir) / 'USER-GUIDE.md'
             readme_file.write_text('# Test README')
             mock_readme.return_value = readme_file
             
             self.manager._copy_missing_files(missing_files)
             
             # Check if file was copied
-            dst_file = self.settings_folder / 'README.md'
+            dst_file = self.settings_folder / 'USER-GUIDE.md'
             self.assertTrue(dst_file.exists())
 
     def test_graceful_program_termination(self):
