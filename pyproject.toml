@@ -94,3 +94,9 @@ exclude_lines = [
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
 ]
+
+[tool.bandit]
+# Bandit security scanner configuration
+# Skip B110: try_except_pass - Allow try/except with pass statements for intentional error suppression
+skips = ["B110"]
+exclude_dirs = ["tests", "build", "dist", ".venv", ".git"]

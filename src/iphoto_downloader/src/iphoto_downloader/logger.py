@@ -38,6 +38,7 @@ def setup_logging(log_level: int = logging.INFO) -> None:
     )
 
     # Set up the global logger
+    global _logger  # noqa
     _logger = logging.getLogger("iphoto_downloader")
 
 
