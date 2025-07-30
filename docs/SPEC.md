@@ -74,10 +74,13 @@ automatically using **GitHub Actions**.
    - The app execution mode (single or continuous) shall be defined in the
      settings file. If nothing is provided the default shall be single
      execution.
-  
+
    - The app shall run allow multiple instances or run as single instance only.
-   - If only one instance is allowed, a message shall be printed, that another instance is already running and abort immediately
-   - It shall be configurable in the settings if multi-instances are allowed. The related settings key shall be "allow_multi_instance". The default value shall be false.
+   - If only one instance is allowed, a message shall be printed, that another
+     instance is already running and abort immediately
+   - It shall be configurable in the settings if multi-instances are allowed.
+     The related settings key shall be "allow_multi_instance". The default value
+     shall be false.
 
 3. **Global exception handling**
    - The main entry-point function shall have a global try-except blocks
@@ -85,12 +88,26 @@ automatically using **GitHub Actions**.
      notification whenever a unhandled exception occurs
 
 4. **Consideration of delivery artifacts**
-    - It should be possible to define two operating modes in the settings: "InDevelopment" and "Delivered" - When the "Delivered" operating mode is activated, the system should check whether the settings folder (see section **Photo Sync**) exists and whether the files README.md, settings.ini.template, and settings.ini are located there. If any of these files are missing, they should be copied there and the program should be terminated. In addition, the user should be informed that the files have been copied and where exactly, what the files are for, and that they should run this program again after adjusting settings.ini.
-    - If the files are present, the program should perform its normal function.
-    - In "Delivered" mode, READMD.md and settings.ini.template should be copied to the settings folder each time the program is started (but not settings.ini).
-    - READMD.md and .env.example (as source for settings.ini.template ) from the repository are to be used. I.e. when the executable is created these files must be included in the executable as additional resources. The content of the created READM.md and shall **not** be included in a python file as strings to avoid duplicated sources.
-    - The default mode for operation in development environment shall be "InDevelopment" 
-
+   - It should be possible to define two operating modes in the settings:
+     "InDevelopment" and "Delivered" - When the "Delivered" operating mode is
+     activated, the system should check whether the settings folder (see section
+     **Photo Sync**) exists and whether the files README.md,
+     settings.ini.template, and settings.ini are located there. If any of these
+     files are missing, they should be copied there and the program should be
+     terminated. In addition, the user should be informed that the files have
+     been copied and where exactly, what the files are for, and that they should
+     run this program again after adjusting settings.ini.
+   - If the files are present, the program should perform its normal function.
+   - In "Delivered" mode, READMD.md and settings.ini.template should be copied
+     to the settings folder each time the program is started (but not
+     settings.ini).
+   - READMD.md and .env.example (as source for settings.ini.template ) from the
+     repository are to be used. I.e. when the executable is created these files
+     must be included in the executable as additional resources. The content of
+     the created READM.md and shall **not** be included in a python file as
+     strings to avoid duplicated sources.
+   - The default mode for operation in development environment shall be
+     "InDevelopment"
 
 5. **2FA authenticaion**
 
@@ -187,6 +204,18 @@ automatically using **GitHub Actions**.
    - Running the tool multiple times must not create duplicate files or
      unintended deletions.
 
+8. **Versioning**
+   - Versioning shall be semver based
+   - When a new release is created, a plain text file named "VERSION" which
+     stores the release version as text shall be created. This file shall be
+     included as artefact in the executable created by PyInstaller. The version
+     stored in this VERSION file shall be included in the start-up message, when
+     the app is started. This is true for both apps, iphoto_downloader and
+     iphoto_downloader_credentials. In development environment (i.e. the VERSION
+     file does not exist), the release shall be simply "dev". This shall be
+     included in the code and the ci-pipelines (see chapter below **CI/CD
+     Pipeline**)
+
 ---
 
 ### 2️⃣ Non-Functional Requirements
@@ -213,15 +242,24 @@ automatically using **GitHub Actions**.
 6. **Executable Packaging**
 
 6.1. **Main Executable Packaging**
-- Build a standalone (single file) Windows .exe and a Linux executable using PyInstaller for the main executable, which is based on #main.py as first entry point. 
+
+- Build a standalone (single file) Windows .exe and a Linux executable using
+  PyInstaller for the main executable, which is based on #main.py as first entry
+  point.
 - The app shall have the image #iphoto-downloader-main.png as App icon
-- When the executable is used the modus "Delivered" (decribed in chapter **Consideration of delivery artifacts**) shall be the default one.
-- Both files "READMD.md" and ".env.example" must be included in the executable as additional resources to be available later on for copying, see chapter **Consideration of delivery artifacts**
+- When the executable is used the modus "Delivered" (decribed in chapter
+  **Consideration of delivery artifacts**) shall be the default one.
+- Both files "READMD.md" and ".env.example" must be included in the executable
+  as additional resources to be available later on for copying, see chapter
+  **Consideration of delivery artifacts**
 - The Linux build must be statically linked if possible, or provide clear
   runtime requirements.
 
 6.2. **Credentials Manager Executable Packaging**
-- Build a standalone (single file) Windows .exe and a Linux executable using PyInstaller for the iphoto_downloader_credentials executable, which is based on #manage_credentials.py as first entry point. 
+
+- Build a standalone (single file) Windows .exe and a Linux executable using
+  PyInstaller for the iphoto_downloader_credentials executable, which is based
+  on #manage_credentials.py as first entry point.
 - The app shall have the image #iphoto-downloader-credentials.png as App icon
 - The Linux build must be statically linked if possible, or provide clear
   runtime requirements.
@@ -233,11 +271,17 @@ automatically using **GitHub Actions**.
 - Follow this guide for PyInstaller CI/CD
   [https://ragug.medium.com/ci-cd-pipeline-for-pyinstaller-on-github-actions-for-windows-7f8274349278](https://ragug.medium.com/ci-cd-pipeline-for-pyinstaller-on-github-actions-for-windows-7f8274349278)
 - The previously given link shall be used considering the following adpations:
-  - the release workflow shall be trigger, whenever a new release is requested in github for this repo, i.e. link "https://github.com/.../releases/new" is called
+  - the release workflow shall be trigger, whenever a new release is requested
+    in github for this repo, i.e. link "https://github.com/.../releases/new" is
+    called
   - The release workflow shall created executables for windows and linux
-  - Before the creation of the executables the test-suite shall be executed. Any error shall cause an aboration. The tests which are included, shall not be blocked by any required user-interaction.
-  - The windows executable shall be published automatically to winget, i.e. the Windows Package Manager.
-  - The linux executable shall be published automatically to APT (Advanced Packaging Tool), i.e. the ubuntu package manager
+  - Before the creation of the executables the test-suite shall be executed. Any
+    error shall cause an aboration. The tests which are included, shall not be
+    blocked by any required user-interaction.
+  - The windows executable shall be published automatically to winget, i.e. the
+    Windows Package Manager.
+  - The linux executable shall be published automatically to APT (Advanced
+    Packaging Tool), i.e. the ubuntu package manager
 
 ---
 

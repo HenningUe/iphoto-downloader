@@ -117,18 +117,23 @@ specified.
 #### 2.1.5 Delivery Artifacts Management
 
 - [x] Implement **operating mode detection**:
-  - [x] Add configuration parameter for operating mode ("InDevelopment"/"Delivered")
+  - [x] Add configuration parameter for operating mode
+        ("InDevelopment"/"Delivered")
   - [x] Implement mode validation and default value assignment
   - [x] Add mode-specific behavior switching in main application logic
 - [x] Implement **"Delivered" mode functionality**:
   - [x] Add settings folder path detection based on user directory structure
-  - [x] Implement required files existence check (README.md, settings.ini.template, settings.ini)
+  - [x] Implement required files existence check (README.md,
+        settings.ini.template, settings.ini)
   - [x] Create file copying mechanism for missing delivery artifacts
-  - [x] Add user notification system for copied files with detailed location info
+  - [x] Add user notification system for copied files with detailed location
+        info
   - [x] Implement graceful program termination after file copying
 - [x] Implement **automatic file management in "Delivered" mode**:
   - [x] Copy README.md to settings folder on every startup (overwrite existing)
-  - [x] Copy .env.example to settings folder on every startup (overwrite existing). Change target file name depending on the context. I.e. either ".env" or "settings.ini".
+  - [x] Copy .env.example to settings folder on every startup (overwrite
+        existing). Change target file name depending on the context. I.e. either
+        ".env" or "settings.ini".
   - [x] Preserve existing settings.ini file (never overwrite)
   - [x] Add file copy operation logging and error handling
 - [x] Integrate **delivery mode with packaging**:
@@ -252,7 +257,28 @@ specified.
 
 ---
 
-## 5️⃣ 🧪 Tests
+## 3️⃣ 📦 Versioning
+
+- [ ] Implement **semver-based versioning**:
+  - [ ] Set up semantic versioning scheme (MAJOR.MINOR.PATCH)
+  - [ ] Define version increment rules for different change types
+- [ ] Implement **VERSION file management**:
+  - [ ] Create VERSION file generation during release process
+  - [ ] Store release version as plain text in VERSION file
+  - [ ] Include VERSION file as artifact in PyInstaller executable builds
+- [ ] Implement **version display in applications**:
+  - [ ] Add version reading from VERSION file in startup message
+  - [ ] Implement fallback to "dev" version when VERSION file doesn't exist
+  - [ ] Add version display for both iphoto_downloader and
+        iphoto_downloader_credentials apps
+- [ ] Integrate **versioning with CI/CD pipeline**:
+  - [ ] Automate VERSION file creation during release builds
+  - [ ] Ensure version consistency across release artifacts
+  - [ ] Add version validation in build process
+
+---
+
+## 4️⃣ 🧪 Tests
 
 - [x] Write **unit tests** for:
   - [x] Photo listing & new photo detection
@@ -295,7 +321,8 @@ specified.
   - [x] Test file copying mechanism for missing artifacts
   - [x] Test user notification system for copied files
   - [x] Test graceful program termination after file operations
-  - [x] Test automatic file updates in "Delivered" mode (README.md, settings.ini.template)
+  - [x] Test automatic file updates in "Delivered" mode (README.md,
+        settings.ini.template)
   - [x] Test settings.ini preservation in "Delivered" mode
   - [x] Test executable default mode behavior (should be "Delivered")
 - [x] Add **multi-instance control tests**:
@@ -314,7 +341,7 @@ specified.
 
 ---
 
-## 6️⃣ 🐧🪟 Cross-Platform Build
+## 5️⃣ 🐧🪟 Cross-Platform Build
 
 ### 6.1 PyInstaller Configuration
 
@@ -324,10 +351,12 @@ specified.
   - [x] Configure hiddenimports for keyring backends (Windows, macOS, Linux)
   - [x] Set up proper pathex and binaries configuration
   - [x] Ensure delivery artifacts resources are accessible in executable
-  - [x] Configure app icon using `iphoto-downloader-main.png` for cross-platform executable branding
+  - [x] Configure app icon using `iphoto-downloader-main.png` for cross-platform
+        executable branding
 - [x] Write **Credentials Manager PyInstaller spec** for cross-platform builds:
   - [x] Create `iphoto_downloader_credentials.spec` with proper configuration
-  - [x] Configure app icon using `iphoto-downloader-credentials.png` for credentials manager branding
+  - [x] Configure app icon using `iphoto-downloader-credentials.png` for
+        credentials manager branding
   - [x] Set up proper pathex and binaries configuration for credentials manager
   - [x] Configure hiddenimports for keyring backends (Windows, macOS, Linux)
   - [x] Ensure static linking where possible for Linux builds
@@ -335,7 +364,8 @@ specified.
 ### 6.2 Build Scripts and Commands
 
 - [x] Create **Windows build script**:
-  - [x] Add PowerShell script (`build_windows.ps1`) for Windows `.exe` generation
+  - [x] Add PowerShell script (`build_windows.ps1`) for Windows `.exe`
+        generation
   - [x] Include dependency installation via `uv sync`
   - [x] Add PyInstaller execution with spec file
   - [x] Include post-build verification steps
@@ -368,7 +398,8 @@ specified.
   - [x] Create automated testing tools (`test_build.py`)
   - [ ] Verify `.exe` runs on Windows 10/11
   - [ ] Test delivery artifacts creation on first run
-  - [ ] Verify settings folder detection (%USERPROFILE%\\AppData\\Local\\iPhotoDownloader)
+  - [ ] Verify settings folder detection
+        (%USERPROFILE%\\AppData\\Local\\iPhotoDownloader)
   - [ ] Test file copying and user notifications
   - [ ] Test credentials manager `.exe` functionality on Windows
 - [ ] Test **Linux builds**:
@@ -416,6 +447,7 @@ specified.
 ### 6.7 Build System Status
 
 ✅ **Completed Infrastructure:**
+
 - PyInstaller spec file with resource embedding
 - Windows PowerShell build script with options
 - Linux bash build script with dependency checks
@@ -423,6 +455,7 @@ specified.
 - Comprehensive build documentation and troubleshooting guide
 
 🔄 **Ready for Testing:**
+
 - Manual build testing on Windows and Linux systems
 - Delivery artifacts verification in packaged executables
 - 2FA and Pushover functionality validation in builds
@@ -430,7 +463,7 @@ specified.
 
 ---
 
-## 7️⃣ 🔁 CI/CD Pipeline (GitHub Actions)
+## 6️⃣ 🔁 CI/CD Pipeline (GitHub Actions)
 
 - [x] Create **CI workflow**:
   - [x] Install dependencies using `uv`
@@ -441,13 +474,15 @@ specified.
         ([APT guide](https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository))
   - [x] Package Windows build for **WinGet**
         ([WinGetCreate](https://techwatching.dev/posts/wingetcreate))
-  - [x] **Automatically publish Windows executable to WinGet** (Windows Package Manager)
-  - [x] **Automatically publish Linux executable to APT** (Advanced Packaging Tool / Ubuntu package manager)
+  - [x] **Automatically publish Windows executable to WinGet** (Windows Package
+        Manager)
+  - [x] **Automatically publish Linux executable to APT** (Advanced Packaging
+        Tool / Ubuntu package manager)
   - [x] Publish releases automatically
 
 ---
 
-## 8️⃣ 🧩 Configuration & Security
+## 7️⃣ 🧩 Configuration & Security
 
 - [x] Add example `.env` template for credentials
 - [x] Support configurable local sync directory
@@ -455,12 +490,16 @@ specified.
 - [ ] Add **2FA web server configuration** (port range, bind address)
 - [x] Add **delivery artifacts configuration**:
   - [x] Add operating mode configuration ("InDevelopment" vs "Delivered")
-  - [x] Set default operating mode to "InDevelopment" for development environment
+  - [x] Set default operating mode to "InDevelopment" for development
+        environment
   - [x] Implement settings folder detection for "Delivered" mode
-  - [x] Implement required files check (README.md, settings.ini.template, settings.ini)
+  - [x] Implement required files check (README.md, settings.ini.template,
+        settings.ini)
   - [x] Add file copying mechanism for missing delivery artifacts
-  - [x] Implement program termination with user notification when files are missing
-  - [x] Add automatic copying of README.md and settings.ini.template on each "Delivered" mode startup
+  - [x] Implement program termination with user notification when files are
+        missing
+  - [x] Add automatic copying of README.md and settings.ini.template on each
+        "Delivered" mode startup
   - [x] Ensure settings.ini is never overwritten in "Delivered" mode
   - [x] Set "Delivered" mode as default for executable packages (PyInstaller)
 - [x] Add **database path configuration**:
@@ -475,7 +514,7 @@ specified.
 
 ---
 
-## 9️⃣ 📜 Documentation
+## 8️⃣ 📜 Documentation
 
 - [x] Write **user guide**:
   - [x] How to install (Windows & Linux)
@@ -498,7 +537,7 @@ specified.
 
 ---
 
-## 1️⃣0️⃣ ✅ Manual Verification
+## 9️⃣ ✅ Manual Verification
 
 - [ ] Test `.exe` on Windows:
   - [ ] App runs and syncs as expected
@@ -511,7 +550,8 @@ specified.
   - [ ] **Database path configuration** works with relative/absolute paths
   - [ ] **Environment variables** in database paths work cross-platform
   - [ ] **Multi-instance control** works correctly:
-    - [ ] Default behavior prevents multiple instances (allow_multi_instance=false)
+    - [ ] Default behavior prevents multiple instances
+          (allow_multi_instance=false)
     - [ ] Clear message displayed when second instance is started
     - [ ] Second instance aborts immediately when multi-instance disabled
     - [ ] Multiple instances work when allow_multi_instance=true
@@ -519,9 +559,11 @@ specified.
   - [x] **Delivery artifacts management** works correctly:
     - [x] Executable defaults to "Delivered" mode
     - [x] Settings folder is created/detected correctly
-    - [x] Required files (README.md, settings.ini.template, settings.ini) are copied when missing
+    - [x] Required files (README.md, settings.ini.template, settings.ini) are
+          copied when missing
     - [x] User receives clear notification about copied files and their purpose
-    - [x] Program terminates gracefully after copying files with instruction to adjust settings.ini
+    - [x] Program terminates gracefully after copying files with instruction to
+          adjust settings.ini
     - [x] README.md and settings.ini.template are updated on each startup
     - [x] Existing settings.ini is preserved and never overwritten
   - [ ] No credentials leaked in binary
@@ -539,7 +581,8 @@ specified.
   - [ ] Cross-platform album-aware database works
   - [ ] Cross-platform database path configuration works correctly
   - [ ] **Multi-instance control** works correctly on Linux:
-    - [ ] Default behavior prevents multiple instances (allow_multi_instance=false)
+    - [ ] Default behavior prevents multiple instances
+          (allow_multi_instance=false)
     - [ ] Clear message displayed when second instance is started
     - [ ] Second instance aborts immediately when multi-instance disabled
     - [ ] Multiple instances work when allow_multi_instance=true
@@ -557,7 +600,7 @@ specified.
 
 ---
 
-## 1️⃣1️⃣ 🚀 Release
+## 1️⃣0️⃣ 🚀 Release
 
 - [ ] Tag a versioned release on GitHub
 - [ ] Verify Linux package published to **APT repo**
