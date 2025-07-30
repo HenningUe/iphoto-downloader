@@ -349,10 +349,10 @@ that local deletion tracking works as specified.
   - Install dependencies.
   - Run tests & linting.
   - Package Windows .exe and Linux executable.
-  - The linux package shall be published as APT repository, see
-    [https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository](https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository)
-  - The required APT-package-structure shall be taken into account, see
-    [https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository](https://www.ms8.com/how-to-submit-your-application-to-the-official-apt-repository)
+  - The linux package shall be published as snap package, see
+    [https://www.digitalocean.com/community/tutorials/how-to-package-and-publish-a-snap-application-on-ubuntu-18-04](https://www.digitalocean.com/community/tutorials/how-to-package-and-publish-a-snap-application-on-ubuntu-18-04)
+  - The required snap-package-structure shall be taken into account, see
+    [https://www.digitalocean.com/community/tutorials/how-to-package-and-publish-a-snap-application-on-ubuntu-18-04](https://www.digitalocean.com/community/tutorials/how-to-package-and-publish-a-snap-application-on-ubuntu-18-04)
   - The windows package shall be published as WinGet package, see
     https://techwatching.dev/posts/wingetcreate
 - ✅ Full unit & integration test suite.
