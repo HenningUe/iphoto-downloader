@@ -35,7 +35,7 @@ def test_pushover_config():
 
     # Load configuration
     logger.info("Loading configuration...")
-    config = KeyringConfig()
+    config = KeyringConfig(None)  # Use None for env_file_path to use default
 
     # Check if Pushover is enabled
     if not config.enable_pushover:

@@ -173,8 +173,8 @@ def test_web_server_integration():
         print(f"🔄 Handler received 2FA request #{request_count}")
         return True
     
-    config = KeyringConfig()
-    handler = TwoFactorAuthHandler(config)
+    config = KeyringConfig(None)  # Use None for env_file_path to use default
+    TwoFactorAuthHandler(config)
     test_server = None
     
     try:

@@ -37,7 +37,7 @@ def create_test_config(temp_dir, **env_vars):
     content = '\n'.join([f"{key}={value}" for key, value in defaults.items()])
     env_file.write_text(content)
 
-    return KeyringConfig(str(env_file))
+    return KeyringConfig(env_file)
 
 
 @pytest.mark.manual
@@ -164,8 +164,8 @@ def test_album_existence_validation():
         # Mock iCloud client
         mock_client = MagicMock()
         mock_client.verify_albums_exist.side_effect = [
-            (['Existing Album'], ['Missing Album']),  # Personal albums
-            (['Shared Existing'], ['Shared Missing'])  # Shared albums
+            (['Existing Album'], [], ['Missing Album']),  # Personal albums: all, existing, missing
+            (['Shared Existing'], [], ['Shared Missing'])  # Shared albums: all, existing, missing
         ]
 
         # Should raise error for missing albums

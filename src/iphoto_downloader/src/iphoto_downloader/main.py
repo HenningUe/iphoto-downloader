@@ -8,7 +8,7 @@ from iphoto_downloader.continuous_runner import run_execution_mode
 from iphoto_downloader.delivery_artifacts import DeliveryArtifactsManager
 from iphoto_downloader.instance_manager import InstanceManager
 from iphoto_downloader.logger import setup_logging, get_logger
-from iphoto_downloader import iphoto_downloader_credentials
+from iphoto_downloader.manage_credentials import icloud_store_credentials, pushover_store_credentials
 
 
 def main() -> None:
@@ -44,11 +44,11 @@ def main() -> None:
         with instance_manager.instance_context():
             if not config.icloud_has_stored_credentials():
                 print("🔑 iCloud credentials not found in keyring.")
-                iphoto_downloader_credentials.icloud_store_credentials()
+                icloud_store_credentials()
 
             if config.enable_pushover and not config.pushover_has_stored_credentials():
                 print("🔑 Pushover credentials not found in keyring.")
-                iphoto_downloader_credentials.pushover_store_credentials()
+                pushover_store_credentials()
 
             config.validate()
 

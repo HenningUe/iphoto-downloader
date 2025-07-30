@@ -199,6 +199,9 @@ DATABASE_PARENT_DIRECTORY={self.temp_dir}/valid_db
 DRY_RUN=true
 LOG_LEVEL=INFO
 ENABLE_PUSHOVER=false
+EXECUTION_MODE=single
+ICLOUD_USERNAME=test@example.com
+ICLOUD_PASSWORD=testpassword
 """)
 
         config = BaseConfig(env_file_abs)

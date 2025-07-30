@@ -26,12 +26,12 @@ class TestSyncIntegration:
         setup_logging(mock_log_config)
 
     @pytest.fixture
-    def mock_config(self, temp_dir):  # noqa
+    def mock_config(self, tmp_path):  # noqa
         """Create a mock configuration for integration testing."""
         config = Mock()
         config.icloud_username = "test@example.com"
         config.icloud_password = "test-password"
-        config.sync_directory = temp_dir / "photos"
+        config.sync_directory = tmp_path / "photos"
         config.dry_run = False
         config.log_level = "INFO"
         config.max_downloads = 0
