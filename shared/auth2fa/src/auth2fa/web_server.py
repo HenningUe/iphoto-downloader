@@ -532,7 +532,7 @@ button:hover {
             
             // Update page title
             document.title = "✅ 2FA Complete - Please close this window";
-            
+        
             // Flash the title
             flashTitle();
         }
@@ -781,7 +781,7 @@ class TwoFAWebServer:
         self.server: HTTPServer | None = None
         self.server_thread: threading.Thread | None = None
         self.port: int | None = None
-        self.host: str = "0.0.0.0"  # Default to localhost
+        self.host: str = "0.0.0.0"  # Default to localhost  # nosec B104
         self.logger = get_logger(__name__)
 
         # 2FA state management

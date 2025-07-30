@@ -85,8 +85,8 @@ class DeliveryArtifactsManager:
             List of missing file definitions
         """
 
-        assert dst_file_type in ["operation", "template"], (
-            "dst_file_type must be 'operation' or 'template'"
+        assert dst_file_type in ["operation", "template"], (  # nosec B101
+            "dst_file_type must be 'operation' or 'template'"  # nosec B101
         )
 
         required_files = []
@@ -232,11 +232,11 @@ class DeliveryArtifactsManager:
 
         print("Shall the file-explorer open the settings folder [y/N]? ", end="")
         if input().strip().lower() == "y":
-            os.system(
+            os.system(  # nosec B605
                 f'explorer "{self.settings_folder}"'
-            ) if sys.platform == "win32" else os.system(
+            ) if sys.platform == "win32" else os.system(  # nosec B605
                 f'open "{self.settings_folder}"'
-            ) if sys.platform == "darwin" else os.system(
+            ) if sys.platform == "darwin" else os.system(  # nosec B605
                 f'xdg-open "{self.settings_folder}"'
             ) if sys.platform.startswith("linux") else print(
                 "Unsupported platform for opening settings folder"
