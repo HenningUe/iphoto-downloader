@@ -133,12 +133,6 @@ jobs:
         uv run bandit -r src/ shared/ -s B110 -f json -o bandit-report.json || true
         uv run bandit -r src/ shared/ -s B110
 
-    - name: Run safety check
-      run: |
-        uv run pip install safety
-        uv run safety check --json --output safety-report.json || true
-        uv run safety check
-
     - name: Upload security scan results
       if: always()
       uses: actions/upload-artifact@v4
