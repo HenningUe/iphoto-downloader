@@ -156,7 +156,7 @@ class TestDeliveryArtifactsManager(unittest.TestCase):
         with patch('platform.system', return_value='Windows'), \
              patch('iphoto_downloader.delivery_artifacts.get_settings_folder_path') as mock_path:
             
-            mock_path.return_value = Path('C:/Users/Test/AppData/Local/icloud-photo-sync/settings')
+            mock_path.return_value = Path('C:/Users/Test/AppData/Local/iphoto-downloader/settings')
             
             # Create new manager to test folder detection
             with patch('iphoto_downloader.delivery_artifacts.get_logger'):
@@ -168,7 +168,7 @@ class TestDeliveryArtifactsManager(unittest.TestCase):
         with patch('platform.system', return_value='Linux'), \
              patch('iphoto_downloader.delivery_artifacts.get_settings_folder_path') as mock_path:
             
-            mock_path.return_value = Path('/home/test/.config/icloud-photo-sync/settings')
+            mock_path.return_value = Path('/home/test/.config/iphoto-downloader/settings')
             
             # Create new manager to test folder detection
             with patch('iphoto_downloader.delivery_artifacts.get_logger'):

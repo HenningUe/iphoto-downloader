@@ -225,14 +225,14 @@ uv run pyi-makespec --onefile src/iphoto_downloader/src/iphoto_downloader/main.p
 linuxdeploy --appdir AppDir --executable dist/iphoto_downloader --create-desktop-file --output appimage
 
 # Create deb package (requires fpm)
-fpm -s dir -t deb -n icloud-photo-sync -v 1.0.0 \
+fpm -s dir -t deb -n iphoto-downloader -v 1.0.0 \
     --description "iPhoto Downloader Tool" \
     --url "https://github.com/your-org/iphoto-downloader" \
     --maintainer "Your Name <your.email@example.com>" \
     dist/iphoto_downloader=/usr/local/bin/
 
 # Create rpm package (requires fpm)
-fpm -s dir -t rpm -n icloud-photo-sync -v 1.0.0 \
+fpm -s dir -t rpm -n iphoto-downloader -v 1.0.0 \
     --description "iPhoto Downloader Tool" \
     --url "https://github.com/your-org/iphoto-downloader" \
     --maintainer "Your Name <your.email@example.com>" \

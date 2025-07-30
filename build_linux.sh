@@ -128,7 +128,7 @@ fi
 # Build credentials manager executable (unless main-only is specified)
 if [ "$MAIN_ONLY" = false ]; then
     echo "🔧 Building credentials manager executable..."
-    if ! uv run pyinstaller manage_credentials.spec --distpath "$OUTPUT_DIR" --workpath build; then
+    if ! uv run pyinstaller iphoto_downloader_credentials.spec --distpath "$OUTPUT_DIR" --workpath build; then
         echo "❌ Credentials manager build failed"
         exit 1
     fi
@@ -137,7 +137,7 @@ fi
 
 # Verify build output
 MAIN_EXE_PATH="$OUTPUT_DIR/iphoto_downloader"
-CRED_EXE_PATH="$OUTPUT_DIR/manage_credentials"
+CRED_EXE_PATH="$OUTPUT_DIR/iphoto_downloader_credentials"
 
 echo "📊 Build Information:"
 
@@ -219,6 +219,6 @@ echo ""
 echo "💡 For AppImage creation:"
 echo "   Use linuxdeploy or appimagetool with the built executable"
 echo "💡 For deb package:"
-echo "   Use fpm: fpm -s dir -t deb -n icloud-photo-sync ..."
+echo "   Use fpm: fpm -s dir -t deb -n iphoto-downloader ..."
 echo "💡 For rpm package:"
-echo "   Use fpm: fpm -s dir -t rpm -n icloud-photo-sync ..."
+echo "   Use fpm: fpm -s dir -t rpm -n iphoto-downloader ..."

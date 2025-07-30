@@ -23,7 +23,7 @@ Complete guide for installing, configuring, and using the iPhoto Downloader Tool
 
 #### Option 1: Download Executable (Recommended)
 1. Go to the [Releases page](https://github.com/HenningUe/iphoto-downloader/releases)
-2. Download the latest `iphoto_downloader.exe` and `manage_credentials.exe`
+2. Download the latest `iphoto_downloader.exe` and `iphoto_downloader_credentials.exe`
 3. Place both files in a dedicated folder (e.g., `C:\iPhotoDownloader\`)
 4. Run `iphoto_downloader.exe` for the first time to set up configuration files
 
@@ -46,10 +46,10 @@ cd iphoto-downloader
 
 #### Option 1: Download Executable (Recommended)
 1. Go to the [Releases page](https://github.com/HenningUe/iphoto-downloader/releases)
-2. Download the latest `iphoto_downloader` and `manage_credentials` binaries
+2. Download the latest `iphoto_downloader` and `iphoto_downloader_credentials` binaries
 3. Make them executable:
    ```bash
-   chmod +x iphoto_downloader manage_credentials
+   chmod +x iphoto_downloader iphoto_downloader_credentials
    ```
 4. Run `./iphoto_downloader` for the first time to set up configuration files
 
@@ -101,9 +101,6 @@ SYNC_DIRECTORY=/path/to/your/photos
 DRY_RUN=true
 LOG_LEVEL=INFO
 
-# iCloud Credentials (if not using keyring)
-ICLOUD_USERNAME=your.email@icloud.com
-ICLOUD_PASSWORD=your-app-specific-password
 ```
 
 ### Sync Directory Setup
@@ -138,10 +135,10 @@ Use the credential manager to store credentials securely in your system's creden
 
 ```bash
 # Windows
-manage_credentials.exe
+iphoto_downloader_credentials.exe
 
 # Linux
-./manage_credentials
+./iphoto_downloader_credentials
 ```
 
 The credential manager will guide you through:
@@ -343,7 +340,7 @@ When 2FA is required:
 
 **Session Problems**: Clear old sessions using the credential manager:
 ```bash
-manage_credentials
+iphoto_downloader_credentials
 # Choose option 4: "iCloud - Delete 2FA sessions"
 ```
 

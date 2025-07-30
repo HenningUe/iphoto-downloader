@@ -236,10 +236,10 @@ jobs:
           echo "✗ iphoto_downloader.spec is missing"
         fi
         
-        if [ -f manage_credentials.spec ]; then
-          echo "✓ manage_credentials.spec exists"
+        if [ -f iphoto_downloader_credentials.spec ]; then
+          echo "✓ iphoto_downloader_credentials.spec exists"
         else
-          echo "✗ manage_credentials.spec is missing"
+          echo "✗ iphoto_downloader_credentials.spec is missing"
         fi
 
     - name: Check build assets

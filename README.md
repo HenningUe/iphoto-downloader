@@ -51,8 +51,8 @@ authentication.
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/icloud-photo-sync.git
-   cd icloud-photo-sync
+   git clone https://github.com/your-username/iphoto-downloader.git
+   cd iphoto-downloader
    ```
 
 2. **Install all workspace dependencies:**
@@ -68,13 +68,13 @@ authentication.
 
 4. **Run the sync:**
    ```bash
-   uv run icloud-photo-sync
+   uv run iphoto-downloader
    ```
 
 ## 📁 Workspace Structure
 
 ```
-icloud-photo-sync/
+iphoto-downloader/
 ├── shared/
 │   └── auth2fa/              # 2FA authentication package
 │       ├── src/
@@ -224,7 +224,7 @@ uv run mypy src/
 uv add --dev pyinstaller
 
 # Build for current platform
-uv run pyinstaller icloud-photo-sync.spec
+uv run pyinstaller iphoto-downloader.spec
 ```
 
 ## 🛠️ How It Works
@@ -266,7 +266,7 @@ for details.
 
 If you encounter issues:
 
-1. Check the [Issues](https://github.com/your-username/icloud-photo-sync/issues)
+1. Check the [Issues](https://github.com/your-username/iphoto-downloader/issues)
    page
 2. Review the logs in the `logs/` directory
 3. Ensure your iCloud credentials are correct

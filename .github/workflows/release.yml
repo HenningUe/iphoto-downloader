@@ -47,7 +47,7 @@ jobs:
       run: |
         mkdir windows-artifacts
         copy dist\iphoto_downloader.exe windows-artifacts\
-        copy dist\manage_credentials.exe windows-artifacts\
+        copy dist\iphoto_downloader_credentials.exe windows-artifacts\
 
     - name: Upload Windows build artifacts
       uses: actions/upload-artifact@v4
@@ -97,7 +97,7 @@ jobs:
       run: |
         mkdir linux-artifacts
         cp dist/iphoto_downloader linux-artifacts/
-        cp dist/manage_credentials linux-artifacts/
+        cp dist/iphoto_downloader_credentials linux-artifacts/
 
     - name: Upload Linux build artifacts
       uses: actions/upload-artifact@v4
@@ -135,7 +135,7 @@ jobs:
     - name: Copy executables to package
       run: |
         cp linux-executables/iphoto_downloader debian-package/iphoto-downloader/usr/bin/
-        cp linux-executables/manage_credentials debian-package/iphoto-downloader/usr/bin/iphoto-downloader-credentials
+        cp linux-executables/iphoto_downloader_credentials debian-package/iphoto-downloader/usr/bin/iphoto-downloader-credentials
         chmod +x debian-package/iphoto-downloader/usr/bin/*
 
     - name: Create Debian control file
@@ -217,7 +217,7 @@ jobs:
         
         # Create installer for main executable
         $mainSize = (Get-Item windows-executables/iphoto_downloader.exe).Length
-        $credSize = (Get-Item windows-executables/manage_credentials.exe).Length
+        $credSize = (Get-Item windows-executables/iphoto_downloader_credentials.exe).Length
         
         # Create manifest directory
         New-Item -ItemType Directory -Force -Path "winget-manifests"
@@ -384,9 +384,9 @@ jobs:
         
         # Copy individual executables with versioned names
         cp windows-executables/iphoto_downloader.exe release-assets/
-        cp windows-executables/manage_credentials.exe release-assets/
+        cp windows-executables/iphoto_downloader_credentials.exe release-assets/
         cp linux-executables/iphoto_downloader release-assets/
-        cp linux-executables/manage_credentials release-assets/iphoto-downloader-credentials
+        cp linux-executables/iphoto_downloader_credentials release-assets/iphoto-downloader-credentials
 
     - name: Upload release assets
       uses: softprops/action-gh-release@v2
@@ -401,7 +401,7 @@ jobs:
           **Windows:**
           - 📦 [Complete Windows Package](./iphoto-downloader-windows-x64.zip) - Both executables in one ZIP
           - 🖼️ [Main Application (iphoto_downloader.exe)](./iphoto_downloader.exe)
-          - 🔐 [Credentials Manager (manage_credentials.exe)](./manage_credentials.exe)
+          - 🔐 [Credentials Manager (iphoto_downloader_credentials.exe)](./iphoto_downloader_credentials.exe)
           
           **Linux:**
           - 📦 [Complete Linux Package](./iphoto-downloader-linux-x64.tar.gz) - Both executables in one archive
@@ -422,7 +422,7 @@ jobs:
           wget https://github.com/HenningUe/iphoto-downloader/releases/download/${{ github.event.release.tag_name }}/iphoto-downloader-linux-x64.tar.gz
           tar -xzf iphoto-downloader-linux-x64.tar.gz
           sudo mv iphoto_downloader /usr/local/bin/
-          sudo mv manage_credentials /usr/local/bin/iphoto-downloader-credentials
+          sudo mv iphoto_downloader_credentials /usr/local/bin/iphoto-downloader-credentials
           ```
           
           ### What's New

@@ -1,6 +1,6 @@
 # Test Execution Guide
 
-This document explains all the ways to run tests in the icloud-photo-sync project.
+This document explains all the ways to run tests in the iphoto-downloader project.
 
 ## Prerequisites
 

@@ -12,7 +12,7 @@ All tasks have been successfully implemented:
 - ✅ **Keyring backends**: Comprehensive hiddenimports for Windows, macOS, Linux
 
 #### Credentials Manager PyInstaller Spec
-- ✅ **New spec file**: Created `manage_credentials.spec` from scratch
+- ✅ **New spec file**: Created `iphoto_downloader_credentials.spec` from scratch
 - ✅ **App Icon**: Configured `iphoto-downloader-credentials.png` icon 
 - ✅ **Optimized build**: Excluded heavy dependencies not needed for credentials management
 - ✅ **Keyring integration**: Full keyring backend support for cross-platform credential storage
@@ -37,7 +37,7 @@ All tasks have been successfully implemented:
 
 ### Successful Builds
 - **Main Executable**: `iphoto_downloader.exe` (15.72 MB)
-- **Credentials Manager**: `manage_credentials.exe` (15.69 MB)
+- **Credentials Manager**: `iphoto_downloader_credentials.exe` (15.69 MB)
 
 ### Build Script Usage Examples
 ```powershell
@@ -71,7 +71,7 @@ All tasks have been successfully implemented:
 ## 🔧 Technical Implementation Details
 
 ### New Files Created
-1. **`manage_credentials.spec`**: PyInstaller spec for credentials manager
+1. **`iphoto_downloader_credentials.spec`**: PyInstaller spec for credentials manager
 2. **Enhanced build scripts**: Updated Windows and Linux build scripts
 
 ### Key Features Implemented

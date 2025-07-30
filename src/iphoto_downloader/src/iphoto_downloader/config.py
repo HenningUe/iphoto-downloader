@@ -24,7 +24,7 @@ class BaseConfig(ABC):
     """Base configuration class with common functionality."""
 
     # Keyring service name for storing credentials
-    ICLOUD_KEYRING_SERVICE_NAME = "icloud-photo-sync"
+    ICLOUD_KEYRING_SERVICE_NAME = "iphoto-downloader"
     PUSHOVER_KEYRING_SERVICE_NAME = "pushover-photo-sync"
 
     def __init__(self, env_file_path: Path) -> None:
@@ -491,7 +491,7 @@ def get_app_data_folder_path() -> Path:
             base_path = Path(os.path.expanduser('~/.config'))
         else:
             raise EnvironmentError(f"Unsupported OS: {os.name}")
-        base_path /= 'foto_pool'
+        base_path /= 'iphoto_downloader'
     else:
         # In development mode, use current working directory
         base_path = Path.cwd()
@@ -529,9 +529,9 @@ def get_settings_env_file_path() -> Path:
     settings_ini_file_p = Path('.env')
     settings_ini_file_p_options.append(settings_ini_file_p)
     
-    # Create the foto_pool subdirectory path
-    foto_pool_settings_dir = get_settings_folder_path()
-    settings_ini_file_p = foto_pool_settings_dir / 'settings.ini'
+    # Create the iphoto_downloader subdirectory path
+    iphoto_downloader_settings_dir = get_settings_folder_path()
+    settings_ini_file_p = iphoto_downloader_settings_dir / 'settings.ini'
     settings_ini_file_p_options.append(settings_ini_file_p)
 
     settings_ini_file_p = None

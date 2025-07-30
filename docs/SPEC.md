@@ -24,7 +24,7 @@ automatically using **GitHub Actions**.
    - If the local ".env" file is not available in the current directory and the
      app shall search in the respective system user settings directory (for
      example "LOCALUSERDATA" on Windows systems) for a file named "settings.ini"
-     inside a subfolder named "foto_pool".
+     inside a subfolder named "iphoto_downloader".
    - There shall be a parallel .env-file named .env.example which works as
      template. This shall not contain any secrets.
    - It shall be possible to specify whether personal i-cloud-albums shall be
@@ -177,7 +177,7 @@ automatically using **GitHub Actions**.
    - The database's default value shall be ".data", i.e. inside the photos
      folder, e.g. "test_photos/.data".
    - It shall be possible to provide environment-variables, e.g.
-     "%LOCALAPPDATA%/foto_pool/deletion_tracker"
+     "%LOCALAPPDATA%/iphoto_downloader/deletion_tracker"
    - The environment variable "%LOCALAPPDATA%" shall be usable in windows and
      linux environments. In linux environments, this shall be replaced by a
      appropriate directory path, where user settings are stored on linux
@@ -221,7 +221,7 @@ automatically using **GitHub Actions**.
   runtime requirements.
 
 6.2. **Credentials Manager Executable Packaging**
-- Build a standalone (single file) Windows .exe and a Linux executable using PyInstaller for the manage_credentials executable, which is based on #manage_credentials.py as first entry point. 
+- Build a standalone (single file) Windows .exe and a Linux executable using PyInstaller for the iphoto_downloader_credentials executable, which is based on #manage_credentials.py as first entry point. 
 - The app shall have the image #iphoto-downloader-credentials.png as App icon
 - The Linux build must be statically linked if possible, or provide clear
   runtime requirements.

@@ -47,7 +47,7 @@ class PhotoSyncer:
             True if sync completed successfully, False otherwise
         """
         try:
-            self.logger.info("🚀 Starting iCloud photo sync")
+            self.logger.info("🚀 Starting iphoto-downloader")
 
             # Ensure sync directory exists
             self.config.ensure_sync_directory()

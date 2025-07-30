@@ -14,11 +14,11 @@ A tool to sync photos from iCloud to local storage with deletion tracking.
 ## Installation
 
 ```bash
-pip install icloud-photo-sync
+pip install iphoto-downloader
 ```
 
 ## Usage
 
 ```bash
-icloud-photo-sync
+iphoto-downloader
 ```

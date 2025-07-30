@@ -5,9 +5,9 @@ members = [
 ]
 
 [project]
-name = "icloud-photo-sync-workspace"
+name = "iphoto-downloader-workspace"
 version = "0.1.0"
-description = "A monorepo workspace for iCloud photo sync tools"
+description = "A monorepo workspace for iphoto-downloader tools"
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [
@@ -25,18 +25,18 @@ classifiers = [
 ]
 dependencies = [
     "uv",
-    "icloud-photo-sync",
+    "iphoto-downloader",
     "auth2fa",
 ]
 
 [tool.uv.sources]
-icloud-photo-sync = { workspace = true }
+iphoto-downloader = { workspace = true }
 auth2fa = { workspace = true }
 
 [project.urls]
-Homepage = "https://github.com/your-username/icloud-photo-sync"
-Repository = "https://github.com/your-username/icloud-photo-sync"
-Issues = "https://github.com/your-username/icloud-photo-sync/issues"
+Homepage = "https://github.com/your-username/iphoto-downloader"
+Repository = "https://github.com/your-username/iphoto-downloader"
+Issues = "https://github.com/your-username/iphoto-downloader/issues"
 
 [dependency-groups]
 dev = [

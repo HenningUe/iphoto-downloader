@@ -97,8 +97,8 @@ class TestKeyringConfig:
         """Test initialization with keyring credentials."""
         # Mock keyring to return stored credentials
         mock_keyring.get_password.side_effect = lambda service, key: {
-            ("icloud-photo-sync", "username"): "keyring@example.com",
-            ("icloud-photo-sync", "keyring@example.com"): "keyring-password"
+            ("iphoto-downloader", "username"): "keyring@example.com",
+            ("iphoto-downloader", "keyring@example.com"): "keyring-password"
         }.get((service, key))
 
         env_file = temp_dir / ".env"
@@ -113,8 +113,8 @@ class TestKeyringConfig:
         """Test that environment variables take precedence over keyring."""
         # Mock keyring to return stored credentials
         mock_keyring.get_password.side_effect = lambda service, key: {
-            ("icloud-photo-sync", "username"): "keyring@example.com",
-            ("icloud-photo-sync", "keyring@example.com"): "keyring-password"
+            ("iphoto-downloader", "username"): "keyring@example.com",
+            ("iphoto-downloader", "keyring@example.com"): "keyring-password"
         }.get((service, key))
 
         env_file = temp_dir / ".env"
@@ -156,9 +156,9 @@ class TestKeyringConfig:
 
         assert result is True
         mock_keyring.set_password.assert_any_call(
-            "icloud-photo-sync", "username", "new@example.com")
+            "iphoto-downloader", "username", "new@example.com")
         mock_keyring.set_password.assert_any_call(
-            "icloud-photo-sync", "new@example.com", "new-password")
+            "iphoto-downloader", "new@example.com", "new-password")
 
     def test_store_credentials_failure(self, temp_dir, clean_env, mock_keyring):
         """Test credential storage failure."""
@@ -180,8 +180,8 @@ class TestKeyringConfig:
     def test_has_stored_credentials(self, temp_dir, clean_env, mock_keyring):
         """Test checking for stored credentials."""
         mock_keyring.get_password.side_effect = lambda service, key: {
-            ("icloud-photo-sync", "username"): "stored@example.com",
-            ("icloud-photo-sync", "stored@example.com"): "stored-password"
+            ("iphoto-downloader", "username"): "stored@example.com",
+            ("iphoto-downloader", "stored@example.com"): "stored-password"
         }.get((service, key))
 
         env_file = temp_dir / ".env"
@@ -211,8 +211,8 @@ class TestKeyringConfig:
         result = config.icloud_delete_credentials()
 
         assert result is True
-        mock_keyring.delete_password.assert_any_call("icloud-photo-sync", "stored@example.com")
-        mock_keyring.delete_password.assert_any_call("icloud-photo-sync", "username")
+        mock_keyring.delete_password.assert_any_call("iphoto-downloader", "stored@example.com")
+        mock_keyring.delete_password.assert_any_call("iphoto-downloader", "username")
 
     def test_ensure_sync_directory_creates_directory(self, temp_dir, clean_env):
         """Test that ensure_sync_directory creates the sync directory."""

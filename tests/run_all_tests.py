@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test runner script for icloud-photo-sync project.
+Test runner script for iphoto-downloader project.
 Provides easy ways to run all tests, specific test files, or test categories.
 """
 

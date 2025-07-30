@@ -148,10 +148,10 @@ if (-not $MainOnly) {
     Write-Host "Building credentials manager executable..." -ForegroundColor Cyan
     try {
         if ($uvCommand.Source) {
-            & $uvCommand run pyinstaller manage_credentials.spec --distpath $OutputDir --workpath build
+            & $uvCommand run pyinstaller iphoto_downloader_credentials.spec --distpath $OutputDir --workpath build
         }
         else {
-            uv run pyinstaller manage_credentials.spec --distpath $OutputDir --workpath build
+            uv run pyinstaller iphoto_downloader_credentials.spec --distpath $OutputDir --workpath build
         }
         Write-Host "Credentials manager build completed successfully" -ForegroundColor Green
     }
@@ -163,7 +163,7 @@ if (-not $MainOnly) {
 
 # Verify build output
 $MainExePath = Join-Path $OutputDir "iphoto_downloader.exe"
-$CredExePath = Join-Path $OutputDir "manage_credentials.exe"
+$CredExePath = Join-Path $OutputDir "iphoto_downloader_credentials.exe"
 
 Write-Host "Build Information:" -ForegroundColor Cyan
 

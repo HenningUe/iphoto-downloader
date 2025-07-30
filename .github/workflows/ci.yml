@@ -67,7 +67,7 @@ jobs:
         test -f build_windows.ps1
         test -f build_linux.sh
         test -f iphoto_downloader.spec
-        test -f manage_credentials.spec
+        test -f iphoto_downloader_credentials.spec
 
     - name: Validate PyInstaller specs
       run: |
@@ -81,9 +81,9 @@ jobs:
             print('✓ iphoto_downloader.spec is readable')
         
         # Validate credentials spec file
-        with open('manage_credentials.spec', 'r') as f:
+        with open('iphoto_downloader_credentials.spec', 'r') as f:
             content = f.read()
-            print('✓ manage_credentials.spec is readable')
+            print('✓ iphoto_downloader_credentials.spec is readable')
         
         print('✓ All PyInstaller specs validated')
         "

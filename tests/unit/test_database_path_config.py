@@ -131,7 +131,7 @@ ENABLE_PUSHOVER=false
             env_file_abs = self.temp_dir / ".env"
             env_file_abs.write_text("""
 SYNC_DIRECTORY=./test_photos
-DATABASE_PARENT_DIRECTORY=$TEST_DB_PATH/foto_pool
+DATABASE_PARENT_DIRECTORY=$TEST_DB_PATH/iphoto_downloader
 DRY_RUN=true
 LOG_LEVEL=INFO
 ENABLE_PUSHOVER=false
@@ -143,7 +143,7 @@ ENABLE_PUSHOVER=false
             # Should expand environment variable
             self.assertTrue(str(database_path).startswith(test_env_path))
             self.assertTrue(str(database_path).endswith("deletion_tracker.db"))
-            self.assertTrue("foto_pool" in str(database_path))
+            self.assertTrue("iphoto_downloader" in str(database_path))
 
     def test_database_path_with_deletion_tracker(self):
         """Test that DeletionTracker can use configured database path."""

@@ -326,7 +326,7 @@ specified.
   - [x] Ensure delivery artifacts resources are accessible in executable
   - [x] Configure app icon using `iphoto-downloader-main.png` for cross-platform executable branding
 - [x] Write **Credentials Manager PyInstaller spec** for cross-platform builds:
-  - [x] Create `manage_credentials.spec` with proper configuration
+  - [x] Create `iphoto_downloader_credentials.spec` with proper configuration
   - [x] Configure app icon using `iphoto-downloader-credentials.png` for credentials manager branding
   - [x] Set up proper pathex and binaries configuration for credentials manager
   - [x] Configure hiddenimports for keyring backends (Windows, macOS, Linux)
@@ -467,7 +467,7 @@ specified.
   - [x] Add database location parameter to .env template
   - [x] Support relative and absolute paths in database configuration
   - [x] Document environment variable usage (e.g.,
-        %LOCALAPPDATA%/foto_pool/deletion_tracker)
+        %LOCALAPPDATA%/iphoto_downloader/deletion_tracker)
   - [x] Add cross-platform environment variable mapping documentation
   - [x] Set default database path to ".data" in configuration examples
 - [ ] Ensure credentials are not bundled in builds

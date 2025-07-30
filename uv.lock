@@ -5,8 +5,8 @@ requires-python = ">=3.12"
 [manifest]
 members = [
     "auth2fa",
-    "icloud-photo-sync",
-    "icloud-photo-sync-workspace",
+    "iphoto-downloader",
+    "iphoto-downloader-workspace",
 ]
 
 [[package]]
@@ -217,7 +217,7 @@ wheels = [
 ]
 
 [[package]]
-name = "icloud-photo-sync"
+name = "iphoto-downloader"
 version = "0.1.0"
 source = { editable = "src/iphoto_downloader" }
 dependencies = [
@@ -258,12 +258,12 @@ dev = [
 ]
 
 [[package]]
-name = "icloud-photo-sync-workspace"
+name = "iphoto-downloader-workspace"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "auth2fa" },
-    { name = "icloud-photo-sync" },
+    { name = "iphoto-downloader" },
     { name = "uv" },
 ]
 
@@ -282,7 +282,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "auth2fa", editable = "shared/auth2fa" },
-    { name = "icloud-photo-sync", editable = "src/iphoto_downloader" },
+    { name = "iphoto-downloader", editable = "src/iphoto_downloader" },
     { name = "uv" },
 ]
 
