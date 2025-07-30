@@ -4,6 +4,7 @@ import os
 import shutil
 import sys
 from pathlib import Path
+from typing import Any, ClassVar
 
 from .config import get_operating_mode, get_settings_folder_path
 from .logger import get_logger
@@ -12,7 +13,7 @@ from .logger import get_logger
 class DeliveryArtifactsManager:
     """Manages delivery artifacts for 'Delivered' operating mode."""
 
-    ARTEFACT_FILES = [
+    ARTEFACT_FILES: ClassVar[list[dict[str, Any]]] = [
         {"src": "USER-GUIDE.md"},
         {
             "src": ".env.example",
@@ -226,7 +227,7 @@ class DeliveryArtifactsManager:
         print("4. Run the application again to start syncing")
         print("\n💡 TIP: Your iCloud and Pushover credentials will be")
         print("   stored securely when you run the application.")
-        print(f"\n🔧 Settings folder: {self.settings_folder}")
+        print("\n🔧 Settings folder: {self.settings_folder}")
         print("=" * 60)
 
         print("Shall the file-explorer open the settings folder [y/N]? ", end="")
