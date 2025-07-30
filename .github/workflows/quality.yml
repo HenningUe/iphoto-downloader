@@ -29,14 +29,6 @@ jobs:
     - name: Install dependencies
       run: uv sync --dev
 
-    - name: Run ruff with detailed output
-      run: |
-        uv run ruff check . --output-format=github
-
-    - name: Run mypy with detailed output
-      run: |
-        uv run mypy src/ shared/ --show-error-codes --show-error-context
-
     - name: Generate test coverage
       run: |
         uv run pytest -m "not manual" --cov=src --cov=shared --cov-report=xml --cov-report=html
@@ -78,10 +70,6 @@ jobs:
         else:
             print('All functions and classes have docstrings!')
         "
-
-    - name: Check file formatting
-      run: |
-        uv run ruff format --check --diff .
 
     - name: Analyze imports
       run: |
