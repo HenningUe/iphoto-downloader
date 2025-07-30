@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 import pytest
+
 """Simple test script to verify the success page implementation."""
 
-import time
-from pathlib import Path
-import webbrowser
 import sys
+import time
+import webbrowser
+from pathlib import Path
 
 from auth2fa.web_server import TwoFAWebServer
 

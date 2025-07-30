@@ -1,16 +1,17 @@
 """Unit tests for enhanced deletion tracking functionality."""
 
 import logging
-from iphoto_downloader.logger import setup_logging
-from iphoto_downloader.deletion_tracker import DeletionTracker
-import unittest
-from pathlib import Path
-import tempfile
 import os
 import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+from iphoto_downloader.deletion_tracker import DeletionTracker
+from iphoto_downloader.logger import setup_logging
 
 # Add the source path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src/iphoto_downloader/src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src/iphoto_downloader/src"))
 
 
 # Setup logging for tests
@@ -31,6 +32,7 @@ class TestEnhancedDeletionTracker(unittest.TestCase):
         self.tracker.close()
         # Clean up temp directory
         import shutil
+
         try:
             shutil.rmtree(self.temp_dir)
         except Exception:
@@ -43,7 +45,7 @@ class TestEnhancedDeletionTracker(unittest.TestCase):
             filename="test.jpg",
             local_path="album/test.jpg",
             file_size=1024,
-            album_name="Test Album"
+            album_name="Test Album",
         )
 
         downloaded = self.tracker.get_downloaded_photos()
@@ -75,7 +77,7 @@ class TestEnhancedDeletionTracker(unittest.TestCase):
             filename="test.jpg",
             local_path="TestAlbum/test.jpg",
             file_size=12,
-            album_name="TestAlbum"
+            album_name="TestAlbum",
         )
 
         # Detect deletions - should be empty since file exists
@@ -93,7 +95,7 @@ class TestEnhancedDeletionTracker(unittest.TestCase):
             filename="deleted.jpg",
             local_path="TestAlbum/deleted.jpg",
             file_size=1024,
-            album_name="TestAlbum"
+            album_name="TestAlbum",
         )
 
         # Detect deletions - should find the missing file
@@ -114,7 +116,7 @@ class TestEnhancedDeletionTracker(unittest.TestCase):
             filename="deleted.jpg",
             local_path="TestAlbum/deleted.jpg",
             file_size=1024,
-            album_name="TestAlbum"
+            album_name="TestAlbum",
         )
 
         # Mark it as deleted
@@ -122,7 +124,7 @@ class TestEnhancedDeletionTracker(unittest.TestCase):
             photo_id="photo1",
             filename="deleted.jpg",
             file_size=1024,
-            original_path="TestAlbum/deleted.jpg"
+            original_path="TestAlbum/deleted.jpg",
         )
 
         # Detect deletions - should skip since already marked
@@ -133,19 +135,19 @@ class TestEnhancedDeletionTracker(unittest.TestCase):
         """Test marking multiple photos as deleted."""
         deleted_photos = [
             {
-                'photo_id': 'photo1',
-                'filename': 'test1.jpg',
-                'local_path': 'album/test1.jpg',
-                'file_size': 1024,
-                'album_name': 'Album1'
+                "photo_id": "photo1",
+                "filename": "test1.jpg",
+                "local_path": "album/test1.jpg",
+                "file_size": 1024,
+                "album_name": "Album1",
             },
             {
-                'photo_id': 'photo2',
-                'filename': 'test2.jpg',
-                'local_path': 'album/test2.jpg',
-                'file_size': 2048,
-                'album_name': 'Album1'
-            }
+                "photo_id": "photo2",
+                "filename": "test2.jpg",
+                "local_path": "album/test2.jpg",
+                "file_size": 2048,
+                "album_name": "Album1",
+            },
         ]
 
         self.tracker.mark_photos_as_deleted(deleted_photos)
@@ -162,7 +164,7 @@ class TestEnhancedDeletionTracker(unittest.TestCase):
             filename="test.jpg",
             local_path="album/test.jpg",
             file_size=1024,
-            album_name="TestAlbum"
+            album_name="TestAlbum",
         )
 
         # Verify it exists
@@ -184,7 +186,7 @@ class TestEnhancedDeletionTracker(unittest.TestCase):
             filename="test.jpg",
             local_path="album/test.jpg",
             file_size=1024,
-            album_name="TestAlbum"
+            album_name="TestAlbum",
         )
 
         # Initially not deleted
@@ -192,10 +194,7 @@ class TestEnhancedDeletionTracker(unittest.TestCase):
 
         # Mark as deleted
         self.tracker.add_deleted_photo(
-            photo_id="photo1",
-            filename="test.jpg",
-            file_size=1024,
-            original_path="album/test.jpg"
+            photo_id="photo1", filename="test.jpg", file_size=1024, original_path="album/test.jpg"
         )
 
         # Now should be marked as deleted

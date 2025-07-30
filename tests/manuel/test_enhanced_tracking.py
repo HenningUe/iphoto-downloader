@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 import pytest
+
 """Test script to verify enhanced photo tracking with album-aware schema."""
 
-import sys
 import sqlite3
+import sys
 from pathlib import Path
 
 # Add src to Python path
 sys.path.insert(0, str(Path(__file__).parent / "src" / "iphoto_downloader" / "src"))
 
 try:
+    import logging
+
     from iphoto_downloader.deletion_tracker import DeletionTracker
     from iphoto_downloader.logger import setup_logging
-    import logging
 except ImportError as e:
     print(f"Import error: {e}")
     sys.exit(1)
@@ -45,14 +47,14 @@ def test_album_aware_tracking():
             photo_id="photo1",
             filename="vacation.jpg",
             local_path="Album1/vacation.jpg",
-            album_name="Album1"
+            album_name="Album1",
         )
 
         tracker.add_downloaded_photo(
             photo_id="photo2",
             filename="vacation.jpg",
             local_path="Album2/vacation.jpg",
-            album_name="Album2"
+            album_name="Album2",
         )
 
         print("✅ Added same photo name to different albums")
@@ -79,11 +81,7 @@ def test_album_aware_tracking():
         print("\n🗑️ Test 3: Testing album-aware deletion tracking...")
 
         # Mark photo as deleted from Album1 only
-        tracker.add_deleted_photo(
-            photo_id="photo1",
-            filename="vacation.jpg",
-            album_name="Album1"
-        )
+        tracker.add_deleted_photo(photo_id="photo1", filename="vacation.jpg", album_name="Album1")
 
         deleted_album1 = tracker.is_photo_deleted("vacation.jpg", "Album1")
         deleted_album2 = tracker.is_photo_deleted("vacation.jpg", "Album2")
@@ -107,8 +105,14 @@ def test_album_aware_tracking():
             cursor.execute("PRAGMA table_info(downloaded_photos)")
             columns = {row[1] for row in cursor.fetchall()}
 
-            expected_columns = {'photo_name', 'source_album_name',
-                                'photo_id', 'local_path', 'downloaded_at', 'file_size'}
+            expected_columns = {
+                "photo_name",
+                "source_album_name",
+                "photo_id",
+                "local_path",
+                "downloaded_at",
+                "file_size",
+            }
 
             if expected_columns.issubset(columns):
                 print("✅ Database schema has correct album-aware columns")

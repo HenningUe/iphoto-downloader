@@ -6,14 +6,16 @@ functionality including the web interface, 2FA workflow, and server management.
 Run this file directly to start interactive testing:
     python tests/manuel/test_web_server_manual.py
 """
-import pytest
-from pathlib import Path
-import sys
 
-from iphoto_downloader.config import get_config
-from iphoto_downloader.logger import setup_logging
+import sys
+from pathlib import Path
+
+import pytest
+
 from auth2fa import TwoFactorAuthHandler
 from auth2fa.authenticator import Auth2FAConfig
+from iphoto_downloader.config import get_config
+from iphoto_downloader.logger import setup_logging
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
@@ -46,8 +48,7 @@ def test_web_interface_manual():
     two_factor_hdl = TwoFactorAuthHandler(cfg_2fa)
     try:
         two_factor_hdl.handle_2fa_authentication(
-            request_2fa_callback=on_new_2fa_requested,
-            validate_2fa_callback=on_code_received
+            request_2fa_callback=on_new_2fa_requested, validate_2fa_callback=on_code_received
         )
 
         print("\n📋 Manual Testing Instructions:")
@@ -72,7 +73,7 @@ def test_web_interface_manual():
         # Ask user for feedback
         print("\n🤔 Manual Test Feedback:")
         feedback = input("Did the web interface work correctly? (y/n): ").lower().strip()
-        if feedback == 'y':
+        if feedback == "y":
             print("✅ Manual test passed!")
             return True
         else:

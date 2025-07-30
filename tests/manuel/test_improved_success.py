@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 import pytest
+
 """Test the improved 2FA success page with better closing functionality."""
 
-from auth2fa.web_server import TwoFAWebServer
 import sys
 import time
 from pathlib import Path
+
+from auth2fa.web_server import TwoFAWebServer
 
 # Add the shared package to path
 sys.path.append(str(Path(__file__).parent / "shared" / "auth2fa" / "src"))
@@ -27,7 +29,7 @@ def test_improved_success_page():
     print(f"🌐 Direct success page: {url}/success")
 
     # Set authenticated state and open browser to main page
-    server.set_state('waiting_for_code', 'Ready for testing - enter any 6-digit code')
+    server.set_state("waiting_for_code", "Ready for testing - enter any 6-digit code")
 
     if server.open_browser():
         print("✅ Browser opened to main page")

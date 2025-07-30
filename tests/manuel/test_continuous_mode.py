@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 import pytest
+
 """
 Test script to verify continuous execution mode functionality.
 """
 
-from pathlib import Path
-from iphoto_downloader.config import BaseConfig
 import sys
-sys.path.append('src/iphoto_downloader/src')
+from pathlib import Path
+
+from iphoto_downloader.config import BaseConfig
+
+sys.path.append("src/iphoto_downloader/src")
 
 
 @pytest.mark.manual
@@ -31,7 +34,7 @@ ENABLE_PUSHOVER=false
 """
 
     test_env_path = Path("test_continuous.env")
-    with open(test_env_path, 'w') as f:
+    with open(test_env_path, "w") as f:
         f.write(test_env_content)
 
     try:
@@ -52,8 +55,9 @@ ENABLE_PUSHOVER=false
 
         # Test single mode
         test_env_single = test_env_content.replace(
-            "EXECUTION_MODE=continuous", "EXECUTION_MODE=single")
-        with open(test_env_path, 'w') as f:
+            "EXECUTION_MODE=continuous", "EXECUTION_MODE=single"
+        )
+        with open(test_env_path, "w") as f:
             f.write(test_env_single)
 
         config_single = BaseConfig(test_env_path)
@@ -61,8 +65,9 @@ ENABLE_PUSHOVER=false
 
         # Test invalid mode
         test_env_invalid = test_env_content.replace(
-            "EXECUTION_MODE=continuous", "EXECUTION_MODE=invalid")
-        with open(test_env_path, 'w') as f:
+            "EXECUTION_MODE=continuous", "EXECUTION_MODE=invalid"
+        )
+        with open(test_env_path, "w") as f:
             f.write(test_env_invalid)
 
         config_invalid = BaseConfig(test_env_path)

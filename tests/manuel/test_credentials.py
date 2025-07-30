@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 import pytest
+
 """Test script for credential manager functionality."""
 
-from iphoto_downloader.config import KeyringConfig
-import sys
 import os
+import sys
 from pathlib import Path
+
+from iphoto_downloader.config import KeyringConfig
 
 # Add the src directory to the path so we can import our modules
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -17,12 +19,12 @@ def test_keyring_helper():
     print("Testing keyring helper...")
 
     # Save original environment
-    temp_username = os.environ.get('ICLOUD_USERNAME')
-    temp_password = os.environ.get('ICLOUD_PASSWORD')
+    temp_username = os.environ.get("ICLOUD_USERNAME")
+    temp_password = os.environ.get("ICLOUD_PASSWORD")
 
     # Set temporary values to avoid validation errors
-    os.environ['ICLOUD_USERNAME'] = 'temp'
-    os.environ['ICLOUD_PASSWORD'] = 'temp'
+    os.environ["ICLOUD_USERNAME"] = "temp"
+    os.environ["ICLOUD_PASSWORD"] = "temp"
 
     try:
         config = KeyringConfig()
@@ -39,14 +41,14 @@ def test_keyring_helper():
     finally:
         # Restore original environment
         if temp_username is None:
-            os.environ.pop('ICLOUD_USERNAME', None)
+            os.environ.pop("ICLOUD_USERNAME", None)
         else:
-            os.environ['ICLOUD_USERNAME'] = temp_username
+            os.environ["ICLOUD_USERNAME"] = temp_username
 
         if temp_password is None:
-            os.environ.pop('ICLOUD_PASSWORD', None)
+            os.environ.pop("ICLOUD_PASSWORD", None)
         else:
-            os.environ['ICLOUD_PASSWORD'] = temp_password
+            os.environ["ICLOUD_PASSWORD"] = temp_password
 
 
 if __name__ == "__main__":

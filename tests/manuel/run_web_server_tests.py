@@ -7,9 +7,10 @@ Usage:
     python tests/manuel/run_web_server_tests.py
 """
 
-import test_web_server_manual
 import sys
 from pathlib import Path
+
+import test_web_server_manual
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
@@ -46,22 +47,22 @@ def main():
                 print("👋 Goodbye!")
                 break
             elif choice == "1":
-                print("\n" + "="*50)
+                print("\n" + "=" * 50)
                 result = test_port_conflict_handling()
                 print(f"Result: {'✅ PASSED' if result else '❌ FAILED'}")
             elif choice == "2":
-                print("\n" + "="*50)
+                print("\n" + "=" * 50)
                 result = test_server_state_management()
                 print(f"Result: {'✅ PASSED' if result else '❌ FAILED'}")
             elif choice == "3":
-                print("\n" + "="*50)
+                print("\n" + "=" * 50)
                 result = test_browser_integration()
                 print(f"Result: {'✅ PASSED' if result else '❌ FAILED'}")
             elif choice == "4":
-                print("\n" + "="*50)
+                print("\n" + "=" * 50)
                 print("⚠️ This test will open a browser window for manual interaction")
                 confirm = input("Continue? (y/n): ").lower().strip()
-                if confirm == 'y':
+                if confirm == "y":
                     result = test_web_interface_manual()
                     print(f"Result: {'✅ PASSED' if result else '❌ FAILED'}")
                 else:
@@ -70,7 +71,7 @@ def main():
                 print("❌ Invalid choice. Please select 0-4.")
                 continue
 
-            print("\n" + "="*50)
+            print("\n" + "=" * 50)
             print("Press Enter to continue...")
             input()
 

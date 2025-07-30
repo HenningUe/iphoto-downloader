@@ -1,0 +1,79 @@
+# Python version
+target-version = "py312"
+
+# Line length to match your current settings
+line-length = 100
+
+# Files to exclude
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+    "*.egg-info",
+    ".pytest_cache",
+    "htmlcov",
+]
+
+# Source directories
+src = ["src", "shared", "tests"]
+
+[lint]
+# Enable specific rule categories
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "SIM",    # flake8-simplify
+    "I",      # isort
+    "N",      # pep8-naming
+    "C90",    # mccabe complexity
+    "PL",     # Pylint
+    "RUF",    # Ruff-specific rules
+]
+
+# Ignore specific rules that might be too strict for this project
+ignore = [
+    "E501",   # Line too long (let formatter handle this)
+    "B008",   # Do not perform function calls in argument defaults
+    "B904",   # Within an `except` clause, raise exceptions with `raise ... from err`
+    "PLR0913", # Too many arguments to function call
+    "PLR0912", # Too many branches
+    "PLR0915", # Too many statements
+    "C901",   # Function is too complex
+    "N806",   # Variable in function should be lowercase (for API responses)
+    "SIM108", # Use ternary operator instead of if-else-block
+]
+
+[lint.per-file-ignores]
+# Test files can have longer lines and more complex functions
+"tests/*" = ["E501", "PLR0913", "PLR0915", "C901"]
+# Configuration files might have long lines
+"**/config.py" = ["E501"]
+# CLI scripts might have complex argument parsing
+"**/main.py" = ["PLR0912", "PLR0915"]
+"**/manage_credentials.py" = ["PLR0912", "PLR0915"]
+
+[lint.mccabe]
+# Maximum cyclomatic complexity
+max-complexity = 10
+
+[lint.isort]
+# Import organization
+known-first-party = ["iphoto_downloader", "auth2fa"]
+force-single-line = false
+combine-as-imports = true
+
+[lint.pydocstyle]
+# Docstring conventions
+convention = "google"
+
+[format]
+# Enable the formatter
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

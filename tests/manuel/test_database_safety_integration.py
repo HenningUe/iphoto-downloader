@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 import pytest
+
 """Quick test script to verify database safety methods integration."""
+
+import logging
+import os
+import sys
+import tempfile
+from pathlib import Path
 
 from iphoto_downloader.deletion_tracker import DeletionTracker
 from iphoto_downloader.logger import setup_logging
-import logging
-import tempfile
-from pathlib import Path
-import sys
-import os
 
 # Add the source directory to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'iphoto_downloader', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src", "iphoto_downloader", "src"))
 
 
 @pytest.mark.manual
@@ -22,54 +24,55 @@ def test_database_safety_integration():
     setup_logging(logging.INFO)
 
     test_results = {
-        'initialization': False,
-        'backup_creation': False,
-        'integrity_check': False,
-        'corruption_recovery': False,
-        'cleanup': False
+        "initialization": False,
+        "backup_creation": False,
+        "integrity_check": False,
+        "corruption_recovery": False,
+        "cleanup": False,
     }
 
     try:
         # Test 1: Normal initialization (should call ensure_database_safety)
         with tempfile.TemporaryDirectory() as tmpdir:
-            db_path = Path(tmpdir) / 'test.db'
+            db_path = Path(tmpdir) / "test.db"
 
             # This should automatically call ensure_database_safety() -> _init_database()
             tracker = DeletionTracker(str(db_path))
 
             # Verify database was created and is functional
-            tracker.add_downloaded_photo('test1', 'test1.jpg', 'album1/test1.jpg', 1024, 'Album1')
+            tracker.add_downloaded_photo("test1", "test1.jpg", "album1/test1.jpg", 1024, "Album1")
             photos = tracker.get_downloaded_photos()
 
             if len(photos) == 1 and db_path.exists():
-                test_results['initialization'] = True
+                test_results["initialization"] = True
 
             # Test 2: Backup creation (should be called automatically)
             import glob
-            backup_files = glob.glob(str(db_path.with_suffix('.backup_*.db')))
+
+            backup_files = glob.glob(str(db_path.with_suffix(".backup_*.db")))
             if len(backup_files) >= 1:
-                test_results['backup_creation'] = True
+                test_results["backup_creation"] = True
 
             # Test 3: Integrity check (should work)
             if tracker.check_database_integrity():
-                test_results['integrity_check'] = True
+                test_results["integrity_check"] = True
 
             tracker.close()
 
         # Test 4: Corruption recovery
         with tempfile.TemporaryDirectory() as tmpdir:
-            db_path = Path(tmpdir) / 'test.db'
+            db_path = Path(tmpdir) / "test.db"
 
             # Create initial database with data and backup
             tracker1 = DeletionTracker(str(db_path))
-            tracker1.add_downloaded_photo('test1', 'test1.jpg', 'album1/test1.jpg', 1024, 'Album1')
+            tracker1.add_downloaded_photo("test1", "test1.jpg", "album1/test1.jpg", 1024, "Album1")
             tracker1.create_backup()
             tracker1.close()
             del tracker1
 
             # Corrupt the database
-            with open(db_path, 'wb') as f:
-                f.write(b'corrupted database content')
+            with open(db_path, "wb") as f:
+                f.write(b"corrupted database content")
 
             # Initialize new tracker - should auto-recover
             try:
@@ -78,7 +81,7 @@ def test_database_safety_integration():
                 # Verify data was recovered
                 photos = tracker2.get_downloaded_photos()
                 if len(photos) == 1:
-                    test_results['corruption_recovery'] = True
+                    test_results["corruption_recovery"] = True
 
                 tracker2.close()
             except Exception:
@@ -86,14 +89,14 @@ def test_database_safety_integration():
 
         # Test 5: Cleanup functionality
         with tempfile.TemporaryDirectory() as tmpdir:
-            db_path = Path(tmpdir) / 'test.db'
+            db_path = Path(tmpdir) / "test.db"
             tracker = DeletionTracker(str(db_path))
             tracker.close()  # Should not raise exception
-            test_results['cleanup'] = True
+            test_results["cleanup"] = True
 
     except Exception as e:
         # Write error to file for debugging
-        with open('test_error.log', 'w') as f:
+        with open("test_error.log", "w") as f:
             f.write(f"Test failed with error: {e}\n")
         return False, test_results
 
@@ -101,7 +104,7 @@ def test_database_safety_integration():
     all_passed = all(test_results.values())
 
     # Write results to file
-    with open('test_results.txt', 'w') as f:
+    with open("test_results.txt", "w") as f:
         f.write("Database Safety Methods Integration Test Results\n")
         f.write("=" * 50 + "\n\n")
 
@@ -110,7 +113,8 @@ def test_database_safety_integration():
             f.write(f"{test_name.replace('_', ' ').title()}: {status}\n")
 
         f.write(
-            f"\nOverall Result: {'✅ ALL TESTS PASSED' if all_passed else '❌ SOME TESTS FAILED'}\n")
+            f"\nOverall Result: {'✅ ALL TESTS PASSED' if all_passed else '❌ SOME TESTS FAILED'}\n"
+        )
 
         f.write("\nMethod Call Verification:\n")
         f.write("• ensure_database_safety() → Called in __init__\n")
@@ -127,7 +131,7 @@ if __name__ == "__main__":
     success, results = test_database_safety_integration()
 
     # Write simple status file
-    with open('test_status.txt', 'w') as f:
+    with open("test_status.txt", "w") as f:
         if success:
             f.write("SUCCESS: All database safety methods are properly integrated!")
         else:

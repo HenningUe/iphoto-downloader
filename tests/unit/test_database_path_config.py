@@ -18,6 +18,7 @@ class TestDatabasePathConfiguration(unittest.TestCase):
         """Set up test fixtures."""
         # Set up logging for tests
         import logging
+
         setup_logging(log_level=logging.INFO)
 
         self.temp_dir = Path(tempfile.mkdtemp())
@@ -42,6 +43,7 @@ ENABLE_PUSHOVER=false
         os.chdir(self.original_cwd)
 
         import shutil
+
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def test_default_database_path(self):
@@ -64,9 +66,9 @@ ENABLE_PUSHOVER=false
         # Ensure DATABASE_PARENT_DIRECTORY is not set in environment for this test
         with patch.dict(os.environ, {}, clear=False):
             # Remove DATABASE_PARENT_DIRECTORY if it exists
-            if 'DATABASE_PARENT_DIRECTORY' in os.environ:
-                del os.environ['DATABASE_PARENT_DIRECTORY']
-            
+            if "DATABASE_PARENT_DIRECTORY" in os.environ:
+                del os.environ["DATABASE_PARENT_DIRECTORY"]
+
             try:
                 config = BaseConfig(test_env_file)
                 database_path = config.database_path
@@ -126,7 +128,7 @@ ENABLE_PUSHOVER=false
         # Create a test environment variable
         test_env_path = str(self.temp_dir / "env_test")
 
-        with patch.dict(os.environ, {'TEST_DB_PATH': test_env_path}):
+        with patch.dict(os.environ, {"TEST_DB_PATH": test_env_path}):
             # Update env file with environment variable
             env_file_abs = self.temp_dir / ".env"
             env_file_abs.write_text("""
@@ -213,5 +215,5 @@ ICLOUD_PASSWORD=testpassword
             self.fail("validate() raised ValueError unexpectedly with valid database path")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

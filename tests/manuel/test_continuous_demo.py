@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 import pytest
+
 """
 Integration test to demonstrate continuous execution mode functionality.
 """
 
-from iphoto_downloader.logger import setup_logging
-from iphoto_downloader.continuous_runner import ContinuousRunner
-from iphoto_downloader.config import BaseConfig
 import sys
 import tempfile
 import threading
 import time
 from pathlib import Path
 
-sys.path.append('src/iphoto_downloader/src')
+from iphoto_downloader.config import BaseConfig
+from iphoto_downloader.continuous_runner import ContinuousRunner
+from iphoto_downloader.logger import setup_logging
+
+sys.path.append("src/iphoto_downloader/src")
 
 
 @pytest.mark.manual
@@ -41,7 +43,7 @@ ENABLE_PUSHOVER=false
 """
 
         env_file = temp_path / "test.env"
-        with open(env_file, 'w') as f:
+        with open(env_file, "w") as f:
             f.write(test_env_content)
 
         # Create config first
@@ -59,7 +61,7 @@ ENABLE_PUSHOVER=false
 
         # Test single mode
         print("\n📍 Testing single execution mode...")
-        config.execution_mode = 'single'
+        config.execution_mode = "single"
         runner = ContinuousRunner(config)
 
         success = runner.run_single_sync()
@@ -67,7 +69,7 @@ ENABLE_PUSHOVER=false
 
         # Test that continuous mode can be started (but stop it quickly)
         print("\n🔄 Testing continuous execution mode (5 second demo)...")
-        config.execution_mode = 'continuous'
+        config.execution_mode = "continuous"
         runner = ContinuousRunner(config)
 
         # Start continuous mode in a thread

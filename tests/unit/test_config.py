@@ -3,10 +3,13 @@
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
+
 import pytest
 
 from iphoto_downloader.config import (
-    get_config, BaseConfig, KeyringConfig,
+    BaseConfig,
+    KeyringConfig,
+    get_config,
 )
 
 
@@ -22,10 +25,17 @@ def clean_env(monkeypatch):
     """Clean environment variables for testing."""
     # Remove any existing iCloud related environment variables
     env_vars_to_clean = [
-        'ICLOUD_USERNAME', 'ICLOUD_PASSWORD', 'SYNC_DIRECTORY',
-        'DRY_RUN', 'LOG_LEVEL', 'MAX_DOWNLOADS', 'MAX_FILE_SIZE_MB',
-        'INCLUDE_PERSONAL_ALBUMS', 'INCLUDE_SHARED_ALBUMS',
-        'PERSONAL_ALBUM_NAMES_TO_INCLUDE', 'SHARED_ALBUM_NAMES_TO_INCLUDE'
+        "ICLOUD_USERNAME",
+        "ICLOUD_PASSWORD",
+        "SYNC_DIRECTORY",
+        "DRY_RUN",
+        "LOG_LEVEL",
+        "MAX_DOWNLOADS",
+        "MAX_FILE_SIZE_MB",
+        "INCLUDE_PERSONAL_ALBUMS",
+        "INCLUDE_SHARED_ALBUMS",
+        "PERSONAL_ALBUM_NAMES_TO_INCLUDE",
+        "SHARED_ALBUM_NAMES_TO_INCLUDE",
     ]
 
     for var in env_vars_to_clean:
@@ -50,9 +60,9 @@ class TestConfigFactory:
     def test_returns_keyring_config_when_available(self, clean_env, monkeypatch):
         """Test that get_config returns KeyringConfig when keyring is available."""
         # Set up environment with valid credentials to pass validation
-        monkeypatch.setenv('ICLOUD_USERNAME', 'test@example.com')
-        monkeypatch.setenv('ICLOUD_PASSWORD', 'test-password')
-        monkeypatch.setenv('ENABLE_PUSHOVER', 'false')
+        monkeypatch.setenv("ICLOUD_USERNAME", "test@example.com")
+        monkeypatch.setenv("ICLOUD_PASSWORD", "test-password")
+        monkeypatch.setenv("ENABLE_PUSHOVER", "false")
         config = get_config()
         assert isinstance(config, KeyringConfig)
 
@@ -60,7 +70,7 @@ class TestConfigFactory:
 @pytest.fixture
 def mock_keyring():
     """Mock keyring module."""
-    with patch('iphoto_downloader.config.keyring') as mock_keyring:
+    with patch("iphoto_downloader.config.keyring") as mock_keyring:
         yield mock_keyring
 
 
@@ -71,7 +81,7 @@ class TestKeyringConfig:
         """Test initialization with environment variables."""
         # Mock keyring to return no credentials to ensure env vars are used
         mock_keyring.get_password.return_value = None
-        
+
         env_file = temp_dir / ".env"
         env_file.write_text(
             "ICLOUD_USERNAME=test@example.com\n"
@@ -98,7 +108,7 @@ class TestKeyringConfig:
         # Mock keyring to return stored credentials
         mock_keyring.get_password.side_effect = lambda service, key: {
             ("iphoto-downloader", "username"): "keyring@example.com",
-            ("iphoto-downloader", "keyring@example.com"): "keyring-password"
+            ("iphoto-downloader", "keyring@example.com"): "keyring-password",
         }.get((service, key))
 
         env_file = temp_dir / ".env"
@@ -114,7 +124,7 @@ class TestKeyringConfig:
         # Mock keyring to return stored credentials
         mock_keyring.get_password.side_effect = lambda service, key: {
             ("iphoto-downloader", "username"): "keyring@example.com",
-            ("iphoto-downloader", "keyring@example.com"): "keyring-password"
+            ("iphoto-downloader", "keyring@example.com"): "keyring-password",
         }.get((service, key))
 
         env_file = temp_dir / ".env"
@@ -156,9 +166,11 @@ class TestKeyringConfig:
 
         assert result is True
         mock_keyring.set_password.assert_any_call(
-            "iphoto-downloader", "username", "new@example.com")
+            "iphoto-downloader", "username", "new@example.com"
+        )
         mock_keyring.set_password.assert_any_call(
-            "iphoto-downloader", "new@example.com", "new-password")
+            "iphoto-downloader", "new@example.com", "new-password"
+        )
 
     def test_store_credentials_failure(self, temp_dir, clean_env, mock_keyring):
         """Test credential storage failure."""
@@ -181,7 +193,7 @@ class TestKeyringConfig:
         """Test checking for stored credentials."""
         mock_keyring.get_password.side_effect = lambda service, key: {
             ("iphoto-downloader", "username"): "stored@example.com",
-            ("iphoto-downloader", "stored@example.com"): "stored-password"
+            ("iphoto-downloader", "stored@example.com"): "stored-password",
         }.get((service, key))
 
         env_file = temp_dir / ".env"
@@ -248,7 +260,7 @@ class TestKeyringConfig:
         """Test that string representation hides sensitive data."""
         # Mock keyring to return no credentials to ensure env vars are used
         mock_keyring.get_password.return_value = None
-        
+
         env_file = temp_dir / ".env"
         env_file.write_text(
             "ICLOUD_USERNAME=test@example.com\n"
@@ -271,9 +283,7 @@ class TestConfigsWithEnvVars:
     def test_init_with_env_variables(self, temp_dir, clean_env):
         """Test initialization with environment variables."""
         env_file = temp_dir / ".env"
-        env_file.write_text(
-            "SYNC_DIRECTORY=./test_photos\n"
-        )
+        env_file.write_text("SYNC_DIRECTORY=./test_photos\n")
 
         config = KeyringConfig(env_file)
 
@@ -283,7 +293,7 @@ class TestConfigsWithEnvVars:
         """Test that string representation shows env-only source."""
         # Mock keyring to return no credentials to ensure env vars are used
         mock_keyring.get_password.return_value = None
-        
+
         env_file = temp_dir / ".env"
         env_file.write_text(
             "ICLOUD_USERNAME=test@example.com\n"
@@ -315,10 +325,7 @@ class TestAlbumFilteringConfig:
     def test_album_filtering_boolean_settings(self, temp_dir, clean_env):
         """Test album filtering boolean configuration."""
         env_file = temp_dir / ".env"
-        env_file.write_text(
-            "INCLUDE_PERSONAL_ALBUMS=false\n"
-            "INCLUDE_SHARED_ALBUMS=true\n"
-        )
+        env_file.write_text("INCLUDE_PERSONAL_ALBUMS=false\nINCLUDE_SHARED_ALBUMS=true\n")
 
         config = KeyringConfig(env_file)
 
@@ -341,10 +348,7 @@ class TestAlbumFilteringConfig:
     def test_empty_album_names(self, temp_dir, clean_env):
         """Test handling of empty album name lists."""
         env_file = temp_dir / ".env"
-        env_file.write_text(
-            "PERSONAL_ALBUM_NAMES_TO_INCLUDE=\n"
-            "SHARED_ALBUM_NAMES_TO_INCLUDE=,,,\n"
-        )
+        env_file.write_text("PERSONAL_ALBUM_NAMES_TO_INCLUDE=\nSHARED_ALBUM_NAMES_TO_INCLUDE=,,,\n")
 
         config = KeyringConfig(env_file)
 
@@ -354,17 +358,13 @@ class TestAlbumFilteringConfig:
     def test_album_validation_error_both_disabled(self, temp_dir, clean_env):
         """Test validation error when both album types are disabled."""
         env_file = temp_dir / ".env"
-        env_file.write_text(
-            "INCLUDE_PERSONAL_ALBUMS=false\n"
-            "INCLUDE_SHARED_ALBUMS=false\n"
-        )
+        env_file.write_text("INCLUDE_PERSONAL_ALBUMS=false\nINCLUDE_SHARED_ALBUMS=false\n")
 
         config = KeyringConfig(env_file)
 
         with pytest.raises(
-                ValueError,
-                match="At least one of INCLUDE_PERSONAL_ALBUMS or "
-                      "INCLUDE_SHARED_ALBUMS must be true"
+            ValueError,
+            match="At least one of INCLUDE_PERSONAL_ALBUMS or INCLUDE_SHARED_ALBUMS must be true",
         ):
             config.validate()
 
@@ -383,8 +383,16 @@ class TestAlbumFilteringConfig:
         # Mock icloud_client
         mock_client = MagicMock()
         mock_client.verify_albums_exist.side_effect = [
-            (["all_albums"], ["Existing"], ["Missing"]),  # Personal albums - (all, existing, missing)
-            (["all_albums"], ["SharedExisting"], ["SharedMissing"])  # Shared albums - (all, existing, missing)
+            (
+                ["all_albums"],
+                ["Existing"],
+                ["Missing"],
+            ),  # Personal albums - (all, existing, missing)
+            (
+                ["all_albums"],
+                ["SharedExisting"],
+                ["SharedMissing"],
+            ),  # Shared albums - (all, existing, missing)
         ]
 
         with pytest.raises(ValueError, match="The following specified albums do not exist"):
@@ -405,8 +413,8 @@ class TestAlbumFilteringConfig:
         # Mock icloud_client
         mock_client = MagicMock()
         mock_client.verify_albums_exist.side_effect = [
-            (["all_albums"], ["Album1", "Album2"], []),  # Personal albums - all found  
-            (["all_albums"], ["Shared1", "Shared2"], [])  # Shared albums - all found
+            (["all_albums"], ["Album1", "Album2"], []),  # Personal albums - all found
+            (["all_albums"], ["Shared1", "Shared2"], []),  # Shared albums - all found
         ]
 
         # Should not raise an exception

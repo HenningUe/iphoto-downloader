@@ -1,16 +1,14 @@
 """Centralized logging configuration for iPhoto Downloader Tool."""
 
-import sys
 import logging
+import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import Optional
 
 from .config import get_app_data_folder_path
 
-
 # Global logger instance
-_logger: Optional[logging.Logger] = None
+_logger: logging.Logger | None = None
 
 
 def setup_logging(log_level: int = logging.INFO) -> None:
@@ -19,7 +17,6 @@ def setup_logging(log_level: int = logging.INFO) -> None:
     Args:
         config: Application configuration
     """
-    global _logger
 
     # Create logs directory if it doesn't exist
     get_log_dir_path().mkdir(exist_ok=True)
@@ -27,17 +24,17 @@ def setup_logging(log_level: int = logging.INFO) -> None:
     # Configure logging
     logging.basicConfig(
         level=log_level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         handlers=[
             logging.StreamHandler(sys.stdout),
             RotatingFileHandler(
-                get_log_dir_path() / 'icloud-sync.log', 
-                mode='a', 
-                encoding='utf-8',
-                maxBytes=50*1024,  # 50KB
-                backupCount=5
+                get_log_dir_path() / "icloud-sync.log",
+                mode="a",
+                encoding="utf-8",
+                maxBytes=50 * 1024,  # 50KB
+                backupCount=5,
             ),
-        ]
+        ],
     )
 
     # Set up the global logger

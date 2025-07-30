@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 import pytest
+
 """Quick verification test for database safety methods integration."""
+
+import logging
+import os
+import sys
+import tempfile
+from pathlib import Path
 
 from iphoto_downloader.deletion_tracker import DeletionTracker
 from iphoto_downloader.logger import setup_logging
-import logging
-import tempfile
-from pathlib import Path
-import sys
-import os
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src', 'iphoto_downloader', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src", "iphoto_downloader", "src"))
 
 
 @pytest.mark.manual
@@ -26,7 +28,7 @@ def test_database_safety_integration():
     # Test 1: Normal initialization flow
     try:
         with tempfile.TemporaryDirectory() as tmpdir:
-            db_path = Path(tmpdir) / 'test.db'
+            db_path = Path(tmpdir) / "test.db"
 
             # This should trigger: ensure_database_safety() -> _init_database() -> create_backup()
             tracker = DeletionTracker(str(db_path))
@@ -45,7 +47,7 @@ def test_database_safety_integration():
                 results.append("❌ Backup creation during init: FAIL")
 
             # Test normal operations
-            tracker.add_downloaded_photo('test1', 'test1.jpg', 'album1/test1.jpg', 1024, 'Album1')
+            tracker.add_downloaded_photo("test1", "test1.jpg", "album1/test1.jpg", 1024, "Album1")
             photos = tracker.get_downloaded_photos()
             if len(photos) == 1:
                 results.append("✅ Normal database operations: PASS")
@@ -61,18 +63,18 @@ def test_database_safety_integration():
     # Test 2: Database corruption recovery
     try:
         with tempfile.TemporaryDirectory() as tmpdir:
-            db_path = Path(tmpdir) / 'test.db'
+            db_path = Path(tmpdir) / "test.db"
 
             # Create initial database with data and backup
             tracker1 = DeletionTracker(str(db_path))
-            tracker1.add_downloaded_photo('test1', 'test1.jpg', 'album1/test1.jpg', 1024, 'Album1')
+            tracker1.add_downloaded_photo("test1", "test1.jpg", "album1/test1.jpg", 1024, "Album1")
             tracker1.create_backup()
             tracker1.close()
             del tracker1
 
             # Corrupt the database
-            with open(db_path, 'wb') as f:
-                f.write(b'corrupted database content')
+            with open(db_path, "wb") as f:
+                f.write(b"corrupted database content")
 
             # This should trigger: ensure_database_safety()
             # -> check_database_integrity() -> recover_from_backup()
@@ -80,7 +82,7 @@ def test_database_safety_integration():
 
             # Verify data was recovered
             photos = tracker2.get_downloaded_photos()
-            if len(photos) == 1 and 'test1' in photos:
+            if len(photos) == 1 and "test1" in photos:
                 results.append("✅ Database corruption recovery: PASS")
             else:
                 results.append("❌ Database corruption recovery: FAIL")
@@ -93,13 +95,14 @@ def test_database_safety_integration():
     # Test 3: Backup cleanup functionality
     try:
         with tempfile.TemporaryDirectory() as tmpdir:
-            db_path = Path(tmpdir) / 'test.db'
+            db_path = Path(tmpdir) / "test.db"
             tracker = DeletionTracker(str(db_path))
 
             # Create multiple backups (should keep only max_backups)
             for i in range(7):
                 tracker.add_downloaded_photo(
-                    f'test{i}', f'test{i}.jpg', f'album1/test{i}.jpg', 1024, 'Album1')
+                    f"test{i}", f"test{i}.jpg", f"album1/test{i}.jpg", 1024, "Album1"
+                )
                 tracker.create_backup(max_backups=3)
 
             # Count backup files
@@ -108,7 +111,8 @@ def test_database_safety_integration():
                 results.append("✅ Backup cleanup (max_backups): PASS")
             else:
                 results.append(
-                    f"❌ Backup cleanup: FAIL - Found {len(backup_files)} backups, expected ≤3")
+                    f"❌ Backup cleanup: FAIL - Found {len(backup_files)} backups, expected ≤3"
+                )
 
             tracker.close()
 
@@ -121,13 +125,13 @@ def test_database_safety_integration():
         from iphoto_downloader.sync import PhotoSyncer
 
         # Check if cleanup method exists
-        if hasattr(PhotoSyncer, 'cleanup'):
+        if hasattr(PhotoSyncer, "cleanup"):
             results.append("✅ PhotoSyncer.cleanup() method exists: PASS")
         else:
             results.append("❌ PhotoSyncer.cleanup() method missing: FAIL")
 
         # Check if __del__ method exists
-        if hasattr(PhotoSyncer, '__del__'):
+        if hasattr(PhotoSyncer, "__del__"):
             results.append("✅ PhotoSyncer.__del__() method exists: PASS")
         else:
             results.append("❌ PhotoSyncer.__del__() method missing: FAIL")

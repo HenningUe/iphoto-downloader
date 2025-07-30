@@ -1,11 +1,12 @@
 """Shared test utilities and fixtures."""
 
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
-from typing import Dict, Any
-import pytest
+from typing import Any
 from unittest.mock import Mock
+
+import pytest
 
 
 @pytest.fixture
@@ -16,8 +17,9 @@ def temp_dir():
 
     # Windows-specific cleanup with retry
     def cleanup_dir(path, retries=3):
-        import time
         import os
+        import time
+
         for attempt in range(retries):
             try:
                 # Force close any open file handles
@@ -97,15 +99,15 @@ class MockPhotoInfo:
         return b"fake_image_data"
 
 
-def create_test_photo_info(filename: str, **kwargs) -> Dict[str, Any]:
+def create_test_photo_info(filename: str, **kwargs) -> dict[str, Any]:
     """Create test photo info dictionary."""
     return {
-        'filename': filename,
-        'size': kwargs.get('size', 1024 * 1024),
-        'created': kwargs.get('created', '2023-01-01T12:00:00Z'),
-        'download_url': kwargs.get('download_url', f'https://example.com/{filename}'),
-        'id': kwargs.get('id', f'photo_{filename}'),
-        'type': kwargs.get('type', 'image/jpeg'),
+        "filename": filename,
+        "size": kwargs.get("size", 1024 * 1024),
+        "created": kwargs.get("created", "2023-01-01T12:00:00Z"),
+        "download_url": kwargs.get("download_url", f"https://example.com/{filename}"),
+        "id": kwargs.get("id", f"photo_{filename}"),
+        "type": kwargs.get("type", "image/jpeg"),
     }
 
 

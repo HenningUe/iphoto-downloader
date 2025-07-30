@@ -3,16 +3,18 @@
 import time
 import typing as t
 from pathlib import Path
-from pyicloud.services.photos import AlbumContainer, BasePhotoAlbum
+
 from pyicloud import PyiCloudService
-from pyicloud.exceptions import PyiCloudFailedLoginException, PyiCloudAPIResponseException
+from pyicloud.exceptions import PyiCloudAPIResponseException, PyiCloudFailedLoginException
+from pyicloud.services.photos import AlbumContainer, BasePhotoAlbum
+
+from auth2fa import Auth2FAConfig, PushoverConfig, handle_2fa_authentication
 
 from .config import BaseConfig
 from .logger import get_logger
-from auth2fa import handle_2fa_authentication, Auth2FAConfig, PushoverConfig
 
 
-class iCloudClient:
+class ICloudClient:
     """Handles iCloud authentication and photo operations."""
 
     def __init__(self, config: BaseConfig) -> None:
@@ -33,7 +35,7 @@ class iCloudClient:
         """Get the global logger instance."""
         return get_logger()
 
-    def authenticate(self) -> bool:
+    def authenticate(self) -> bool:  # noqa
         """Authenticate with iCloud with session persistence and web-based 2FA.
 
         Returns:
@@ -53,11 +55,11 @@ class iCloudClient:
             self._api = PyiCloudService(
                 self.config.icloud_username,
                 self.config.icloud_password,
-                cookie_directory=str(self.session_dir)
+                cookie_directory=str(self.session_dir),
             )
 
             # Check if we have a trusted session
-            if hasattr(self._api, 'is_trusted_session') and self._api.is_trusted_session:
+            if hasattr(self._api, "is_trusted_session") and self._api.is_trusted_session:
                 self.logger.info("✅ Using existing trusted session - no 2FA required")
                 return self._verify_access()
 
@@ -108,14 +110,13 @@ class iCloudClient:
         """
         cfg_2fa = Auth2FAConfig(
             pushover_config=PushoverConfig(
-                api_token=self.config.pushover_api_token,
-                user_key=self.config.pushover_user_key
+                api_token=self.config.pushover_api_token, user_key=self.config.pushover_user_key
             ),
         )
         return handle_2fa_authentication(
             config=cfg_2fa,
             request_2fa_callback=self._request_new_2fa,
-            validate_2fa_callback=self.handle_2fa_validation
+            validate_2fa_callback=self.handle_2fa_validation,
         )
 
     def _request_new_2fa(self) -> bool:
@@ -124,9 +125,9 @@ class iCloudClient:
         Returns:
             True if request was successful, False otherwise
         """
-        if self._api and hasattr(self._api, 'send_verification_code'):
+        if self._api and hasattr(self._api, "send_verification_code"):
             # Try to get trusted devices and send to first one
-            if hasattr(self._api, 'trusted_devices') and self._api.trusted_devices:
+            if hasattr(self._api, "trusted_devices") and self._api.trusted_devices:
                 device = self._api.trusted_devices[0]
                 self._api.send_verification_code(device)
                 self.logger.info("📱 New 2FA code requested from Apple")
@@ -156,7 +157,7 @@ class iCloudClient:
         """
         if not self._api:
             return False
-        return hasattr(self._api, 'is_trusted_session') and self._api.is_trusted_session
+        return hasattr(self._api, "is_trusted_session") and self._api.is_trusted_session
 
     def handle_2fa_validation(self, code: str) -> bool:
         """Handle 2FA verification.
@@ -190,7 +191,7 @@ class iCloudClient:
         if not self._api:
             return False
 
-        if hasattr(self._api, 'trust_session'):
+        if hasattr(self._api, "trust_session"):
             result = self._api.trust_session()
             if result:
                 self.logger.info("✅ Session trusted successfully")
@@ -228,9 +229,7 @@ class iCloudClient:
                         total_size += file_size
                         self.logger.debug(f"Removed expired session file: {session_file.name}")
                 except (OSError, FileNotFoundError) as e:
-                    self.logger.warning(
-                        f"Failed to remove session file {session_file.name}: {e}"
-                    )
+                    self.logger.warning(f"Failed to remove session file {session_file.name}: {e}")
 
         if cleaned_count > 0:
             self.logger.info(
@@ -266,13 +265,13 @@ class iCloudClient:
                 try:
                     # Extract photo metadata
                     photo_info = {
-                        'id': photo.id,
-                        'filename': photo.filename,
-                        'size': getattr(photo, 'size', 0),
-                        'created': getattr(photo, 'created', None),
-                        'modified': getattr(photo, 'modified', None),
-                        'album_name': 'All Photos',  # Default album for main library
-                        'photo_obj': photo  # Keep reference for downloading
+                        "id": photo.id,
+                        "filename": photo.filename,
+                        "size": getattr(photo, "size", 0),
+                        "created": getattr(photo, "created", None),
+                        "modified": getattr(photo, "modified", None),
+                        "album_name": "All Photos",  # Default album for main library
+                        "photo_obj": photo,  # Keep reference for downloading
                     }
 
                     yield photo_info
@@ -298,33 +297,33 @@ class iCloudClient:
 
         # Get all albums from iCloud
         albums = self._api.photos.albums
-        
-        # Get personal albums (excluding the Library album which contains shared streams)  
-        all_albums = list(albums.values()) if hasattr(albums, 'values') else []
-        albums_list = [album for album in all_albums if getattr(album, 'name', '') != 'Library']
-        
+
+        # Get personal albums (excluding the Library album which contains shared streams)
+        all_albums = list(albums.values()) if hasattr(albums, "values") else []
+        albums_list = [album for album in all_albums if getattr(album, "name", "") != "Library"]
+
         self.logger.info(f"📊 Found {len(albums_list)} personal albums in iCloud")
 
         # shared albums
-        album_library = self._api.photos.albums['Library']
+        album_library = self._api.photos.albums["Library"]
         albums_shared: AlbumContainer = album_library.service.shared_streams
         albums_shared_list = list(albums_shared.values())
         self.logger.info(f"📊 Found {len(albums_shared_list)} shared albums in iCloud")
 
         for album in albums_list + albums_shared_list:
-            is_shared = getattr(album, 'list_type', '') == "sharedstream"
+            is_shared = getattr(album, "list_type", "") == "sharedstream"
             # Extract album metadata
             try:
                 photo_count = len(album)
             except (TypeError, AttributeError):
                 photo_count = 0
-                
+
             album_info = {
-                'id': getattr(album, 'id', None),
-                'name': album.name,
-                'photo_count': photo_count,
-                'is_shared': is_shared,
-                'album_obj': album  # Keep reference for accessing photos
+                "id": getattr(album, "id", None),
+                "name": album.name,
+                "photo_count": photo_count,
+                "is_shared": is_shared,
+                "album_obj": album,  # Keep reference for accessing photos
             }
 
             yield album_info
@@ -356,7 +355,7 @@ class iCloudClient:
 
         if is_shared is None or is_shared is True:
             # Get all shared albums from iCloud
-            album_library = self._api.photos.albums['Library']
+            album_library = self._api.photos.albums["Library"]
             albums_shared: AlbumContainer = album_library.service.shared_streams
             albums_shared_list = list(albums_shared.values())
             all_albums.extend(albums_shared_list)
@@ -381,30 +380,29 @@ class iCloudClient:
 
         for i, photo in enumerate(photos, 1):
             if i % 50 == 0:  # Log progress every 50 photos for albums
-                self.logger.info(f"📥 Processing photo {i}/{total_count} "
-                                 f"from album '{album_name}'")
+                self.logger.info(f"📥 Processing photo {i}/{total_count} from album '{album_name}'")
 
             try:
                 # Extract photo metadata
                 photo_info = {
-                    'id': photo.id,
-                    'filename': photo.filename,
-                    'size': getattr(photo, 'size', 0),
-                    'created': getattr(photo, 'created', None),
-                    'modified': getattr(photo, 'modified', None),
-                    'album_name': album_name,
-                    'photo_obj': photo  # Keep reference for downloading
+                    "id": photo.id,
+                    "filename": photo.filename,
+                    "size": getattr(photo, "size", 0),
+                    "created": getattr(photo, "created", None),
+                    "modified": getattr(photo, "modified", None),
+                    "album_name": album_name,
+                    "photo_obj": photo,  # Keep reference for downloading
                 }
 
                 yield photo_info
 
             except Exception as e:
-                self.logger.warning(f"⚠️ Error processing photo {i} "
-                                    f"from album '{album_name}': {e}")
+                self.logger.warning(f"⚠️ Error processing photo {i} from album '{album_name}': {e}")
                 continue
 
-    def list_photos_from_albums(self, album_names: list[str],
-                                include_main_library: bool = True) -> t.Iterator[dict[str, t.Any]]:
+    def list_photos_from_albums(
+        self, album_names: list[str], include_main_library: bool = True
+    ) -> t.Iterator[dict[str, t.Any]]:
         """List photos from multiple specified albums.
 
         Args:
@@ -424,8 +422,8 @@ class iCloudClient:
         if include_main_library:
             self.logger.info("📥 Including photos from main library")
             for photo_info in self.list_photos():
-                if photo_info['id'] not in processed_photo_ids:
-                    processed_photo_ids.add(photo_info['id'])
+                if photo_info["id"] not in processed_photo_ids:
+                    processed_photo_ids.add(photo_info["id"])
                     yield photo_info
 
         # Include photos from specified albums
@@ -433,12 +431,14 @@ class iCloudClient:
             for album_name in album_names:
                 self.logger.info(f"📥 Including photos from album '{album_name}'")
                 for photo_info in self.list_photos_from_album(album_name):
-                    if photo_info['id'] not in processed_photo_ids:
-                        processed_photo_ids.add(photo_info['id'])
+                    if photo_info["id"] not in processed_photo_ids:
+                        processed_photo_ids.add(photo_info["id"])
                         yield photo_info
                     else:
-                        self.logger.debug(f"⏭️ Skipping duplicate photo: {photo_info['filename']} "
-                                          f"(already processed from another album)")
+                        self.logger.debug(
+                            f"⏭️ Skipping duplicate photo: {photo_info['filename']} "
+                            f"(already processed from another album)"
+                        )
 
     def verify_albums_exist(self, album_names: list[str]) -> tuple[list[str], list[str], list[str]]:
         """Verify that specified albums exist in iCloud.
@@ -458,7 +458,7 @@ class iCloudClient:
         albums_list = list(albums.values())
 
         # shared albums
-        album_library = self._api.photos.albums['Library']
+        album_library = self._api.photos.albums["Library"]
         albums_shared: AlbumContainer = album_library.service.shared_streams
         albums_shared_list = list(albums_shared.values())
 
@@ -493,31 +493,32 @@ class iCloudClient:
             return
 
         for album_info in self.list_albums():
-            is_shared = album_info.get('is_shared', False)
-            album_name = album_info['name']
+            is_shared = album_info.get("is_shared", False)
+            album_name = album_info["name"]
 
             # Filter by album type (personal vs shared)
             if is_shared:
                 if not config.include_shared_albums:
                     continue
                 # Check shared album allow-list
-                if (config.shared_album_names_to_include and
-                        album_name not in config.shared_album_names_to_include):
+                if (
+                    config.shared_album_names_to_include
+                    and album_name not in config.shared_album_names_to_include
+                ):
                     continue
             else:
                 if not config.include_personal_albums:
                     continue
                 # Check personal album allow-list
-                if (config.personal_album_names_to_include and
-                        album_name not in config.personal_album_names_to_include):
+                if (
+                    config.personal_album_names_to_include
+                    and album_name not in config.personal_album_names_to_include
+                ):
                     continue
 
             yield album_info
 
-    def list_photos_from_filtered_albums(
-            self,
-            config: BaseConfig
-    ) -> t.Iterator[dict[str, t.Any]]:
+    def list_photos_from_filtered_albums(self, config: BaseConfig) -> t.Iterator[dict[str, t.Any]]:
         """List photos from albums based on configuration filtering.
 
         Args:
@@ -531,19 +532,21 @@ class iCloudClient:
 
         # Include photos from filtered albums
         for album_info in self.get_filtered_albums(config):
-            album_name = album_info['name']
-            is_shared = album_info.get('is_shared', False)
+            album_name = album_info["name"]
+            is_shared = album_info.get("is_shared", False)
             album_type = "shared" if is_shared else "personal"
 
             self.logger.info(f"📥 Including photos from {album_type} album '{album_name}'")
 
             for photo_info in self.list_photos_from_album(album_name, is_shared=is_shared):
-                if photo_info['id'] not in processed_photo_ids:
-                    processed_photo_ids.add(photo_info['id'])
+                if photo_info["id"] not in processed_photo_ids:
+                    processed_photo_ids.add(photo_info["id"])
                     yield photo_info
                 else:
-                    self.logger.debug(f"⏭️ Skipping duplicate photo: {photo_info['filename']} "
-                                      f"(already processed from another source)")
+                    self.logger.debug(
+                        f"⏭️ Skipping duplicate photo: {photo_info['filename']} "
+                        f"(already processed from another source)"
+                    )
 
     def download_photo(self, photo_info: dict[str, t.Any], local_path: str) -> bool:
         """Download a photo to local storage.
@@ -556,18 +559,19 @@ class iCloudClient:
             True if download successful, False otherwise
         """
         try:
-            photo = photo_info['photo_obj']
-            filename = photo_info['filename']
+            photo = photo_info["photo_obj"]
+            filename = photo_info["filename"]
 
             self.logger.debug(f"📥 Downloading {filename} to {local_path}")
 
             # Check file size limit if configured
             if self.config.max_file_size_mb > 0:
-                size_mb = photo_info.get('size', 0) / (1024 * 1024)
+                size_mb = photo_info.get("size", 0) / (1024 * 1024)
                 if size_mb > self.config.max_file_size_mb:
                     self.logger.info(
                         f"⏭️ Skipping {filename} (size: {size_mb:.1f}MB > limit: "
-                        f"{self.config.max_file_size_mb}MB)")
+                        f"{self.config.max_file_size_mb}MB)"
+                    )
                     return False
 
             if self.config.dry_run:
@@ -578,7 +582,7 @@ class iCloudClient:
             download = photo.download()
 
             # Write to file
-            with open(local_path, 'wb') as f:
+            with open(local_path, "wb") as f:
                 f.write(download.raw.read())
 
             self.logger.debug(f"✅ Downloaded {filename}")
@@ -586,7 +590,8 @@ class iCloudClient:
 
         except Exception as e:
             self.logger.error(
-                f"❌ Error downloading photo {photo_info.get('filename', 'unknown')}: {e}")
+                f"❌ Error downloading photo {photo_info.get('filename', 'unknown')}: {e}"
+            )
             return False
 
     @property
@@ -599,7 +604,7 @@ class iCloudClient:
         return self._api is not None and self._api.photos is not None
 
 
-def cleanup_sessions(max_age_days: int = 30, session_dir: t.Optional[Path] = None) -> None:
+def cleanup_sessions(max_age_days: int = 30, session_dir: Path | None = None) -> None:
     """Standalone utility to clean up expired session files.
 
     This can be used independently of the iCloudClient class.
@@ -609,6 +614,7 @@ def cleanup_sessions(max_age_days: int = 30, session_dir: t.Optional[Path] = Non
         session_dir: Optional custom session directory path
     """
     import time
+
     from .logger import get_logger
 
     logger = get_logger()

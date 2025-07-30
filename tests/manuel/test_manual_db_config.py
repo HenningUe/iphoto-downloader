@@ -1,9 +1,10 @@
 """Test the database path configuration manually."""
-import tempfile
-import shutil
-from pathlib import Path
+
 import logging
 import os
+import shutil
+import tempfile
+from pathlib import Path
 
 from src.iphoto_downloader.src.iphoto_downloader.config import BaseConfig
 from src.iphoto_downloader.src.iphoto_downloader.logger import setup_logging

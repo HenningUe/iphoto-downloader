@@ -1,15 +1,15 @@
 """Local HTTP server for 2FA interface."""
 
-import threading
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from urllib.parse import parse_qs, urlparse
 import json
-import socket
-from typing import Optional, Dict, Any
-import webbrowser
 import logging
+import socket
+import threading
 import time
+import webbrowser
 from collections import defaultdict
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from typing import Any
+from urllib.parse import parse_qs, urlparse
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -32,13 +32,13 @@ class TwoFAHandler(BaseHTTPRequestHandler):
         """Handle GET requests."""
         parsed_path = urlparse(self.path)
 
-        if parsed_path.path == '/':
+        if parsed_path.path == "/":
             self._serve_main_page()
-        elif parsed_path.path == '/status':
+        elif parsed_path.path == "/status":
             self._serve_status()
-        elif parsed_path.path == '/success':
+        elif parsed_path.path == "/success":
             self._serve_success_page()
-        elif parsed_path.path == '/styles.css':
+        elif parsed_path.path == "/styles.css":
             self._serve_css()
         else:
             self._serve_404()
@@ -47,9 +47,9 @@ class TwoFAHandler(BaseHTTPRequestHandler):
         """Handle POST requests."""
         parsed_path = urlparse(self.path)
 
-        if parsed_path.path == '/submit_2fa':
+        if parsed_path.path == "/submit_2fa":
             self._handle_2fa_submission()
-        elif parsed_path.path == '/request_new_2fa':
+        elif parsed_path.path == "/request_new_2fa":
             self._handle_new_2fa_request()
         else:
             self._serve_404()
@@ -204,7 +204,7 @@ class TwoFAHandler(BaseHTTPRequestHandler):
         """
 
         self.send_response(200)
-        self.send_header('Content-type', 'text/html')
+        self.send_header("Content-type", "text/html")
         self.end_headers()
         self.wfile.write(html_content.encode())
 
@@ -352,7 +352,7 @@ button:hover {
         """
 
         self.send_response(200)
-        self.send_header('Content-type', 'text/css')
+        self.send_header("Content-type", "text/css")
         self.end_headers()
         self.wfile.write(css_content.encode())
 
@@ -598,7 +598,7 @@ button:hover {
         """
 
         self.send_response(200)
-        self.send_header('Content-type', 'text/html')
+        self.send_header("Content-type", "text/html")
         self.end_headers()
         self.wfile.write(html_content.encode())
 
@@ -607,25 +607,25 @@ button:hover {
         try:
             # Get status from the server instance
             server = self.server
-            if hasattr(server, 'twofa_server'):
-                twofa_server: TwoFAWebServer = getattr(server, 'twofa_server')
+            if hasattr(server, "twofa_server"):
+                twofa_server: TwoFAWebServer = server.twofa_server
                 if twofa_server:
                     status_data = twofa_server.get_status()
                 else:
                     status_data = {
-                        'state': 'error',
-                        'status': 'Server not initialized',
-                        'message': None
+                        "state": "error",
+                        "status": "Server not initialized",
+                        "message": None,
                     }
             else:
                 status_data = {
-                    'state': 'error',
-                    'status': 'Server not initialized',
-                    'message': None
+                    "state": "error",
+                    "status": "Server not initialized",
+                    "message": None,
                 }
 
             self.send_response(200)
-            self.send_header('Content-type', 'application/json')
+            self.send_header("Content-type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps(status_data).encode())
         except Exception as e:
@@ -640,130 +640,132 @@ button:hover {
 
             # Get server instance
             server = self.server
-            if not hasattr(server, 'twofa_server'):
-                self._serve_json_response({
-                    'success': False,
-                    'message': 'Server not initialized'
-                })
+            if not hasattr(server, "twofa_server"):
+                self._serve_json_response({"success": False, "message": "Server not initialized"})
                 return
 
-            twofa_server: TwoFAWebServer = getattr(server, 'twofa_server')
+            twofa_server: TwoFAWebServer = server.twofa_server
             if not twofa_server:
-                self._serve_json_response({
-                    'success': False,
-                    'message': 'Server not initialized'
-                })
+                self._serve_json_response({"success": False, "message": "Server not initialized"})
                 return
 
             # Check session timeout
             if twofa_server.is_session_expired():
                 get_logger(__name__).warning(f"Session expired for IP {client_ip}")
-                self._serve_json_response({
-                    'success': False,
-                    'message': 'Session expired. Please restart the authentication process.'
-                })
+                self._serve_json_response(
+                    {
+                        "success": False,
+                        "message": "Session expired. Please restart the authentication process.",
+                    }
+                )
                 return
 
             # Check rate limiting
             if twofa_server.is_rate_limited(client_ip):
                 get_logger(__name__).warning(f"Rate limit exceeded for IP {client_ip}")
-                self._serve_json_response({
-                    'success': False,
-                    'message': 'Too many attempts. Please wait before trying again.'
-                })
+                self._serve_json_response(
+                    {
+                        "success": False,
+                        "message": "Too many attempts. Please wait before trying again.",
+                    }
+                )
                 return
 
             # Record this attempt
             twofa_server.record_attempt(client_ip)
 
-            content_length = int(self.headers['Content-Length'])
+            content_length = int(self.headers["Content-Length"])
             post_data = self.rfile.read(content_length)
 
             # Parse URL-encoded form data
-            parsed_data = parse_qs(post_data.decode('utf-8'))
-            code = parsed_data.get('code', [''])[0].strip()
+            parsed_data = parse_qs(post_data.decode("utf-8"))
+            code = parsed_data.get("code", [""])[0].strip()
 
             if not code:
-                self._serve_json_response({'success': False, 'message': 'No code provided'})
+                self._serve_json_response({"success": False, "message": "No code provided"})
                 return
 
             # Sanitize code for logging (don't log actual code values)
             code_length = len(code) if code else 0
-            get_logger(__name__).info(f"2FA code submission attempt from {client_ip} "
-                                      f"(code length: {code_length})", extra={
-                "event": "2fa_code_submission",
-                "client_ip": client_ip,
-                "code_length": code_length,
-                "session_id": id(twofa_server) if twofa_server else None
-            })
+            get_logger(__name__).info(
+                f"2FA code submission attempt from {client_ip} (code length: {code_length})",
+                extra={
+                    "event": "2fa_code_submission",
+                    "client_ip": client_ip,
+                    "code_length": code_length,
+                    "session_id": id(twofa_server) if twofa_server else None,
+                },
+            )
 
             # Submit code to the server instance
             success = twofa_server.submit_2fa_code(code)
             if success:
                 # Refresh session on successful authentication
                 twofa_server.refresh_session()
-                get_logger(__name__).info(f"2FA code validation successful for {client_ip}", extra={
-                    "event": "2fa_validation_success",
-                    "client_ip": client_ip,
-                    "session_id": id(twofa_server)
-                })
+                get_logger(__name__).info(
+                    f"2FA code validation successful for {client_ip}",
+                    extra={
+                        "event": "2fa_validation_success",
+                        "client_ip": client_ip,
+                        "session_id": id(twofa_server),
+                    },
+                )
             else:
-                get_logger(__name__).warning(f"2FA code validation failed for {client_ip}", extra={
-                    "event": "2fa_validation_failed",
-                    "client_ip": client_ip,
-                    "session_id": id(twofa_server) if twofa_server else None
-                })
+                get_logger(__name__).warning(
+                    f"2FA code validation failed for {client_ip}",
+                    extra={
+                        "event": "2fa_validation_failed",
+                        "client_ip": client_ip,
+                        "session_id": id(twofa_server) if twofa_server else None,
+                    },
+                )
 
-            self._serve_json_response({'success': success})
+            self._serve_json_response({"success": success})
 
         except Exception as e:
             get_logger(__name__).error(f"Error handling 2FA submission: {e}")
-            self._serve_json_response({'success': False, 'message': 'Internal error'})
+            self._serve_json_response({"success": False, "message": "Internal error"})
 
     def _handle_new_2fa_request(self):
         """Handle request for new 2FA code."""
         try:
             server = self.server
-            if hasattr(server, 'twofa_server'):
-                twofa_server: TwoFAWebServer = getattr(server, 'twofa_server')
+            if hasattr(server, "twofa_server"):
+                twofa_server: TwoFAWebServer = server.twofa_server
                 if twofa_server:
                     success = twofa_server.request_new_2fa()
-                    self._serve_json_response({'success': success})
+                    self._serve_json_response({"success": success})
                 else:
-                    self._serve_json_response({
-                        'success': False,
-                        'message': 'Server not initialized'
-                    })
+                    self._serve_json_response(
+                        {"success": False, "message": "Server not initialized"}
+                    )
             else:
-                self._serve_json_response({
-                    'success': False,
-                    'message': 'Server not initialized'
-                })
+                self._serve_json_response({"success": False, "message": "Server not initialized"})
 
         except Exception as e:
             get_logger(__name__).error(f"Error handling new 2FA request: {e}")
-            self._serve_json_response({'success': False, 'message': 'Internal error'})
+            self._serve_json_response({"success": False, "message": "Internal error"})
 
-    def _serve_json_response(self, data: Dict[str, Any]):
+    def _serve_json_response(self, data: dict[str, Any]):
         """Send a JSON response."""
         self.send_response(200)
-        self.send_header('Content-type', 'application/json')
+        self.send_header("Content-type", "application/json")
         self.end_headers()
         self.wfile.write(json.dumps(data).encode())
 
     def _serve_error(self, message: str):
         """Send an error response."""
         self.send_response(500)
-        self.send_header('Content-type', 'application/json')
+        self.send_header("Content-type", "application/json")
         self.end_headers()
-        self.wfile.write(json.dumps({'error': message}).encode())
+        self.wfile.write(json.dumps({"error": message}).encode())
 
     def _serve_404(self):
         """Send a 404 response."""
         self.send_response(404)
-        self.send_header('Content-type', 'text/plain')
+        self.send_header("Content-type", "text/plain")
         self.end_headers()
-        self.wfile.write(b'Not Found')
+        self.wfile.write(b"Not Found")
 
 
 class TwoFAWebServer:
@@ -776,14 +778,14 @@ class TwoFAWebServer:
             port_range: Tuple of (min_port, max_port) to try
         """
         self.port_range = port_range
-        self.server: Optional[HTTPServer] = None
-        self.server_thread: Optional[threading.Thread] = None
-        self.port: Optional[int] = None
+        self.server: HTTPServer | None = None
+        self.server_thread: threading.Thread | None = None
+        self.port: int | None = None
         self.host: str = "0.0.0.0"  # Default to localhost
         self.logger = get_logger(__name__)
 
         # 2FA state management
-        self.state = 'pending'  # pending, waiting_for_code, authenticated, failed
+        self.state = "pending"  # pending, waiting_for_code, authenticated, failed
         self.status_message = None
         self.submitted_code = None
         self.code_submitted_event = threading.Event()
@@ -821,7 +823,7 @@ class TwoFAWebServer:
             # Fallback to localhost
             return "127.0.0.1"
 
-    def find_available_port(self) -> Optional[int]:
+    def find_available_port(self) -> int | None:
         """Find an available port in the specified range."""
         # Get the host IP first
         self.host = self.get_local_ipv4()
@@ -844,23 +846,29 @@ class TwoFAWebServer:
         """
         expired = time.time() - self.session_start_time > self.session_timeout
         if expired:
-            self.logger.warning("Session expired", extra={
-                "event": "session_expired",
-                "session_id": id(self),
-                "session_duration": time.time() - self.session_start_time,
-                "session_timeout": self.session_timeout
-            })
+            self.logger.warning(
+                "Session expired",
+                extra={
+                    "event": "session_expired",
+                    "session_id": id(self),
+                    "session_duration": time.time() - self.session_start_time,
+                    "session_timeout": self.session_timeout,
+                },
+            )
         return expired
 
     def refresh_session(self):
         """Refresh the session timestamp."""
         old_start_time = self.session_start_time
         self.session_start_time = time.time()
-        self.logger.debug("Session refreshed", extra={
-            "event": "session_refreshed",
-            "session_id": id(self),
-            "previous_session_duration": time.time() - old_start_time
-        })
+        self.logger.debug(
+            "Session refreshed",
+            extra={
+                "event": "session_refreshed",
+                "session_id": id(self),
+                "previous_session_duration": time.time() - old_start_time,
+            },
+        )
 
     def is_rate_limited(self, client_ip: str) -> bool:
         """Check if client is rate limited.
@@ -875,7 +883,8 @@ class TwoFAWebServer:
 
         # Clean old attempts (older than 1 hour)
         self.attempt_times[client_ip] = [
-            attempt_time for attempt_time in self.attempt_times[client_ip]
+            attempt_time
+            for attempt_time in self.attempt_times[client_ip]
             if current_time - attempt_time < 3600
         ]
 
@@ -883,33 +892,37 @@ class TwoFAWebServer:
 
         # Check attempts in last minute
         recent_attempts = [
-            attempt_time for attempt_time in attempts
-            if current_time - attempt_time < 60
+            attempt_time for attempt_time in attempts if current_time - attempt_time < 60
         ]
 
         if len(recent_attempts) >= self.max_attempts_per_minute:
-            self.logger.warning(f"Rate limit exceeded for IP {client_ip}: "
-                                f"{len(recent_attempts)} attempts in last minute", extra={
-                "event": "rate_limit_exceeded",
-                "client_ip": client_ip,
-                "rate_limit_type": "per_minute",
-                "attempt_count": len(recent_attempts),
-                "limit": self.max_attempts_per_minute,
-                "session_id": id(self)
-            })
+            self.logger.warning(
+                f"Rate limit exceeded for IP {client_ip}: "
+                f"{len(recent_attempts)} attempts in last minute",
+                extra={
+                    "event": "rate_limit_exceeded",
+                    "client_ip": client_ip,
+                    "rate_limit_type": "per_minute",
+                    "attempt_count": len(recent_attempts),
+                    "limit": self.max_attempts_per_minute,
+                    "session_id": id(self),
+                },
+            )
             return True
 
         # Check attempts in last hour
         if len(attempts) >= self.max_attempts_per_hour:
-            self.logger.warning(f"Rate limit exceeded for IP {client_ip}: "
-                                f"{len(attempts)} attempts in last hour", extra={
-                "event": "rate_limit_exceeded",
-                "client_ip": client_ip,
-                "rate_limit_type": "per_hour",
-                "attempt_count": len(attempts),
-                "limit": self.max_attempts_per_hour,
-                "session_id": id(self)
-            })
+            self.logger.warning(
+                f"Rate limit exceeded for IP {client_ip}: {len(attempts)} attempts in last hour",
+                extra={
+                    "event": "rate_limit_exceeded",
+                    "client_ip": client_ip,
+                    "rate_limit_type": "per_hour",
+                    "attempt_count": len(attempts),
+                    "limit": self.max_attempts_per_hour,
+                    "session_id": id(self),
+                },
+            )
             return True
 
         return False
@@ -923,13 +936,16 @@ class TwoFAWebServer:
         current_time = time.time()
         self.attempt_times[client_ip].append(current_time)
 
-        self.logger.debug("2FA attempt recorded", extra={
-            "event": "2fa_attempt_recorded",
-            "client_ip": client_ip,
-            "timestamp": current_time,
-            "total_attempts": len(self.attempt_times[client_ip]),
-            "session_id": id(self)
-        })
+        self.logger.debug(
+            "2FA attempt recorded",
+            extra={
+                "event": "2fa_attempt_recorded",
+                "client_ip": client_ip,
+                "timestamp": current_time,
+                "total_attempts": len(self.attempt_times[client_ip]),
+                "session_id": id(self),
+            },
+        )
 
     def start(self) -> bool:
         """Start the web server.
@@ -946,30 +962,33 @@ class TwoFAWebServer:
 
             # Create and configure server
             self.server = HTTPServer((self.host, self.port), TwoFAHandler)
-            setattr(self.server, 'twofa_server', self)  # Reference for handlers
+            self.server.twofa_server = self  # Reference for handlers
 
             # Start server in separate thread
-            self.server_thread = threading.Thread(
-                target=self.server.serve_forever,
-                daemon=True
-            )
+            self.server_thread = threading.Thread(target=self.server.serve_forever, daemon=True)
             self.server_thread.start()
 
-            self.logger.info(f"2FA web server started on http://{self.host}:{self.port}", extra={
-                "event": "web_server_started",
-                "host": self.host,
-                "port": self.port,
-                "session_id": id(self)
-            })
+            self.logger.info(
+                f"2FA web server started on http://{self.host}:{self.port}",
+                extra={
+                    "event": "web_server_started",
+                    "host": self.host,
+                    "port": self.port,
+                    "session_id": id(self),
+                },
+            )
             return True
 
         except Exception as e:
-            self.logger.error(f"Failed to start 2FA web server: {e}", extra={
-                "event": "web_server_start_failed",
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "session_id": id(self)
-            })
+            self.logger.error(
+                f"Failed to start 2FA web server: {e}",
+                extra={
+                    "event": "web_server_start_failed",
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "session_id": id(self),
+                },
+            )
             return False
 
     def stop(self):
@@ -983,12 +1002,11 @@ class TwoFAWebServer:
             self.server_thread.join(timeout=5)
             self.server_thread = None
 
-        self.logger.info("2FA web server stopped", extra={
-            "event": "web_server_stopped",
-            "session_id": id(self)
-        })
+        self.logger.info(
+            "2FA web server stopped", extra={"event": "web_server_stopped", "session_id": id(self)}
+        )
 
-    def get_url(self) -> Optional[str]:
+    def get_url(self) -> str | None:
         """Get the server URL.
 
         Returns:
@@ -1015,41 +1033,44 @@ class TwoFAWebServer:
             self.logger.error(f"Failed to open browser: {e}")
             return False
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get current 2FA status.
 
         Returns:
             Dictionary with status information
         """
         status_messages = {
-            'pending': 'Initializing 2FA authentication...',
-            'waiting_for_code': 'Waiting for 2FA code from your trusted device',
-            'authenticated': '✅ Authentication successful!',
-            'failed': '❌ Authentication failed'
+            "pending": "Initializing 2FA authentication...",
+            "waiting_for_code": "Waiting for 2FA code from your trusted device",
+            "authenticated": "✅ Authentication successful!",
+            "failed": "❌ Authentication failed",
         }
 
         return {
-            'state': self.state,
-            'status': status_messages.get(self.state, 'Unknown state'),
-            'message': self.status_message
+            "state": self.state,
+            "status": status_messages.get(self.state, "Unknown state"),
+            "message": self.status_message,
         }
 
-    def set_state(self, state: str, message: Optional[str] = None):
+    def set_state(self, state: str, message: str | None = None):
         """Update the 2FA state.
 
         Args:
             state: New state ('pending', 'waiting_for_code', 'authenticated', 'failed')
             message: Optional status message
         """
-        old_state = getattr(self, 'state', None)
+        old_state = getattr(self, "state", None)
         self.state = state
         self.status_message = message
-        self.logger.info(f"2FA state changed to: {state}", extra={
-            "event": "2fa_state_change",
-            "old_state": old_state,
-            "new_state": state,
-            "session_id": id(self)
-        })
+        self.logger.info(
+            f"2FA state changed to: {state}",
+            extra={
+                "event": "2fa_state_change",
+                "old_state": old_state,
+                "new_state": state,
+                "session_id": id(self),
+            },
+        )
         if message:
             self.logger.debug(f"2FA message: {message}")
 
@@ -1068,12 +1089,13 @@ class TwoFAWebServer:
 
             # Validate code format
             if not code or len(code) != 6 or not code.isdigit():
-                self.set_state('waiting_for_code',
-                               'Invalid code format. Please enter a 6-digit number.')
+                self.set_state(
+                    "waiting_for_code", "Invalid code format. Please enter a 6-digit number."
+                )
                 return False
 
             # Update state to show processing
-            self.set_state('pending', 'Validating 2FA code...')
+            self.set_state("pending", "Validating 2FA code...")
 
             self.submitted_code = code
             self.code_submitted_event.set()
@@ -1082,15 +1104,15 @@ class TwoFAWebServer:
             if self.submit_code_callback:
                 result = self.submit_code_callback(code)
                 if result:
-                    self.set_state('authenticated', 'Authentication successful!')
+                    self.set_state("authenticated", "Authentication successful!")
                     self.logger.info("2FA authentication successful")
                 else:
-                    self.set_state('failed', 'Invalid 2FA code. Please try again.')
+                    self.set_state("failed", "Invalid 2FA code. Please try again.")
                     self.logger.warning("2FA authentication failed - invalid code")
                 return result
             else:
                 # No callback means we accept any valid format code for demo/testing
-                self.set_state('authenticated', 'Authentication successful!')
+                self.set_state("authenticated", "Authentication successful!")
                 self.logger.info("2FA authentication successful (no callback)")
                 return True
 
@@ -1098,7 +1120,7 @@ class TwoFAWebServer:
         except Exception as e:
             # Log error without exposing sensitive data
             self.logger.error(f"Error handling 2FA code submission: {e}")
-            self.set_state('failed', f'Error processing code: {e}')
+            self.set_state("failed", f"Error processing code: {e}")
             return False
 
     def request_new_2fa(self) -> bool:
@@ -1111,18 +1133,19 @@ class TwoFAWebServer:
             self.logger.info("New 2FA code requested via web interface")
 
             # Change state to waiting for code when new 2FA is requested
-            self.set_state('waiting_for_code',
-                           'New 2FA code requested. Please check your trusted device.')
+            self.set_state(
+                "waiting_for_code", "New 2FA code requested. Please check your trusted device."
+            )
 
             if self.request_2fa_callback:
                 return self.request_2fa_callback()
             return True  # Return True even if no callback, state change is successful
         except Exception as e:
             self.logger.error(f"Error handling new 2FA request: {e}")
-            self.set_state('failed', f'Failed to request new 2FA code: {e}')
+            self.set_state("failed", f"Failed to request new 2FA code: {e}")
             return False
 
-    def wait_for_code(self, timeout: int = 300) -> Optional[str]:
+    def wait_for_code(self, timeout: int = 300) -> str | None:
         """Wait for 2FA code submission via web interface.
 
         Args:
@@ -1136,12 +1159,13 @@ class TwoFAWebServer:
         effective_timeout = min(timeout, max(0, remaining_session_time))
 
         if effective_timeout <= 0:
-            self.set_state('failed', 'Session expired')
+            self.set_state("failed", "Session expired")
             self.logger.warning("Session expired during code wait")
             return None
 
-        self.set_state('waiting_for_code',
-                       'Please enter the 6-digit code from your trusted Apple device')
+        self.set_state(
+            "waiting_for_code", "Please enter the 6-digit code from your trusted Apple device"
+        )
 
         self.code_submitted_event.clear()
         self.submitted_code = None
@@ -1152,10 +1176,10 @@ class TwoFAWebServer:
             return self.submitted_code
         else:
             if self.is_session_expired():
-                self.set_state('failed', 'Session expired')
+                self.set_state("failed", "Session expired")
                 self.logger.warning("Session expired while waiting for 2FA code")
             else:
-                self.set_state('failed', 'Timeout waiting for 2FA code')
+                self.set_state("failed", "Timeout waiting for 2FA code")
                 self.logger.warning("Timeout waiting for 2FA code")
             return None
 

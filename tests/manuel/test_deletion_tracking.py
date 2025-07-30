@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 import pytest
+
 """Test script to verify deletion tracking functionality."""
 
-from iphoto_downloader.logger import setup_logging
-from iphoto_downloader.config import BaseConfig
-from iphoto_downloader.sync import PhotoSyncer
-from iphoto_downloader.deletion_tracker import DeletionTracker
+import logging
 import os
 import sys
 import tempfile
-import logging
 from pathlib import Path
 from unittest.mock import Mock, patch
+
+from iphoto_downloader.config import BaseConfig
+from iphoto_downloader.deletion_tracker import DeletionTracker
+from iphoto_downloader.logger import setup_logging
+from iphoto_downloader.sync import PhotoSyncer
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent / "src" / "iphoto_downloader" / "src"))
@@ -37,7 +39,7 @@ def test_deletion_tracker_basics():
                 filename="test1.jpg",
                 local_path="album1/test1.jpg",
                 file_size=1024,
-                album_name="Test Album 1"
+                album_name="Test Album 1",
             )
 
             # Test getting downloaded photos
@@ -52,7 +54,7 @@ def test_deletion_tracker_basics():
                 photo_id="test_photo_2",
                 filename="deleted.jpg",
                 file_size=2048,
-                original_path="album2/deleted.jpg"
+                original_path="album2/deleted.jpg",
             )
 
             # Test checking deletion status
@@ -93,7 +95,7 @@ def test_local_deletion_detection():
                 filename="photo1.jpg",
                 local_path="TestAlbum/photo1.jpg",
                 file_size=len("fake photo 1 content"),
-                album_name="TestAlbum"
+                album_name="TestAlbum",
             )
 
             tracker.add_downloaded_photo(
@@ -101,7 +103,7 @@ def test_local_deletion_detection():
                 filename="photo2.jpg",
                 local_path="TestAlbum/photo2.jpg",
                 file_size=len("fake photo 2 content"),
-                album_name="TestAlbum"
+                album_name="TestAlbum",
             )
 
             logger.info(f"📝 Created test files: {photo1_path}, {photo2_path}")
@@ -160,17 +162,17 @@ def test_end_to_end_deletion_prevention():
 
         # Mock photo data - same photo that will be "re-offered" by iCloud
         test_photo_info = {
-            'id': 'test_photo_delete_prevention',
-            'filename': 'test_photo.jpg',
-            'album_name': 'TestAlbum',
-            'size': 1024
+            "id": "test_photo_delete_prevention",
+            "filename": "test_photo.jpg",
+            "album_name": "TestAlbum",
+            "size": 1024,
         }
 
         # First sync - photo will be downloaded
         mock_icloud.list_photos_from_filtered_albums.return_value = [test_photo_info]
         mock_icloud.download_photo.return_value = True
 
-        with patch('iphoto_downloader.sync.iCloudClient', return_value=mock_icloud):
+        with patch("iphoto_downloader.sync.iCloudClient", return_value=mock_icloud):
             syncer = PhotoSyncer(config)
 
             # Create the photo file to simulate successful download
@@ -181,11 +183,11 @@ def test_end_to_end_deletion_prevention():
 
             # Record the download manually (simulating successful download)
             syncer.deletion_tracker.add_downloaded_photo(
-                photo_id='test_photo_delete_prevention',
-                filename='test_photo.jpg',
-                local_path='TestAlbum/test_photo.jpg',
+                photo_id="test_photo_delete_prevention",
+                filename="test_photo.jpg",
+                local_path="TestAlbum/test_photo.jpg",
                 file_size=len("fake photo content"),
-                album_name='TestAlbum'
+                album_name="TestAlbum",
             )
 
             logger.info("📁 Simulated first sync with photo download")
@@ -206,12 +208,12 @@ def test_end_to_end_deletion_prevention():
             syncer._track_local_deletions(local_files)
 
             # Verify photo is marked as deleted
-            assert syncer.deletion_tracker.is_deleted('test_photo_delete_prevention')
+            assert syncer.deletion_tracker.is_deleted("test_photo_delete_prevention")
             logger.info("✅ Photo marked as deleted after local deletion detection")
 
             # Simulate sync process for this specific photo
-            photo_id = test_photo_info['id']
-            filename = test_photo_info['filename']
+            photo_id = test_photo_info["id"]
+            filename = test_photo_info["filename"]
 
             # Check if photo was deleted locally (should be True now)
             if syncer.deletion_tracker.is_deleted(photo_id):
@@ -249,6 +251,7 @@ def main():
     except Exception as e:
         logger.error(f"❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

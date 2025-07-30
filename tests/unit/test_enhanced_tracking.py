@@ -1,11 +1,11 @@
 """Tests for enhanced tracking functionality with album-aware identification."""
 
-import unittest
-import tempfile
+import logging
 import shutil
 import sqlite3
+import tempfile
+import unittest
 from pathlib import Path
-import logging
 
 from src.iphoto_downloader.src.iphoto_downloader.logger import setup_logging
 
@@ -26,7 +26,7 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def tearDown(self):
         """Clean up test fixtures."""
-        if hasattr(self, 'conn'):
+        if hasattr(self, "conn"):
             self.conn.close()
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
@@ -71,9 +71,7 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def test_album_aware_photo_identification(self):
         """Test album-aware photo identification and tracking."""
-        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import (
-            DeletionTracker
-        )
+        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import DeletionTracker
 
         # Create enhanced deletion tracker
         tracker = DeletionTracker(str(self.test_db))
@@ -86,7 +84,7 @@ class TestEnhancedTracking(unittest.TestCase):
                 "filename": "family_photo.jpg",
                 "local_path": str(self.temp_dir / "family_photo.jpg"),
                 "file_size": 1024000,
-                "checksum": "abc123"
+                "checksum": "abc123",
             },
             {
                 "photo_id": "photo_001",  # Same photo in different album
@@ -94,8 +92,8 @@ class TestEnhancedTracking(unittest.TestCase):
                 "filename": "family_photo.jpg",
                 "local_path": str(self.temp_dir / "family_photo.jpg"),
                 "file_size": 1024000,
-                "checksum": "abc123"
-            }
+                "checksum": "abc123",
+            },
         ]
 
         for photo in photo_data:
@@ -118,9 +116,7 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def test_composite_primary_key_tracking(self):
         """Test composite primary key tracking (photo_id + album_name)."""
-        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import (
-            DeletionTracker
-        )
+        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import DeletionTracker
 
         tracker = DeletionTracker(str(self.test_db))
 
@@ -131,7 +127,7 @@ class TestEnhancedTracking(unittest.TestCase):
             filename="test.jpg",
             local_path=str(self.temp_dir / "test.jpg"),
             file_size=500000,
-            checksum="def456"
+            checksum="def456",
         )
 
         tracker.track_photo(
@@ -140,7 +136,7 @@ class TestEnhancedTracking(unittest.TestCase):
             filename="test.jpg",
             local_path=str(self.temp_dir / "test.jpg"),
             file_size=500000,
-            checksum="def456"
+            checksum="def456",
         )
 
         # Update photo in one album
@@ -156,9 +152,7 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def test_album_level_tracking_statistics(self):
         """Test album-level tracking and statistics."""
-        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import (
-            DeletionTracker
-        )
+        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import DeletionTracker
 
         tracker = DeletionTracker(str(self.test_db))
 
@@ -174,7 +168,7 @@ class TestEnhancedTracking(unittest.TestCase):
                 filename=f"family_{i}.jpg",
                 local_path=str(self.temp_dir / f"family_{i}.jpg"),
                 file_size=1000000,
-                checksum=f"hash_{i}"
+                checksum=f"hash_{i}",
             )
             tracker.update_photo_sync_status(f"family_{i}", "Family", "completed")
 
@@ -185,7 +179,7 @@ class TestEnhancedTracking(unittest.TestCase):
                 filename=f"wedding_{i}.jpg",
                 local_path=str(self.temp_dir / f"wedding_{i}.jpg"),
                 file_size=2000000,
-                checksum=f"wedding_hash_{i}"
+                checksum=f"wedding_hash_{i}",
             )
             if i < 4:
                 tracker.update_photo_sync_status(f"wedding_{i}", "Wedding", "completed")
@@ -208,9 +202,7 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def test_cross_album_duplicate_detection(self):
         """Test detection of photos that exist in multiple albums."""
-        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import (
-            DeletionTracker
-        )
+        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import DeletionTracker
 
         tracker = DeletionTracker(str(self.test_db))
 
@@ -220,12 +212,12 @@ class TestEnhancedTracking(unittest.TestCase):
         albums = ["Family", "Vacation", "Best Photos"]
         for album in albums:
             tracker.track_photo(
-                photo_id=f"photo_dup",
+                photo_id="photo_dup",
                 album_name=album,
                 filename="duplicate_photo.jpg",
                 local_path=str(self.temp_dir / "duplicate_photo.jpg"),
                 file_size=1500000,
-                checksum=duplicate_checksum
+                checksum=duplicate_checksum,
             )
 
         # Test duplicate detection
@@ -240,9 +232,7 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def test_album_sync_coordination(self):
         """Test sync coordination across albums."""
-        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import (
-            DeletionTracker
-        )
+        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import DeletionTracker
 
         tracker = DeletionTracker(str(self.test_db))
 
@@ -272,9 +262,7 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def test_migration_from_old_tracking_format(self):
         """Test migration from old single-key tracking to composite keys."""
-        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import (
-            DeletionTracker
-        )
+        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import DeletionTracker
 
         # Create old format table
         cursor = self.conn.cursor()
@@ -292,11 +280,14 @@ class TestEnhancedTracking(unittest.TestCase):
         """)
 
         # Add old format data
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO photo_tracking 
             (photo_id, filename, local_path, file_size, checksum)
             VALUES (?, ?, ?, ?, ?)
-        """, ("old_photo_1", "old.jpg", str(self.temp_dir / "old.jpg"), 1000, "old_hash"))
+        """,
+            ("old_photo_1", "old.jpg", str(self.temp_dir / "old.jpg"), 1000, "old_hash"),
+        )
 
         self.conn.commit()
         self.conn.close()
@@ -321,9 +312,7 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def test_sync_progress_tracking_per_album(self):
         """Test detailed sync progress tracking per album."""
-        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import (
-            DeletionTracker
-        )
+        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import DeletionTracker
 
         tracker = DeletionTracker(str(self.test_db))
 
@@ -340,7 +329,7 @@ class TestEnhancedTracking(unittest.TestCase):
                 filename=f"progress_{i}.jpg",
                 local_path=str(self.temp_dir / f"progress_{i}.jpg"),
                 file_size=1000000 + i * 100000,
-                checksum=f"progress_hash_{i}"
+                checksum=f"progress_hash_{i}",
             )
             tracker.update_photo_sync_status(f"progress_{i}", album_name, state)
 
@@ -360,9 +349,7 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def test_error_tracking_and_retry_logic(self):
         """Test error tracking and retry logic for failed syncs."""
-        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import (
-            DeletionTracker
-        )
+        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import DeletionTracker
 
         tracker = DeletionTracker(str(self.test_db))
 
@@ -373,7 +360,7 @@ class TestEnhancedTracking(unittest.TestCase):
             filename="error.jpg",
             local_path=str(self.temp_dir / "error.jpg"),
             file_size=1000000,
-            checksum="error_hash"
+            checksum="error_hash",
         )
 
         # Simulate multiple failures
@@ -395,10 +382,9 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def test_bulk_operations_performance(self):
         """Test performance of bulk operations on enhanced tracking."""
-        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import (
-            DeletionTracker
-        )
         import time
+
+        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import DeletionTracker
 
         tracker = DeletionTracker(str(self.test_db))
 
@@ -417,14 +403,16 @@ class TestEnhancedTracking(unittest.TestCase):
         for album in albums:
             photos_data = []
             for i in range(photos_per_album):
-                photos_data.append({
-                    "photo_id": f"{album}_photo_{i}",
-                    "album_name": album,
-                    "filename": f"{album}_{i}.jpg",
-                    "local_path": str(self.temp_dir / f"{album}_{i}.jpg"),
-                    "file_size": 1000000 + i,
-                    "checksum": f"{album}_hash_{i}"
-                })
+                photos_data.append(
+                    {
+                        "photo_id": f"{album}_photo_{i}",
+                        "album_name": album,
+                        "filename": f"{album}_{i}.jpg",
+                        "local_path": str(self.temp_dir / f"{album}_{i}.jpg"),
+                        "file_size": 1000000 + i,
+                        "checksum": f"{album}_hash_{i}",
+                    }
+                )
 
             tracker.bulk_track_photos(photos_data)
         photo_time = time.time() - start_time
@@ -443,10 +431,9 @@ class TestEnhancedTracking(unittest.TestCase):
 
     def test_cleanup_and_maintenance_operations(self):
         """Test cleanup and maintenance operations."""
-        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import (
-            DeletionTracker
-        )
         import time
+
+        from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import DeletionTracker
 
         tracker = DeletionTracker(str(self.test_db))
 
@@ -460,7 +447,7 @@ class TestEnhancedTracking(unittest.TestCase):
                 filename=f"old_{i}.jpg",
                 local_path=str(self.temp_dir / f"old_{i}.jpg"),
                 file_size=1000000,
-                checksum=f"old_hash_{i}"
+                checksum=f"old_hash_{i}",
             )
             tracker.update_photo_sync_status(photo_id, "Old Album", "completed")
             old_photos.append(photo_id)
@@ -471,7 +458,7 @@ class TestEnhancedTracking(unittest.TestCase):
         for photo_id in old_photos:
             cursor.execute(
                 "UPDATE photo_tracking SET updated_at = ? WHERE photo_id = ?",
-                (old_timestamp, photo_id)
+                (old_timestamp, photo_id),
             )
         self.conn.commit()
 
@@ -484,5 +471,5 @@ class TestEnhancedTracking(unittest.TestCase):
         self.assertEqual(len(remaining_photos), 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

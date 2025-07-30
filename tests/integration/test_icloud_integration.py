@@ -1,14 +1,15 @@
 """Integration tests for iPhoto Downloader Tool with real iCloud authentication."""
 
 import os
-import pytest
 import tempfile
 from pathlib import Path
 
+import pytest
+
 from iphoto_downloader.config import get_config
-from iphoto_downloader.icloud_client import iCloudClient
-from iphoto_downloader.sync import PhotoSyncer
+from iphoto_downloader.icloud_client import ICloudClient
 from iphoto_downloader.logger import setup_logging
+from iphoto_downloader.sync import PhotoSyncer
 
 
 @pytest.mark.integration
@@ -23,9 +24,9 @@ class TestiCloudIntegration:
         self.test_sync_dir.mkdir(exist_ok=True)
 
         # Override sync directory in environment
-        os.environ['SYNC_DIRECTORY'] = str(self.test_sync_dir)
-        os.environ['DRY_RUN'] = 'true'  # Start with dry run for safety
-        os.environ['MAX_DOWNLOADS'] = '5'  # Limit downloads for testing
+        os.environ["SYNC_DIRECTORY"] = str(self.test_sync_dir)
+        os.environ["DRY_RUN"] = "true"  # Start with dry run for safety
+        os.environ["MAX_DOWNLOADS"] = "5"  # Limit downloads for testing
 
         # Set up logging for tests
         config = get_config()
@@ -35,11 +36,12 @@ class TestiCloudIntegration:
         """Clean up test environment."""
         # Clean up temporary directory
         import shutil
+
         if Path(self.temp_dir).exists():
             shutil.rmtree(self.temp_dir)
 
         # Clean up environment variables
-        env_vars_to_clean = ['SYNC_DIRECTORY', 'DRY_RUN', 'MAX_DOWNLOADS']
+        env_vars_to_clean = ["SYNC_DIRECTORY", "DRY_RUN", "MAX_DOWNLOADS"]
         for var in env_vars_to_clean:
             os.environ.pop(var, None)
 
@@ -48,24 +50,27 @@ class TestiCloudIntegration:
         config = get_config()
 
         # Should have credentials either from env or keyring
-        assert config.icloud_username is not None, \
+        assert config.icloud_username is not None, (
             "Username should be available from keyring or env"
-        assert config.icloud_password is not None, \
+        )
+        assert config.icloud_password is not None, (
             "Password should be available from keyring or env"
+        )
         assert config.sync_directory == self.test_sync_dir
         assert config.dry_run is True
 
     def test_icloud_authentication_without_2fa(self):
         """Test iCloud authentication when 2FA is not required."""
         config = get_config()
-        client = iCloudClient(config)
+        client = ICloudClient(config)
 
         # Attempt authentication
         auth_result = client.authenticate()
 
         if not auth_result:
             pytest.skip(
-                "Authentication failed - this may be due to 2FA requirement or invalid credentials")
+                "Authentication failed - this may be due to 2FA requirement or invalid credentials"
+            )
 
         assert client.is_authenticated
         assert client._api is not None
@@ -74,7 +79,7 @@ class TestiCloudIntegration:
     def test_icloud_authentication_with_2fa_simulation(self):
         """Test iCloud authentication workflow when 2FA is required."""
         config = get_config()
-        client = iCloudClient(config)
+        client = ICloudClient(config)
 
         # First, try to authenticate
         auth_result = client.authenticate()
@@ -107,7 +112,7 @@ class TestiCloudIntegration:
     def test_photo_listing_integration(self):
         """Test fetching photo list from iCloud."""
         config = get_config()
-        client = iCloudClient(config)
+        client = ICloudClient(config)
 
         # Authenticate first
         if not client.authenticate():
@@ -126,7 +131,7 @@ class TestiCloudIntegration:
         if photos:
             # Verify photo structure
             first_photo = photos[0]
-            required_keys = ['id', 'filename', 'size', 'created', 'photo_obj']
+            required_keys = ["id", "filename", "size", "created", "photo_obj"]
             for key in required_keys:
                 assert key in first_photo, f"Photo should have {key} field"
 
@@ -164,12 +169,12 @@ class TestiCloudInteractive:
     def test_interactive_2fa_authentication(self):
         """Interactive test for 2FA authentication (requires manual input)."""
         # This test should only run when explicitly requested
-        if not os.getenv('RUN_INTERACTIVE_TESTS'):
+        if not os.getenv("RUN_INTERACTIVE_TESTS"):
             pytest.skip("Interactive tests disabled - set RUN_INTERACTIVE_TESTS=1 to enable")
 
         config = get_config()
         setup_logging(config.get_log_level())  # Set up logging for interactive tests
-        client = iCloudClient(config)
+        client = ICloudClient(config)
 
         print("\n🔐 Starting interactive 2FA test...")
         print("💡 This test requires manual 2FA code input")

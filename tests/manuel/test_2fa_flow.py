@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Test the 2FA web server success page functionality."""
 
-import pytest
-from auth2fa.web_server import TwoFAWebServer
 import sys
 import time
 from pathlib import Path
+
+import pytest
+
+from auth2fa.web_server import TwoFAWebServer
 
 # Add the shared package to path
 sys.path.append(str(Path(__file__).parent / "shared" / "auth2fa" / "src"))
@@ -42,7 +44,7 @@ def test_2fa_flow():
     print("5. The window should auto-close after 10 seconds")
 
     # Set the state to waiting for code to enable the form
-    server.set_state('waiting_for_code', 'Please enter any 6-digit code for testing')
+    server.set_state("waiting_for_code", "Please enter any 6-digit code for testing")
 
     print("\n⏳ Server will run for 60 seconds for testing...")
     print("   Press Ctrl+C to stop early")

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 import pytest
+
 """Simple test script to verify that sync pauses during maintenance operations."""
 
+import sys
 import threading
 import time
-import sys
 from pathlib import Path
 
 # Add src to Python path for testing
@@ -12,8 +13,9 @@ sys.path.insert(0, str(Path(__file__).parent / "src" / "iphoto_downloader" / "sr
 
 # Import after path setup
 try:
-    from iphoto_downloader.logger import setup_logging
     import logging
+
+    from iphoto_downloader.logger import setup_logging
 except ImportError as e:
     print(f"Import error: {e}")
     print("Make sure you're running this from the project root directory")
@@ -89,7 +91,8 @@ def test_threading_synchronization():
     else:
         print(
             f"❌ TEST FAILED: sync_waited={sync_waited}, "
-            f"maintenance_completed={maintenance_completed}")
+            f"maintenance_completed={maintenance_completed}"
+        )
         return False
 
 

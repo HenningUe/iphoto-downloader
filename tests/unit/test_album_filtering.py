@@ -1,15 +1,14 @@
 """Tests for album filtering functionality."""
 
-import unittest
-import tempfile
-import shutil
-from pathlib import Path
-from unittest.mock import Mock, patch
 import logging
+import shutil
+import tempfile
+import unittest
+from unittest.mock import Mock, patch
 
-from iphoto_downloader.logger import setup_logging
-from iphoto_downloader.icloud_client import iCloudClient
 from iphoto_downloader.config import BaseConfig
+from iphoto_downloader.icloud_client import ICloudClient
+from iphoto_downloader.logger import setup_logging
 
 
 class TestAlbumFiltering(unittest.TestCase):
@@ -19,12 +18,12 @@ class TestAlbumFiltering(unittest.TestCase):
         """Set up test fixtures."""
         setup_logging(log_level=logging.INFO)
         self.temp_dir = tempfile.mkdtemp()
-        
+
         # Create mock config
         self.mock_config = Mock(spec=BaseConfig)
-        
+
         # Create mock iCloud client with proper patching
-        with patch('iphoto_downloader.icloud_client.iCloudClient') as mock_client_class:
+        with patch("iphoto_downloader.icloud_client.iCloudClient") as mock_client_class:
             self.client = Mock()
             self.client._api = Mock()
             self.client._api.photos = Mock()
@@ -32,19 +31,19 @@ class TestAlbumFiltering(unittest.TestCase):
 
             # Mock album data
             self.mock_albums = [
-                {'name': 'Family', 'is_shared': False, 'guid': 'family_123'},
-                {'name': 'Vacation', 'is_shared': False, 'guid': 'vacation_456'},
-                {'name': 'Work', 'is_shared': False, 'guid': 'work_789'},
-                {'name': 'Wedding', 'is_shared': True, 'guid': 'wedding_abc'},
-                {'name': 'Party', 'is_shared': True, 'guid': 'party_def'},
-                {'name': 'School', 'is_shared': True, 'guid': 'school_ghi'},
+                {"name": "Family", "is_shared": False, "guid": "family_123"},
+                {"name": "Vacation", "is_shared": False, "guid": "vacation_456"},
+                {"name": "Work", "is_shared": False, "guid": "work_789"},
+                {"name": "Wedding", "is_shared": True, "guid": "wedding_abc"},
+                {"name": "Party", "is_shared": True, "guid": "party_def"},
+                {"name": "School", "is_shared": True, "guid": "school_ghi"},
             ]
-            
+
             # Mock the list_albums method
             self.client.list_albums = Mock(return_value=self.mock_albums)
-            
+
             # Create a real iCloudClient instance for testing the get_filtered_albums method
-            real_client = iCloudClient(self.mock_config)
+            real_client = ICloudClient(self.mock_config)
             real_client._api = Mock()
             real_client._api.photos = Mock()
             real_client.list_albums = Mock(return_value=self.mock_albums)
@@ -68,8 +67,8 @@ class TestAlbumFiltering(unittest.TestCase):
 
         # Should only return personal albums in the allowlist
         expected_albums = [
-            {'name': 'Family', 'is_shared': False, 'guid': 'family_123'},
-            {'name': 'Vacation', 'is_shared': False, 'guid': 'vacation_456'}
+            {"name": "Family", "is_shared": False, "guid": "family_123"},
+            {"name": "Vacation", "is_shared": False, "guid": "vacation_456"},
         ]
         self.assertEqual(filtered_albums, expected_albums)
 
@@ -87,8 +86,8 @@ class TestAlbumFiltering(unittest.TestCase):
 
         # Should only return shared albums in the allowlist
         expected_albums = [
-            {'name': 'Wedding', 'is_shared': True, 'guid': 'wedding_abc'},
-            {'name': 'Party', 'is_shared': True, 'guid': 'party_def'}
+            {"name": "Wedding", "is_shared": True, "guid": "wedding_abc"},
+            {"name": "Party", "is_shared": True, "guid": "party_def"},
         ]
         self.assertEqual(filtered_albums, expected_albums)
 
@@ -106,8 +105,8 @@ class TestAlbumFiltering(unittest.TestCase):
 
         # Should return specified albums from both types
         expected_albums = [
-            {'name': 'Family', 'is_shared': False, 'guid': 'family_123'},
-            {'name': 'Wedding', 'is_shared': True, 'guid': 'wedding_abc'}
+            {"name": "Family", "is_shared": False, "guid": "family_123"},
+            {"name": "Wedding", "is_shared": True, "guid": "wedding_abc"},
         ]
         self.assertEqual(filtered_albums, expected_albums)
 
@@ -125,9 +124,9 @@ class TestAlbumFiltering(unittest.TestCase):
 
         # Should return all personal albums
         expected_albums = [
-            {'name': 'Family', 'is_shared': False, 'guid': 'family_123'},
-            {'name': 'Vacation', 'is_shared': False, 'guid': 'vacation_456'},
-            {'name': 'Work', 'is_shared': False, 'guid': 'work_789'}
+            {"name": "Family", "is_shared": False, "guid": "family_123"},
+            {"name": "Vacation", "is_shared": False, "guid": "vacation_456"},
+            {"name": "Work", "is_shared": False, "guid": "work_789"},
         ]
         self.assertEqual(filtered_albums, expected_albums)
 
@@ -145,9 +144,9 @@ class TestAlbumFiltering(unittest.TestCase):
 
         # Should return all shared albums
         expected_albums = [
-            {'name': 'Wedding', 'is_shared': True, 'guid': 'wedding_abc'},
-            {'name': 'Party', 'is_shared': True, 'guid': 'party_def'},
-            {'name': 'School', 'is_shared': True, 'guid': 'school_ghi'}
+            {"name": "Wedding", "is_shared": True, "guid": "wedding_abc"},
+            {"name": "Party", "is_shared": True, "guid": "party_def"},
+            {"name": "School", "is_shared": True, "guid": "school_ghi"},
         ]
         self.assertEqual(filtered_albums, expected_albums)
 
@@ -182,10 +181,10 @@ class TestAlbumFiltering(unittest.TestCase):
 
         # Should return all personal albums AND the specified shared album
         expected_albums = [
-            {'name': 'Family', 'is_shared': False, 'guid': 'family_123'},
-            {'name': 'Vacation', 'is_shared': False, 'guid': 'vacation_456'},
-            {'name': 'Work', 'is_shared': False, 'guid': 'work_789'},
-            {'name': 'Wedding', 'is_shared': True, 'guid': 'wedding_abc'}
+            {"name": "Family", "is_shared": False, "guid": "family_123"},
+            {"name": "Vacation", "is_shared": False, "guid": "vacation_456"},
+            {"name": "Work", "is_shared": False, "guid": "work_789"},
+            {"name": "Wedding", "is_shared": True, "guid": "wedding_abc"},
         ]
         self.assertEqual(filtered_albums, expected_albums)
 
@@ -202,9 +201,7 @@ class TestAlbumFiltering(unittest.TestCase):
         filtered_albums = list(self.real_client.get_filtered_albums(config))
 
         # Should only return existing albums
-        expected_albums = [
-            {'name': 'Family', 'is_shared': False, 'guid': 'family_123'}
-        ]
+        expected_albums = [{"name": "Family", "is_shared": False, "guid": "family_123"}]
         self.assertEqual(filtered_albums, expected_albums)
 
     def test_case_sensitive_album_matching(self):
@@ -226,7 +223,7 @@ class TestAlbumFiltering(unittest.TestCase):
         """Test that unauthenticated client returns no albums."""
         # Create client without authentication
         mock_config = Mock(spec=BaseConfig)
-        client = iCloudClient(mock_config)
+        client = ICloudClient(mock_config)
         client._api = None
 
         config = Mock(spec=BaseConfig)
@@ -245,7 +242,7 @@ class TestAlbumFiltering(unittest.TestCase):
         """Test that client without photos service returns no albums."""
         # Create client without photos service
         mock_config = Mock(spec=BaseConfig)
-        client = iCloudClient(mock_config)
+        client = ICloudClient(mock_config)
         client._api = Mock()
         client._api.photos = None
 

@@ -2,13 +2,14 @@
 """Utility script to manage iCloud credentials in keyring."""
 
 import getpass
+import os
 import shutil
 import sys
 
 from iphoto_downloader import logger
-from iphoto_downloader.config import get_config, KeyringConfig
+from iphoto_downloader.config import KeyringConfig, get_config
 from iphoto_downloader.delivery_artifacts import DeliveryArtifactsManager
-from iphoto_downloader.icloud_client import iCloudClient
+from iphoto_downloader.icloud_client import ICloudClient
 from iphoto_downloader.version import get_version
 
 
@@ -27,9 +28,9 @@ def main():
 
     if not should_continue:
         # First-time setup completed, user needs to configure settings
-            print("\n🎯 Setup complete! Please run the application again after configuring settings.")
-            input("Press Enter to exit...")
-            sys.exit(0)
+        print("\n🎯 Setup complete! Please run the application again after configuring settings.")
+        input("Press Enter to exit...")
+        sys.exit(0)
 
     while True:
         print("\nOptions:")
@@ -117,7 +118,7 @@ def icloud_delete_credentials():
         return
 
     confirm = input("Are you sure you want to delete stored credentials? (y/N): ").strip().lower()
-    if confirm not in ['y', 'yes']:
+    if confirm not in ["y", "yes"]:
         print("❌ Operation cancelled.")
         return
 
@@ -133,7 +134,7 @@ def icloud_delete_2fa_sessions():
     print("-" * 30)
 
     config = _create_temp_config()
-    icloud_client = iCloudClient(config)
+    icloud_client = ICloudClient(config)
     if not icloud_client.session_dir.exists():
         print("No 2FA sessions found in session directory.")
         return
@@ -197,7 +198,7 @@ def pushover_delete_credentials():
         return
 
     confirm = input("Are you sure you want to delete stored credentials? (y/N): ").strip().lower()
-    if confirm not in ['y', 'yes']:
+    if confirm not in ["y", "yes"]:
         print("❌ Operation cancelled.")
         return
 
@@ -210,12 +211,12 @@ def pushover_delete_credentials():
 def _create_temp_config():
     """Create a KeyringConfig instance that can be used for credential management."""
     # Create a temporary KeyringConfig without validation by temporarily setting env vars
-    import os
-    temp_username = os.environ.get('PUSHOVER_DEVICE')
-    temp_password = os.environ.get('ENABLE_PUSHOVER')
 
-    os.environ['PUSHOVER_DEVICE'] = 'temp'
-    os.environ['ENABLE_PUSHOVER'] = 'true'
+    temp_username = os.environ.get("PUSHOVER_DEVICE")
+    temp_password = os.environ.get("ENABLE_PUSHOVER")
+
+    os.environ["PUSHOVER_DEVICE"] = "temp"
+    os.environ["ENABLE_PUSHOVER"] = "true"
 
     try:
         config = get_config()
@@ -223,14 +224,14 @@ def _create_temp_config():
     finally:
         # Restore original environment
         if temp_username is None:
-            os.environ.pop('PUSHOVER_DEVICE', None)
+            os.environ.pop("PUSHOVER_DEVICE", None)
         else:
-            os.environ['PUSHOVER_DEVICE'] = temp_username
+            os.environ["PUSHOVER_DEVICE"] = temp_username
 
         if temp_password is None:
-            os.environ.pop('ENABLE_PUSHOVER', None)
+            os.environ.pop("ENABLE_PUSHOVER", None)
         else:
-            os.environ['ENABLE_PUSHOVER'] = temp_password
+            os.environ["ENABLE_PUSHOVER"] = temp_password
 
 
 if __name__ == "__main__":

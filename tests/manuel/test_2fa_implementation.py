@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 import pytest
+
 """Test script for 2FA implementation with session storage."""
 
 import os
 import sys
 from pathlib import Path
 
-from iphoto_downloader.sync import PhotoSyncer
-from iphoto_downloader.logger import setup_logging
-from iphoto_downloader.icloud_client import iCloudClient
 from iphoto_downloader.config import get_config
+from iphoto_downloader.icloud_client import ICloudClient
+from iphoto_downloader.logger import setup_logging
+from iphoto_downloader.sync import PhotoSyncer
 
 # Add the src directory to the path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -29,7 +30,7 @@ def test_2fa_implementation():
         print(f"📧 Using credentials for: {config.icloud_username}")
 
         # Create client and check session directory
-        client = iCloudClient(config)
+        client = ICloudClient(config)
         print(f"📁 Session directory: {client.session_dir}")
         print(f"✅ Session directory exists: {client.session_dir.exists()}")
 
@@ -83,8 +84,8 @@ def test_syncer_integration():
         config = get_config()
 
         # Override settings for testing
-        os.environ['DRY_RUN'] = 'true'
-        os.environ['MAX_DOWNLOADS'] = '1'
+        os.environ["DRY_RUN"] = "true"
+        os.environ["MAX_DOWNLOADS"] = "1"
 
         # Create syncer
         PhotoSyncer(config)
@@ -99,8 +100,8 @@ def test_syncer_integration():
         return False
     finally:
         # Clean up environment
-        os.environ.pop('DRY_RUN', None)
-        os.environ.pop('MAX_DOWNLOADS', None)
+        os.environ.pop("DRY_RUN", None)
+        os.environ.pop("MAX_DOWNLOADS", None)
 
 
 if __name__ == "__main__":

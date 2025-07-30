@@ -6,11 +6,12 @@ This script helps run end-to-end integration tests that require real iCloud cred
 and handles 2FA authentication requirements.
 """
 
-from iphoto_downloader.config import get_config
-import sys
 import os
 import subprocess
+import sys
 from pathlib import Path
+
+from iphoto_downloader.config import get_config
 
 # Add the src directory to the path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -47,16 +48,19 @@ def run_integration_tests(interactive=False, test_filter=None):
 
     # Base pytest command
     cmd = [
-        python_exe, "-m", "pytest",
+        python_exe,
+        "-m",
+        "pytest",
         "tests/integration/",
         "-v",
         "--tb=short",
-        "-m", "integration"
+        "-m",
+        "integration",
     ]
 
     # Add interactive tests if requested
     if interactive:
-        os.environ['RUN_INTERACTIVE_TESTS'] = '1'
+        os.environ["RUN_INTERACTIVE_TESTS"] = "1"
         print("🔐 Interactive mode enabled - 2FA tests will require manual input")
     else:
         # Skip slow tests unless specifically requested
@@ -78,7 +82,7 @@ def run_integration_tests(interactive=False, test_filter=None):
         return 1
     finally:
         # Clean up environment
-        os.environ.pop('RUN_INTERACTIVE_TESTS', None)
+        os.environ.pop("RUN_INTERACTIVE_TESTS", None)
 
 
 def get_python_executable():
@@ -147,9 +151,9 @@ def main():
     elif "--dry-run" in args:
         test_filter = "dry_run"
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("🧪 iPhoto Downloader - E2E Integration Tests")
-    print("="*60)
+    print("=" * 60)
 
     if interactive:
         print("\n⚠️  INTERACTIVE MODE ENABLED")
@@ -157,7 +161,7 @@ def main():
         print("🔐 Make sure your 2FA device is available")
 
         confirm = input("\nContinue with interactive testing? (y/N): ").strip().lower()
-        if confirm not in ['y', 'yes']:
+        if confirm not in ["y", "yes"]:
             print("❌ Testing cancelled.")
             return 0
 

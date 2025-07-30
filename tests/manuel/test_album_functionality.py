@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import pytest
+
 """
 Test script to verify album functionality implementation.
 
@@ -13,7 +14,7 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from src.iphoto_downloader.src.iphoto_downloader.icloud_client import iCloudClient
+from src.iphoto_downloader.src.iphoto_downloader.icloud_client import ICloudClient
 from src.iphoto_downloader.src.iphoto_downloader.sync import PhotoSyncer
 
 
@@ -54,14 +55,14 @@ def test_album_sync_functionality():
         # Create mock config
         config = MockConfig(
             sync_directory=sync_dir,
-            dry_run=True  # Use dry run to avoid actual downloads
+            dry_run=True,  # Use dry run to avoid actual downloads
         )
 
         # Create syncer with mocked iCloud client
         syncer = PhotoSyncer(config)  # type: ignore
 
         # Mock the iCloud client
-        mock_client = MagicMock(spec=iCloudClient)
+        mock_client = MagicMock(spec=ICloudClient)
         syncer.icloud_client = mock_client
 
         # Mock authentication
@@ -72,23 +73,18 @@ def test_album_sync_functionality():
         # Mock photos with album information
         mock_photos = [
             {
-                'id': 'photo1',
-                'filename': 'vacation1.jpg',
-                'size': 1024,
-                'album_name': 'Summer Vacation'
+                "id": "photo1",
+                "filename": "vacation1.jpg",
+                "size": 1024,
+                "album_name": "Summer Vacation",
             },
             {
-                'id': 'photo2',
-                'filename': 'family2.jpg',
-                'size': 2048,
-                'album_name': 'Family Photos'
+                "id": "photo2",
+                "filename": "family2.jpg",
+                "size": 2048,
+                "album_name": "Family Photos",
             },
-            {
-                'id': 'photo3',
-                'filename': 'work3.jpg',
-                'size': 512,
-                'album_name': 'Work Events'
-            }
+            {"id": "photo3", "filename": "work3.jpg", "size": 512, "album_name": "Work Events"},
         ]
 
         # Set up photo iterator mock
@@ -110,8 +106,8 @@ def test_album_sync_functionality():
         stats = syncer.get_stats()
         print(f"📊 Sync statistics: {stats}")
 
-        assert stats['total_photos'] == 3, f"Expected 3 photos, got {stats['total_photos']}"
-        assert stats['new_downloads'] == 3, f"Expected 3 downloads, got {stats['new_downloads']}"
+        assert stats["total_photos"] == 3, f"Expected 3 photos, got {stats['total_photos']}"
+        assert stats["new_downloads"] == 3, f"Expected 3 downloads, got {stats['new_downloads']}"
 
         print("✅ Album sync functionality test passed!")
 
@@ -136,10 +132,10 @@ def test_album_client_methods():
         sync_directory=Path("/tmp"),
         dry_run=True,
         icloud_username="test@example.com",
-        icloud_password="password"
+        icloud_password="password",
     )
 
-    client = iCloudClient(config)  # type: ignore
+    client = ICloudClient(config)  # type: ignore
 
     # Test list_albums when not authenticated
     albums = list(client.list_albums())
@@ -167,10 +163,10 @@ def test_album_client_methods():
     # Test list_albums when authenticated
     albums = list(client.list_albums())
     assert len(albums) == 2, f"Expected 2 albums, got {len(albums)}"
-    assert albums[0]['name'] == "My Album"
-    assert albums[1]['name'] == "Shared Album"
-    assert albums[0]['is_shared'] is False
-    assert albums[1]['is_shared'] is True
+    assert albums[0]["name"] == "My Album"
+    assert albums[1]["name"] == "Shared Album"
+    assert albums[0]["is_shared"] is False
+    assert albums[1]["is_shared"] is True
 
     # Test verify_albums_exist
     missing = client.verify_albums_exist(["My Album", "Nonexistent Album"])

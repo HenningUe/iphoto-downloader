@@ -1,4 +1,5 @@
 import pytest
+
 """Manual testing for the 2FA web server.
 
 This module provides interactive tests for manually validating the web server
@@ -9,14 +10,14 @@ Run this file directly to start interactive testing:
 """
 
 import logging
+import sys
 import time
 import webbrowser
 from pathlib import Path
-import sys
 
+from auth2fa.web_server import TwoFAWebServer
 from iphoto_downloader.config import get_config
 from iphoto_downloader.logger import setup_logging
-from auth2fa.web_server import TwoFAWebServer
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
@@ -45,8 +46,7 @@ def test_web_interface_manual():
 
     server = TwoFAWebServer()
     server.set_callbacks(
-        request_2fa_callback=on_new_2fa_requested,
-        submit_code_callback=on_code_received
+        request_2fa_callback=on_new_2fa_requested, submit_code_callback=on_code_received
     )
 
     try:
@@ -88,9 +88,11 @@ def test_web_interface_manual():
                     # Show status update
                     elapsed = int(time.time() - start_time)
                     remaining = test_duration - elapsed
-                    status = (f"\r⏱️ Time: {remaining}s | "
-                              f"Codes: {len(received_codes)} | "
-                              f"Requests: {new_2fa_requests}")
+                    status = (
+                        f"\r⏱️ Time: {remaining}s | "
+                        f"Codes: {len(received_codes)} | "
+                        f"Requests: {new_2fa_requests}"
+                    )
                     print(status, end="", flush=True)
         except KeyboardInterrupt:
             print("\n⚠️ Manual test interrupted by user")
@@ -107,7 +109,7 @@ def test_web_interface_manual():
         # Ask user for feedback
         print("\n🤔 Manual Test Feedback:")
         feedback = input("Did the web interface work correctly? (y/n): ").lower().strip()
-        if feedback == 'y':
+        if feedback == "y":
             print("✅ Manual test passed!")
             return True
         else:
@@ -131,24 +133,25 @@ def test_port_conflict_handling():
     try:
         # Start multiple servers to test port conflict resolution
         for i in range(3):
+
             def make_callback(server_id):
                 def callback(code):
                     print(f"Server {server_id} received code: {code}")
                     return True
+
                 return callback
 
             server = TwoFAWebServer()
             server.set_callbacks(
-                submit_code_callback=make_callback(i+1),
-                request_2fa_callback=lambda: True
+                submit_code_callback=make_callback(i + 1), request_2fa_callback=lambda: True
             )
 
             success = server.start()
             if success:
-                print(f"✅ Server {i+1} started on port {server.port}")
+                print(f"✅ Server {i + 1} started on port {server.port}")
                 servers.append(server)
             else:
-                print(f"❌ Server {i+1} failed to start")
+                print(f"❌ Server {i + 1} failed to start")
                 break
 
         if len(servers) >= 2:
@@ -195,8 +198,7 @@ def test_server_state_management():
 
     server = TwoFAWebServer()
     server.set_callbacks(
-        request_2fa_callback=on_new_2fa_requested,
-        submit_code_callback=on_code_received
+        request_2fa_callback=on_new_2fa_requested, submit_code_callback=on_code_received
     )
 
     try:
@@ -247,8 +249,7 @@ def test_browser_integration():
 
     server = TwoFAWebServer()
     server.set_callbacks(
-        request_2fa_callback=on_new_2fa_requested,
-        submit_code_callback=on_code_received
+        request_2fa_callback=on_new_2fa_requested, submit_code_callback=on_code_received
     )
 
     try:
@@ -269,7 +270,7 @@ def test_browser_integration():
 
                 # Give user time to verify
                 feedback = input("Did the browser open correctly? (y/n): ").lower().strip()
-                result = feedback == 'y'
+                result = feedback == "y"
             else:
                 print("❌ Failed to open browser")
                 result = False
@@ -310,9 +311,9 @@ def run_all_manual_tests():
     results = {}
 
     for test_name, test_func in tests:
-        print(f"\n{'='*50}")
+        print(f"\n{'=' * 50}")
         print(f"Running: {test_name}")
-        print(f"{'='*50}")
+        print(f"{'=' * 50}")
 
         try:
             result = test_func()
@@ -324,9 +325,9 @@ def run_all_manual_tests():
             results[test_name] = False
 
     # Print summary
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print("📊 MANUAL TEST SUMMARY")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
 
     passed = sum(1 for result in results.values() if result)
     total = len(results)

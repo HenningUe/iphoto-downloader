@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 import pytest
+
 """Test script to verify that sync pauses during maintenance operations."""
 
+import sys
 import threading
 import time
-import sys
 from pathlib import Path
 
 # Add src to Python path for testing
@@ -12,10 +13,11 @@ sys.path.insert(0, str(Path(__file__).parent / "src" / "iphoto_downloader" / "sr
 
 # Import after path setup
 try:
-    from iphoto_downloader.continuous_runner import ContinuousRunner
-    from iphoto_downloader.config import BaseConfig
-    from iphoto_downloader.logger import setup_logging
     import logging
+
+    from iphoto_downloader.config import BaseConfig
+    from iphoto_downloader.continuous_runner import ContinuousRunner
+    from iphoto_downloader.logger import setup_logging
 except ImportError as e:
     print(f"Import error: {e}")
     print("Make sure you're running this from the project root directory")
@@ -29,7 +31,7 @@ class MockConfig(BaseConfig):
     """Mock configuration for testing."""
 
     def __init__(self):
-        self.execution_mode = 'continuous'
+        self.execution_mode = "continuous"
         self.sync_interval_minutes = 0.1  # Very short for testing
         self.maintenance_interval_hours = 0.01  # Very short for testing
         self.sync_directory = Path.cwd() / "test_photos"

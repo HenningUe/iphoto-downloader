@@ -7,16 +7,16 @@ This package contains all authentication-related components including:
 - Authentication handlers
 """
 
-from .web_server import TwoFAWebServer, TwoFAHandler
-from .pushover_service import PushoverService, PushoverConfig
-from .authenticator import TwoFactorAuthHandler, handle_2fa_authentication, Auth2FAConfig
+from .authenticator import Auth2FAConfig, TwoFactorAuthHandler, handle_2fa_authentication
+from .pushover_service import PushoverConfig, PushoverService
+from .web_server import TwoFAHandler, TwoFAWebServer
 
 __all__ = [
-    'TwoFAWebServer',
-    'TwoFAHandler',
-    'PushoverService',
-    'PushoverConfig',
-    'TwoFactorAuthHandler',
-    'handle_2fa_authentication',
-    'Auth2FAConfig'
+    "Auth2FAConfig",
+    "PushoverConfig",
+    "PushoverService",
+    "TwoFAHandler",
+    "TwoFAWebServer",
+    "TwoFactorAuthHandler",
+    "handle_2fa_authentication",
 ]

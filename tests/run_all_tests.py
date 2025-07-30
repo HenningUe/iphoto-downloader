@@ -4,10 +4,9 @@ Test runner script for iphoto-downloader project.
 Provides easy ways to run all tests, specific test files, or test categories.
 """
 
-import sys
 import subprocess
+import sys
 from pathlib import Path
-from typing import List
 
 
 def get_python_executable() -> str:
@@ -18,7 +17,7 @@ def get_python_executable() -> str:
     return sys.executable
 
 
-def run_command(cmd: List[str], description: str) -> int:
+def run_command(cmd: list[str], description: str) -> int:
     """Run a command and return the exit code."""
     print(f"\n🔄 {description}")
     print(f"Running: {' '.join(cmd)}")
@@ -52,12 +51,14 @@ def main():
         elif test_target == "coverage":
             # Run tests with coverage
             cmd = [
-                python_exe, "-m", "pytest",
+                python_exe,
+                "-m",
+                "pytest",
                 "tests/",
                 "--cov=src",
                 "--cov-report=term-missing",
                 "--cov-report=html",
-                "--cov-fail-under=80"
+                "--cov-fail-under=80",
             ]
             return run_command(cmd, "Running Tests with Coverage")
 

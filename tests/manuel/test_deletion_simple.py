@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 import pytest
+
 """Simple test script to verify deletion tracking functionality works."""
 
-from iphoto_downloader.logger import setup_logging
-from iphoto_downloader.deletion_tracker import DeletionTracker
-import sys
 import logging
+import sys
 from pathlib import Path
+
+from iphoto_downloader.deletion_tracker import DeletionTracker
+from iphoto_downloader.logger import setup_logging
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent / "src" / "iphoto_downloader" / "src"))
@@ -36,7 +38,7 @@ def test_simple_deletion_tracking():
             filename="test1.jpg",
             local_path="album1/test1.jpg",
             file_size=1024,
-            album_name="Test Album 1"
+            album_name="Test Album 1",
         )
         logger.info("✅ Recorded downloaded photo")
 
@@ -55,7 +57,7 @@ def test_simple_deletion_tracking():
             photo_id="test_photo_1",
             filename="test1.jpg",
             file_size=1024,
-            original_path="album1/test1.jpg"
+            original_path="album1/test1.jpg",
         )
         logger.info("✅ Marked photo as deleted")
 
@@ -65,7 +67,7 @@ def test_simple_deletion_tracking():
 
         # Test 6: Get stats
         stats = tracker.get_stats()
-        assert stats['total_deleted'] == 1
+        assert stats["total_deleted"] == 1
         logger.info("✅ Deletion stats work correctly")
 
         logger.info("🎉 Simple deletion tracking test passed!")
@@ -74,6 +76,7 @@ def test_simple_deletion_tracking():
     except Exception as e:
         logger.error(f"❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -116,7 +119,7 @@ def test_deletion_prevention_logic():
             filename="test_photo.jpg",
             local_path="TestAlbum/test_photo.jpg",
             file_size=len("fake photo content"),
-            album_name="TestAlbum"
+            album_name="TestAlbum",
         )
         logger.info("✅ Photo recorded as downloaded")
 
@@ -159,6 +162,7 @@ def test_deletion_prevention_logic():
     except Exception as e:
         logger.error(f"❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -166,6 +170,7 @@ def test_deletion_prevention_logic():
         tracker.close()
         # Clean up test files
         import shutil
+
         if test_sync_dir.exists():
             try:
                 shutil.rmtree(test_sync_dir)

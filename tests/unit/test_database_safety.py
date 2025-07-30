@@ -1,12 +1,11 @@
 """Test database safety and recovery functionality."""
 
-import tempfile
-import sqlite3
 import glob
+import sqlite3
+import tempfile
 from pathlib import Path
 
 import pytest
-
 from src.iphoto_downloader.src.iphoto_downloader.deletion_tracker import DeletionTracker
 from src.iphoto_downloader.src.iphoto_downloader.logger import setup_logging
 
@@ -15,6 +14,7 @@ from src.iphoto_downloader.src.iphoto_downloader.logger import setup_logging
 def setup_test_logging():
     """Set up logging for tests."""
     import logging
+
     setup_logging(logging.INFO)
 
 
@@ -26,8 +26,7 @@ class TestDatabaseSafety:
         tracker = DeletionTracker(str(temp_dir / "test.db"))
 
         # Add some test data
-        tracker.add_downloaded_photo(
-            "test_photo", "test.jpg", "/test/path", 1024, "Album1")
+        tracker.add_downloaded_photo("test_photo", "test.jpg", "/test/path", 1024, "Album1")
 
         # Create backup
         assert tracker.create_backup(max_backups=3) is True
@@ -53,7 +52,7 @@ class TestDatabaseSafety:
     def test_cleanup_old_backups(self, temp_dir):
         """Test that old backup files are cleaned up properly."""
         import time
-        
+
         tracker = DeletionTracker(str(temp_dir / "test.db"))
 
         # Create multiple backups with slight delays to ensure different timestamps
@@ -64,7 +63,7 @@ class TestDatabaseSafety:
         # Should only have 3 backup files
         backup_files = glob.glob(str(temp_dir / "test.backup_*.db"))
         assert len(backup_files) == 3
-        
+
         # Clean up
         tracker.close()
         del tracker
@@ -74,12 +73,11 @@ class TestDatabaseSafety:
         tracker = DeletionTracker(str(temp_dir / "test.db"))
 
         # Add some data
-        tracker.add_downloaded_photo(
-            "test_photo", "test.jpg", "/test/path", 1024, "Album1")
+        tracker.add_downloaded_photo("test_photo", "test.jpg", "/test/path", 1024, "Album1")
 
         # Check integrity
         assert tracker.check_database_integrity() is True
-        
+
         # Clean up
         tracker.close()
         del tracker
@@ -94,8 +92,8 @@ class TestDatabaseSafety:
         del tracker
 
         # Corrupt the database file
-        with open(db_path, 'wb') as f:
-            f.write(b'corrupted data')
+        with open(db_path, "wb") as f:
+            f.write(b"corrupted data")
 
         # Test that corruption is detectable
         corrupt_detected = False
@@ -105,7 +103,7 @@ class TestDatabaseSafety:
             cursor = conn.cursor()
             cursor.execute("PRAGMA integrity_check")
             result = cursor.fetchone()
-            corrupt_detected = (not result or result[0] != "ok")
+            corrupt_detected = not result or result[0] != "ok"
         except Exception:
             corrupt_detected = True
         finally:
@@ -125,8 +123,7 @@ class TestDatabaseSafety:
         tracker = DeletionTracker(str(db_path))
 
         # Add some test data
-        tracker.add_downloaded_photo(
-            "test_photo", "test.jpg", "/test/path", 1024, "Album1")
+        tracker.add_downloaded_photo("test_photo", "test.jpg", "/test/path", 1024, "Album1")
 
         # Create backup
         tracker.create_backup()
@@ -134,8 +131,8 @@ class TestDatabaseSafety:
         # Corrupt the database
         tracker.close()
         del tracker
-        with open(db_path, 'wb') as f:
-            f.write(b'corrupted data')
+        with open(db_path, "wb") as f:
+            f.write(b"corrupted data")
 
         # Create new tracker instance - should detect corruption and recover
         tracker = DeletionTracker(str(db_path))
@@ -144,11 +141,11 @@ class TestDatabaseSafety:
         photos = tracker.get_downloaded_photos()
         # photos is a dict[photo_id, photo_data], not a list
         assert len(photos) == 1
-        
+
         # Get the first (and only) photo from the dict
         photo_data = next(iter(photos.values()))
-        assert photo_data['filename'] == 'test.jpg'
-        
+        assert photo_data["filename"] == "test.jpg"
+
         # Clean up
         tracker.close()
         del tracker
@@ -161,8 +158,8 @@ class TestDatabaseSafety:
         # Don't create any backups, just corrupt the database
         tracker.close()
         del tracker
-        with open(db_path, 'wb') as f:
-            f.write(b'corrupted data')
+        with open(db_path, "wb") as f:
+            f.write(b"corrupted data")
 
         # Recovery should fail but still allow new database creation
         tracker = DeletionTracker(str(db_path))
@@ -170,7 +167,7 @@ class TestDatabaseSafety:
         # Should have a working empty database
         assert tracker.check_database_integrity() is True
         assert len(tracker.get_downloaded_photos()) == 0
-        
+
         # Clean up
         tracker.close()
         del tracker
@@ -187,7 +184,7 @@ class TestDatabaseSafety:
         # Should create new database
         assert db_path.exists()
         assert tracker.check_database_integrity() is True
-        
+
         # Clean up
         tracker.close()
         del tracker
@@ -197,8 +194,7 @@ class TestDatabaseSafety:
         tracker = DeletionTracker(str(temp_dir / "test.db"))
 
         # Add some data
-        tracker.add_downloaded_photo(
-            "test_photo", "test.jpg", "/test/path", 1024, "Album1")
+        tracker.add_downloaded_photo("test_photo", "test.jpg", "/test/path", 1024, "Album1")
 
         # Should pass safety checks and create backup
         assert tracker.ensure_database_safety() is True
@@ -206,7 +202,7 @@ class TestDatabaseSafety:
         # Should have at least one backup
         backup_files = glob.glob(str(temp_dir / "test.backup_*.db"))
         assert len(backup_files) >= 1
-        
+
         # Clean up
         tracker.close()
         del tracker
@@ -217,15 +213,14 @@ class TestDatabaseSafety:
         tracker = DeletionTracker(str(db_path))
 
         # Add data and create backup
-        tracker.add_downloaded_photo(
-            "test_photo", "test.jpg", "/test/path", 1024, "Album1")
+        tracker.add_downloaded_photo("test_photo", "test.jpg", "/test/path", 1024, "Album1")
         tracker.create_backup()
 
         # Corrupt the database
         tracker.close()
         del tracker
-        with open(db_path, 'wb') as f:
-            f.write(b'corrupted data')
+        with open(db_path, "wb") as f:
+            f.write(b"corrupted data")
 
         # Should recover from backup
         tracker = DeletionTracker(str(db_path))
@@ -233,11 +228,11 @@ class TestDatabaseSafety:
         # Data should be recovered
         photos = tracker.get_downloaded_photos()
         assert len(photos) == 1
-        
+
         # Get the first (and only) photo from the dict
         photo_data = next(iter(photos.values()))
-        assert photo_data['filename'] == 'test.jpg'
-        
+        assert photo_data["filename"] == "test.jpg"
+
         # Clean up
         tracker.close()
         del tracker
@@ -256,7 +251,7 @@ class TestDatabaseSafety:
         # Should have created backup
         backup_files = glob.glob(str(temp_dir / "test.backup_*.db"))
         assert len(backup_files) >= 1
-        
+
         # Clean up
         tracker2.close()
         del tracker2
@@ -278,12 +273,12 @@ class TestDatabaseSafety:
         assert len(backup_files) == 1
 
         # Corrupt main database
-        with open(db_path, 'wb') as f:
-            f.write(b'corrupted data')
+        with open(db_path, "wb") as f:
+            f.write(b"corrupted data")
 
         # Corrupt backup too
-        with open(backup_files[0], 'wb') as f:
-            f.write(b'corrupted backup data')
+        with open(backup_files[0], "wb") as f:
+            f.write(b"corrupted backup data")
 
         # Should create new database when recovery fails
         tracker = DeletionTracker(str(db_path))
@@ -291,7 +286,7 @@ class TestDatabaseSafety:
         # Should have working empty database
         assert tracker.check_database_integrity() is True
         assert len(tracker.get_downloaded_photos()) == 0
-        
+
         # Clean up
         tracker.close()
         del tracker

@@ -1,16 +1,15 @@
 """Configuration management for iPhoto Downloader Tool."""
 
+import logging
 import os
 import sys
-import logging
-from pathlib import Path
 from abc import ABC
-from typing import TYPE_CHECKING
-from dotenv import load_dotenv
-import keyring
+from pathlib import Path
 
-if TYPE_CHECKING:
-    from auth2fa.pushover_service import PushoverConfig
+import keyring
+from dotenv import load_dotenv
+
+from auth2fa.pushover_service import PushoverConfig
 
 # Check if keyring is available and functional
 try:
@@ -20,7 +19,7 @@ except Exception:
     KEYRING_AVAILABLE = False
 
 
-class BaseConfig(ABC):
+class BaseConfig(ABC):  # noqa
     """Base configuration class with common functionality."""
 
     # Keyring service name for storing credentials
@@ -38,49 +37,53 @@ class BaseConfig(ABC):
 
         # iCloud credentials - try multiple sources
         # Sync settings
-        self.sync_directory = Path(os.getenv('SYNC_DIRECTORY', './photos'))
-        self.dry_run = os.getenv('DRY_RUN', 'false').lower() == 'true'
-        self.log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
+        self.sync_directory = Path(os.getenv("SYNC_DIRECTORY", "./photos"))
+        self.dry_run = os.getenv("DRY_RUN", "false").lower() == "true"
+        self.log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 
         # Download limits
-        self.max_downloads = int(os.getenv('MAX_DOWNLOADS', '0'))
-        self.max_file_size_mb = int(os.getenv('MAX_FILE_SIZE_MB', '0'))
+        self.max_downloads = int(os.getenv("MAX_DOWNLOADS", "0"))
+        self.max_file_size_mb = int(os.getenv("MAX_FILE_SIZE_MB", "0"))
 
         # Pushover notification settings
-        self.pushover_device: str | None = os.getenv('PUSHOVER_DEVICE', '')
-        self.enable_pushover: bool = os.getenv('ENABLE_PUSHOVER', 'true').lower() == 'true'
+        self.pushover_device: str | None = os.getenv("PUSHOVER_DEVICE", "")
+        self.enable_pushover: bool = os.getenv("ENABLE_PUSHOVER", "true").lower() == "true"
 
         # Album filtering settings
         self.include_personal_albums: bool = (
-            os.getenv('INCLUDE_PERSONAL_ALBUMS', 'true').lower() == 'true'
+            os.getenv("INCLUDE_PERSONAL_ALBUMS", "true").lower() == "true"
         )
         self.include_shared_albums: bool = (
-            os.getenv('INCLUDE_SHARED_ALBUMS', 'true').lower() == 'true'
+            os.getenv("INCLUDE_SHARED_ALBUMS", "true").lower() == "true"
         )
 
         # Parse album name lists from comma-separated strings
-        personal_albums_str = os.getenv('PERSONAL_ALBUM_NAMES_TO_INCLUDE', '')
-        self.personal_album_names_to_include: list[str] = [
-            name.strip() for name in personal_albums_str.split(',') if name.strip()
-        ] if personal_albums_str else []
+        personal_albums_str = os.getenv("PERSONAL_ALBUM_NAMES_TO_INCLUDE", "")
+        self.personal_album_names_to_include: list[str] = (
+            [name.strip() for name in personal_albums_str.split(",") if name.strip()]
+            if personal_albums_str
+            else []
+        )
 
-        shared_albums_str = os.getenv('SHARED_ALBUM_NAMES_TO_INCLUDE', '')
-        self.shared_album_names_to_include: list[str] = [
-            name.strip() for name in shared_albums_str.split(',') if name.strip()
-        ] if shared_albums_str else []
+        shared_albums_str = os.getenv("SHARED_ALBUM_NAMES_TO_INCLUDE", "")
+        self.shared_album_names_to_include: list[str] = (
+            [name.strip() for name in shared_albums_str.split(",") if name.strip()]
+            if shared_albums_str
+            else []
+        )
 
         # Execution mode settings
-        self.execution_mode = os.getenv('EXECUTION_MODE', 'single').lower()
-        self.sync_interval_minutes = float(os.getenv('SYNC_INTERVAL_MINUTES', '2'))
-        self.maintenance_interval_hours = float(os.getenv('MAINTENANCE_INTERVAL_HOURS', '1'))
+        self.execution_mode = os.getenv("EXECUTION_MODE", "single").lower()
+        self.sync_interval_minutes = float(os.getenv("SYNC_INTERVAL_MINUTES", "2"))
+        self.maintenance_interval_hours = float(os.getenv("MAINTENANCE_INTERVAL_HOURS", "1"))
 
         # Multi-instance control settings
         self.allow_multi_instance: bool = (
-            os.getenv('ALLOW_MULTI_INSTANCE', 'false').lower() == 'true'
+            os.getenv("ALLOW_MULTI_INSTANCE", "false").lower() == "true"
         )
 
         # Database path configuration
-        self.database_parent_directory = os.getenv('DATABASE_PARENT_DIRECTORY', '.data')
+        self.database_parent_directory = os.getenv("DATABASE_PARENT_DIRECTORY", ".data")
 
         # Operating mode configuration for delivery artifacts management
         self.operating_mode = get_operating_mode()
@@ -89,10 +92,10 @@ class BaseConfig(ABC):
     def icloud_username(self) -> str:
         """Get iCloud username from credential store."""
         # First check environment variables
-        env_username = os.getenv('ICLOUD_USERNAME')
+        env_username = os.getenv("ICLOUD_USERNAME")
         if env_username:
             return env_username
-        
+
         # Fall back to keyring
         v = self._icloud_get_username_from_store()
         if not v and self.enable_pushover:
@@ -103,10 +106,10 @@ class BaseConfig(ABC):
     def icloud_password(self) -> str:
         """Get iCloud password from credential store."""
         # First check environment variables
-        env_password = os.getenv('ICLOUD_PASSWORD')
+        env_password = os.getenv("ICLOUD_PASSWORD")
         if env_password:
             return env_password
-        
+
         # Fall back to keyring
         v = self._icloud_get_password_from_store()
         if not v and self.enable_pushover:
@@ -138,10 +141,10 @@ class BaseConfig(ABC):
         expanded_path = os.path.expandvars(self.database_parent_directory)
 
         # Cross-platform environment variable mapping
-        if '%LOCALAPPDATA%' in expanded_path and os.name != 'nt':
+        if "%LOCALAPPDATA%" in expanded_path and os.name != "nt":
             # Map Windows %LOCALAPPDATA% to Linux equivalent
-            home = os.path.expanduser('~')
-            expanded_path = expanded_path.replace('%LOCALAPPDATA%', f"{home}/.local/share")
+            home = os.path.expanduser("~")
+            expanded_path = expanded_path.replace("%LOCALAPPDATA%", f"{home}/.local/share")
 
         database_dir = Path(expanded_path)
 
@@ -175,7 +178,7 @@ class BaseConfig(ABC):
         except ValueError:
             errors.append("icloud_password is required (store in keyring)")
 
-        if self.log_level not in ['DEBUG', 'INFO', 'WARNING', 'ERROR']:
+        if self.log_level not in ["DEBUG", "INFO", "WARNING", "ERROR"]:
             errors.append(f"Invalid LOG_LEVEL: {self.log_level}")
 
         # Validate Pushover settings if enabled
@@ -201,7 +204,7 @@ class BaseConfig(ABC):
             )
 
         # Validate execution mode settings
-        if self.execution_mode not in ['single', 'continuous']:
+        if self.execution_mode not in ["single", "continuous"]:
             errors.append(
                 f"Invalid EXECUTION_MODE: {self.execution_mode}. Must be 'single' or 'continuous'"
             )
@@ -213,12 +216,15 @@ class BaseConfig(ABC):
             errors.append("MAINTENANCE_INTERVAL_HOURS must be bigger than 0 hours")
 
         if self.maintenance_interval_hours * 60 <= self.sync_interval_minutes:
-            errors.append("MAINTENANCE_INTERVAL_HOURS * 60 must be bigger than "
-                          "SYNC_INTERVAL_MINUTES")
+            errors.append(
+                "MAINTENANCE_INTERVAL_HOURS * 60 must be bigger than SYNC_INTERVAL_MINUTES"
+            )
 
         # Validate multi-instance control settings
         if not isinstance(self.allow_multi_instance, bool):
-            errors.append(f"ALLOW_MULTI_INSTANCE must be a boolean (true/false), got: {self.allow_multi_instance}")
+            errors.append(
+                f"ALLOW_MULTI_INSTANCE must be a boolean (true/false), got: {self.allow_multi_instance}"
+            )
 
         # Validate database path configuration
         try:
@@ -237,11 +243,11 @@ class BaseConfig(ABC):
         """Create sync directory if it doesn't exist."""
         self.sync_directory.mkdir(parents=True, exist_ok=True)
 
-    def get_log_level(self, fallback_lvl:int=logging.INFO) -> int:
+    def get_log_level(self, fallback_lvl: int = logging.INFO) -> int:
         """Get logging level as integer."""
         return getattr(logging, self.log_level, fallback_lvl)
 
-    def get_pushover_config(self) -> 'PushoverConfig | None':
+    def get_pushover_config(self) -> "PushoverConfig | None":
         """Get Pushover configuration if enabled and properly configured."""
         if not self.enable_pushover:
             return None
@@ -249,11 +255,10 @@ class BaseConfig(ABC):
         if not self.pushover_api_token or not self.pushover_user_key:
             return None
 
-        from auth2fa.pushover_service import PushoverConfig
         return PushoverConfig(
             api_token=self.pushover_api_token,
             user_key=self.pushover_user_key,
-            device=self.pushover_device
+            device=self.pushover_device,
         )
 
     def _icloud_get_username_from_store(self) -> str | None:
@@ -270,7 +275,8 @@ class BaseConfig(ABC):
         """Get password from keyring."""
         try:
             stored_password = keyring.get_password(
-                self.ICLOUD_KEYRING_SERVICE_NAME, self.icloud_username)
+                self.ICLOUD_KEYRING_SERVICE_NAME, self.icloud_username
+            )
             return stored_password
         except Exception:
             # Keyring access failed
@@ -306,7 +312,8 @@ class BaseConfig(ABC):
         stored_username = keyring.get_password(self.ICLOUD_KEYRING_SERVICE_NAME, "username")
         if stored_username:
             stored_password = keyring.get_password(
-                self.ICLOUD_KEYRING_SERVICE_NAME, stored_username)
+                self.ICLOUD_KEYRING_SERVICE_NAME, stored_username
+            )
             return stored_password is not None
         return False
 
@@ -314,8 +321,7 @@ class BaseConfig(ABC):
         """Get pushover user key from keyring."""
         try:
             # Try to get user key from keyring (stored as a separate entry)
-            stored_user_key = keyring.get_password(
-                self.PUSHOVER_KEYRING_SERVICE_NAME, "user_key")
+            stored_user_key = keyring.get_password(self.PUSHOVER_KEYRING_SERVICE_NAME, "user_key")
             return stored_user_key
         except Exception:
             # Keyring access failed
@@ -325,7 +331,8 @@ class BaseConfig(ABC):
         """Get pushover API token from keyring."""
         try:
             stored_api_token = keyring.get_password(
-                self.PUSHOVER_KEYRING_SERVICE_NAME, self.pushover_user_key)
+                self.PUSHOVER_KEYRING_SERVICE_NAME, self.pushover_user_key
+            )
             return stored_api_token
         except Exception:
             # Keyring access failed
@@ -361,7 +368,8 @@ class BaseConfig(ABC):
         stored_user_key = keyring.get_password(self.PUSHOVER_KEYRING_SERVICE_NAME, "user_key")
         if stored_user_key:
             stored_api_token = keyring.get_password(
-                self.PUSHOVER_KEYRING_SERVICE_NAME, stored_user_key)
+                self.PUSHOVER_KEYRING_SERVICE_NAME, stored_user_key
+            )
             return stored_api_token is not None
         return False
 
@@ -370,20 +378,20 @@ class BaseConfig(ABC):
         # Safely get pushover properties
         try:
             pushover_user_key = self.pushover_user_key
-            pushover_user_key_display = '***' if pushover_user_key else None
+            pushover_user_key_display = "***" if pushover_user_key else None
         except ValueError:
             pushover_user_key_display = None
 
         try:
             pushover_api_token = self.pushover_api_token
-            pushover_api_token_display = '***' if pushover_api_token else None
+            pushover_api_token_display = "***" if pushover_api_token else None
         except ValueError:
             pushover_api_token_display = None
 
         credential_store = "keyring"
-        
+
         # Check if credentials come from environment variables
-        if os.getenv('ICLOUD_USERNAME') and not self._icloud_get_username_from_store():
+        if os.getenv("ICLOUD_USERNAME") and not self._icloud_get_username_from_store():
             credential_store = "env-only"
 
         return (
@@ -410,18 +418,17 @@ class BaseConfig(ABC):
         Raises:
             ValueError: If any specified albums don't exist
         """
-        from iphoto_downloader.sync import iCloudClient
+        from iphoto_downloader.sync import ICloudClient
+
         missing_albums = []
-        icloud_client_typed: iCloudClient = icloud_client
+        icloud_client_typed: ICloudClient = icloud_client
         # Check personal albums if specified
         if self.personal_album_names_to_include:
             available_albums, _, missing_personal = icloud_client_typed.verify_albums_exist(
                 self.personal_album_names_to_include
             )
             if missing_personal:
-                missing_albums.extend([
-                    f"Personal: {name}" for name in missing_personal]
-                )
+                missing_albums.extend([f"Personal: {name}" for name in missing_personal])
                 missing_albums.append(
                     f"(Note: existing personal albums: {', '.join(available_albums)})"
                 )
@@ -447,67 +454,65 @@ class KeyringConfig(BaseConfig):
     """Configuration class that uses keyring for storing sensitive data."""
 
 
-
 def get_operating_mode() -> str:
     """Get and validate operating mode configuration.
-    
+
     Returns:
         Operating mode: "InDevelopment" or "Delivered"
     """
     # Check if running from PyInstaller executable
-    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
         # Running from PyInstaller executable - default to 'Delivered'
-        default_mode = 'Delivered'
+        default_mode = "Delivered"
     else:
         # Running from source - default to 'InDevelopment'
-        default_mode = 'InDevelopment'
-        
-    mode = os.getenv('OPERATING_MODE', default_mode)
-    
+        default_mode = "InDevelopment"
+
+    mode = os.getenv("OPERATING_MODE", default_mode)
+
     # Validate operating mode
-    valid_modes = ['InDevelopment', 'Delivered']
+    valid_modes = ["InDevelopment", "Delivered"]
     valid_modes = [m.lower() for m in valid_modes]
     mode = mode.strip().lower()
     if mode not in valid_modes:
         mode = default_mode  # Use appropriate default
-        
-    return mode.lower()
 
+    return mode.lower()
 
 
 def get_app_data_folder_path() -> Path:
     """Get the App's data folder path for 'Delivered' mode.
-    
+
     Returns:
         Path to the App's data folder based on the operating system
     """
-    if get_operating_mode() == 'delivered':
-        if os.name == 'nt':  # Windows
+    if get_operating_mode() == "delivered":
+        if os.name == "nt":  # Windows
             # Use %USERPROFILE%/iphoto_downloader_settings
-            base_path = Path(os.getenv('LOCALAPPDATA', os.path.expanduser('~\\AppData\\Local')))
-        elif os.name == 'posix':
+            base_path = Path(os.getenv("LOCALAPPDATA", os.path.expanduser("~\\AppData\\Local")))
+        elif os.name == "posix":
             # Linux/Unix
             # Use ~/.config/iphoto_downloader
-            base_path = Path(os.path.expanduser('~/.config'))
+            base_path = Path(os.path.expanduser("~/.config"))
         else:
-            raise EnvironmentError(f"Unsupported OS: {os.name}")
-        base_path /= 'iphoto_downloader'
+            raise OSError(f"Unsupported OS: {os.name}")
+        base_path /= "iphoto_downloader"
     else:
         # In development mode, use current working directory
         base_path = Path.cwd()
-        
+
     return base_path
 
 
 def get_settings_folder_path() -> Path:
     """Get the settings folder path for 'Delivered' mode.
-    
+
     Returns:
         Path to the settings folder based on the operating system
     """
-    if get_operating_mode() == 'delivered':
+    if get_operating_mode() == "delivered":
         base_path = get_app_data_folder_path()
-        base_path /= 'settings'
+        base_path /= "settings"
     else:
         # In development mode, use current working directory
         base_path = Path.cwd()
@@ -526,25 +531,27 @@ def get_settings_env_file_path() -> Path:
     settings_ini_file_p_options: list[Path] = []
 
     # First try current directory's .env file
-    settings_ini_file_p = Path('.env')
+    settings_ini_file_p = Path(".env")
     settings_ini_file_p_options.append(settings_ini_file_p)
-    
+
     # Create the iphoto_downloader subdirectory path
     iphoto_downloader_settings_dir = get_settings_folder_path()
-    settings_ini_file_p = iphoto_downloader_settings_dir / 'settings.ini'
+    settings_ini_file_p = iphoto_downloader_settings_dir / "settings.ini"
     settings_ini_file_p_options.append(settings_ini_file_p)
 
     settings_ini_file_p = None
     for loop_file_p in settings_ini_file_p_options:
         if loop_file_p.is_dir():
-            raise EnvironmentError(f"Expected file but found directory: {loop_file_p}")
+            raise OSError(f"Expected file but found directory: {loop_file_p}")
         if loop_file_p.exists():
             settings_ini_file_p = loop_file_p
             break
     if not settings_ini_file_p:
-        msg = ("Warning: No configuration file found. Options are: "
-               f"{', '.join(map(str, settings_ini_file_p_options))}")
-        raise EnvironmentError(msg)
+        msg = (
+            "Warning: No configuration file found. Options are: "
+            f"{', '.join(map(str, settings_ini_file_p_options))}"
+        )
+        raise OSError(msg)
     return settings_ini_file_p
 
 

@@ -3,7 +3,8 @@
 import sqlite3
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
+
 import pytest
 
 from iphoto_downloader.deletion_tracker import DeletionTracker
@@ -17,24 +18,27 @@ class TestDeletionTracker:
     def setup_logger(self):
         """Setup logging for tests."""
         from iphoto_downloader.config import get_config
+
         config = get_config()
         setup_logging(config.get_log_level())
 
     @pytest.fixture
     def temp_db(self):
         """Create a temporary database for testing."""
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
             db_path = f.name
         yield db_path
         # Force close any open connections before cleanup
         try:
             # Give time for connections to close
             import time
+
             time.sleep(0.1)
             Path(db_path).unlink(missing_ok=True)
         except PermissionError:
             # On Windows, if file is still locked, try again after a moment
             import time
+
             time.sleep(0.5)
             try:
                 Path(db_path).unlink(missing_ok=True)
@@ -60,8 +64,9 @@ class TestDeletionTracker:
         """Test adding a deleted photo."""
         tracker = DeletionTracker(temp_db)
 
-        tracker.add_deleted_photo("photo123", "test.jpg", file_size=1024,
-                                  original_path="/path/to/test.jpg")
+        tracker.add_deleted_photo(
+            "photo123", "test.jpg", file_size=1024, original_path="/path/to/test.jpg"
+        )
 
         # Verify it was recorded
         with sqlite3.connect(temp_db) as conn:
@@ -69,7 +74,7 @@ class TestDeletionTracker:
             cursor.execute(
                 "SELECT photo_id, photo_name, file_size, original_path "
                 "FROM deleted_photos WHERE photo_id = ?",
-                ("photo123",)
+                ("photo123",),
             )
             row = cursor.fetchone()
             assert row is not None
@@ -90,8 +95,7 @@ class TestDeletionTracker:
         with sqlite3.connect(temp_db) as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT COUNT(*), file_size FROM deleted_photos WHERE photo_id = ?",
-                ("photo123",)
+                "SELECT COUNT(*), file_size FROM deleted_photos WHERE photo_id = ?", ("photo123",)
             )
             row = cursor.fetchone()
             assert row[0] == 1  # Only one record
@@ -155,10 +159,10 @@ class TestDeletionTracker:
 
         stats = tracker.get_stats()
 
-        assert stats['total_deleted'] == 2
-        assert 'first_deletion' in stats
-        assert 'last_deletion' in stats
-        assert stats['db_path'] == temp_db
+        assert stats["total_deleted"] == 2
+        assert "first_deletion" in stats
+        assert "last_deletion" in stats
+        assert stats["db_path"] == temp_db
 
     def test_get_stats_empty(self, temp_db):
         """Test getting statistics from empty database."""
@@ -166,9 +170,9 @@ class TestDeletionTracker:
 
         stats = tracker.get_stats()
 
-        assert stats['total_deleted'] == 0
-        assert stats['first_deletion'] is None
-        assert stats['last_deletion'] is None
+        assert stats["total_deleted"] == 0
+        assert stats["first_deletion"] is None
+        assert stats["last_deletion"] is None
 
     def test_database_error_handling(self, tmp_path):
         """Test handling of database errors."""
@@ -181,17 +185,17 @@ class TestDeletionTracker:
     def test_corrupted_database_handling(self, temp_db):
         """Test handling of corrupted database."""
         # Create a corrupted database file
-        with open(temp_db, 'w') as f:
+        with open(temp_db, "w") as f:
             f.write("This is not a valid SQLite database")
 
         # Should handle corruption gracefully by recreating database
         tracker = DeletionTracker(temp_db)
-        
+
         # Verify that database was recreated and is functional
         tracker.add_deleted_photo("test_photo", "test.jpg")
         assert tracker.is_photo_deleted("test.jpg") is True
 
-    @patch('iphoto_downloader.deletion_tracker.get_logger')
+    @patch("iphoto_downloader.deletion_tracker.get_logger")
     def test_logging_on_operations(self, mock_get_logger, temp_db):
         """Test that operations are logged."""
         mock_logger = Mock()
@@ -242,7 +246,7 @@ class TestDeletionTracker:
             cursor.execute(
                 "SELECT photo_id, photo_name, file_size, original_path "
                 "FROM deleted_photos WHERE photo_id = ?",
-                ("photo123",)
+                ("photo123",),
             )
             row = cursor.fetchone()
             assert row is not None

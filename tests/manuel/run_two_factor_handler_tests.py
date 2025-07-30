@@ -13,6 +13,7 @@ def check_imports():
     try:
         from iphoto_downloader.config import KeyringConfig  # noqa
         from auth2fa.authenticator import TwoFactorAuthHandler  # noqa
+
         print("✅ All imports successful")
         return True
     except Exception as e:
@@ -23,7 +24,7 @@ def check_imports():
 def run_basic_test():
     """Run a basic test to verify the handler can be created."""
     try:
-        from auth2fa.authenticator import TwoFactorAuthHandler, Auth2FAConfig
+        from auth2fa.authenticator import Auth2FAConfig, TwoFactorAuthHandler
 
         config = Auth2FAConfig()
         TwoFactorAuthHandler(config)

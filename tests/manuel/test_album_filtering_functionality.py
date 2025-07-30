@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import pytest
+
 """
 Test script to verify album filtering functionality implementation.
 
@@ -11,10 +12,10 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from src.iphoto_downloader.src.iphoto_downloader.icloud_client import iCloudClient
-from src.iphoto_downloader.src.iphoto_downloader.sync import PhotoSyncer
 from src.iphoto_downloader.src.iphoto_downloader.config import KeyringConfig
+from src.iphoto_downloader.src.iphoto_downloader.icloud_client import ICloudClient
 from src.iphoto_downloader.src.iphoto_downloader.logger import setup_logging
+from src.iphoto_downloader.src.iphoto_downloader.sync import PhotoSyncer
 
 
 def create_test_config(temp_dir, **env_vars):
@@ -23,18 +24,18 @@ def create_test_config(temp_dir, **env_vars):
 
     # Default values
     defaults = {
-        'INCLUDE_PERSONAL_ALBUMS': 'true',
-        'INCLUDE_SHARED_ALBUMS': 'true',
-        'PERSONAL_ALBUM_NAMES_TO_INCLUDE': '',
-        'SHARED_ALBUM_NAMES_TO_INCLUDE': '',
-        'SYNC_DIRECTORY': str(Path(temp_dir) / "sync")
+        "INCLUDE_PERSONAL_ALBUMS": "true",
+        "INCLUDE_SHARED_ALBUMS": "true",
+        "PERSONAL_ALBUM_NAMES_TO_INCLUDE": "",
+        "SHARED_ALBUM_NAMES_TO_INCLUDE": "",
+        "SYNC_DIRECTORY": str(Path(temp_dir) / "sync"),
     }
 
     # Override with provided values
     defaults.update(env_vars)
 
     # Write to env file
-    content = '\n'.join([f"{key}={value}" for key, value in defaults.items()])
+    content = "\n".join([f"{key}={value}" for key, value in defaults.items()])
     env_file.write_text(content)
 
     return KeyringConfig(env_file)
@@ -47,7 +48,6 @@ def test_album_filtering_configuration():
     print("🧪 Testing album filtering configuration...")
 
     with tempfile.TemporaryDirectory() as temp_dir:
-
         # Test 1: Default settings
         config = create_test_config(temp_dir)
         assert config.include_personal_albums is True
@@ -58,9 +58,7 @@ def test_album_filtering_configuration():
 
         # Test 2: Personal albums only
         config = create_test_config(
-            temp_dir,
-            INCLUDE_PERSONAL_ALBUMS='true',
-            INCLUDE_SHARED_ALBUMS='false'
+            temp_dir, INCLUDE_PERSONAL_ALBUMS="true", INCLUDE_SHARED_ALBUMS="false"
         )
         assert config.include_personal_albums is True
         assert config.include_shared_albums is False
@@ -69,27 +67,32 @@ def test_album_filtering_configuration():
         # Test 3: Album name allow-lists
         config = create_test_config(
             temp_dir,
-            PERSONAL_ALBUM_NAMES_TO_INCLUDE='Family Photos,Vacation 2024,Work Events',
-            SHARED_ALBUM_NAMES_TO_INCLUDE='Shared Family, Trip Photos,  Wedding Album'
+            PERSONAL_ALBUM_NAMES_TO_INCLUDE="Family Photos,Vacation 2024,Work Events",
+            SHARED_ALBUM_NAMES_TO_INCLUDE="Shared Family, Trip Photos,  Wedding Album",
         )
         assert config.personal_album_names_to_include == [
-            'Family Photos', 'Vacation 2024', 'Work Events']
+            "Family Photos",
+            "Vacation 2024",
+            "Work Events",
+        ]
         assert config.shared_album_names_to_include == [
-            'Shared Family', 'Trip Photos', 'Wedding Album']
+            "Shared Family",
+            "Trip Photos",
+            "Wedding Album",
+        ]
         print("✅ Album name allow-lists parsing works correctly")
 
         # Test 4: Validation error when both disabled
         try:
             config = create_test_config(
-                temp_dir,
-                INCLUDE_PERSONAL_ALBUMS='false',
-                INCLUDE_SHARED_ALBUMS='false'
+                temp_dir, INCLUDE_PERSONAL_ALBUMS="false", INCLUDE_SHARED_ALBUMS="false"
             )
             config.validate()
             assert False, "Should have raised validation error"
         except ValueError as e:
-            assert (("At least one of INCLUDE_PERSONAL_ALBUMS or "
-                     "INCLUDE_SHARED_ALBUMS must be true") in str(e))
+            assert (
+                "At least one of INCLUDE_PERSONAL_ALBUMS or INCLUDE_SHARED_ALBUMS must be true"
+            ) in str(e)
             print("✅ Validation correctly rejects when both album types are disabled")
 
 
@@ -103,12 +106,12 @@ def test_album_filtering_logic():
         # Create test config
         config = create_test_config(
             temp_dir,
-            INCLUDE_PERSONAL_ALBUMS='true',
-            INCLUDE_SHARED_ALBUMS='false',
-            PERSONAL_ALBUM_NAMES_TO_INCLUDE='Allowed Album'
+            INCLUDE_PERSONAL_ALBUMS="true",
+            INCLUDE_SHARED_ALBUMS="false",
+            PERSONAL_ALBUM_NAMES_TO_INCLUDE="Allowed Album",
         )
 
-        client = iCloudClient(config)
+        client = ICloudClient(config)
 
         # Mock albums - mix of personal and shared
         mock_allowed_personal = MagicMock()
@@ -139,8 +142,8 @@ def test_album_filtering_logic():
         filtered_albums = list(client.get_filtered_albums(config))
 
         assert len(filtered_albums) == 1
-        assert filtered_albums[0]['name'] == "Allowed Album"
-        assert filtered_albums[0]['is_shared'] is False
+        assert filtered_albums[0]["name"] == "Allowed Album"
+        assert filtered_albums[0]["is_shared"] is False
 
         print("✅ Album filtering logic works correctly")
         print("   - Personal albums only: ✅")
@@ -157,15 +160,15 @@ def test_album_existence_validation():
     with tempfile.TemporaryDirectory() as temp_dir:
         config = create_test_config(
             temp_dir,
-            PERSONAL_ALBUM_NAMES_TO_INCLUDE='Existing Album,Missing Album',
-            SHARED_ALBUM_NAMES_TO_INCLUDE='Shared Existing,Shared Missing'
+            PERSONAL_ALBUM_NAMES_TO_INCLUDE="Existing Album,Missing Album",
+            SHARED_ALBUM_NAMES_TO_INCLUDE="Shared Existing,Shared Missing",
         )
 
         # Mock iCloud client
         mock_client = MagicMock()
         mock_client.verify_albums_exist.side_effect = [
-            (['Existing Album'], [], ['Missing Album']),  # Personal albums: all, existing, missing
-            (['Shared Existing'], [], ['Shared Missing'])  # Shared albums: all, existing, missing
+            (["Existing Album"], [], ["Missing Album"]),  # Personal albums: all, existing, missing
+            (["Shared Existing"], [], ["Shared Missing"]),  # Shared albums: all, existing, missing
         ]
 
         # Should raise error for missing albums
@@ -191,15 +194,15 @@ def test_end_to_end_album_filtering():
         # Create config that only syncs personal albums
         config = create_test_config(
             temp_dir,
-            INCLUDE_PERSONAL_ALBUMS='true',
-            INCLUDE_SHARED_ALBUMS='false',
+            INCLUDE_PERSONAL_ALBUMS="true",
+            INCLUDE_SHARED_ALBUMS="false",
             SYNC_DIRECTORY=str(sync_dir),
-            DRY_RUN='true'
+            DRY_RUN="true",
         )
 
         # Create syncer with mocked iCloud client
         syncer = PhotoSyncer(config)
-        mock_client = MagicMock(spec=iCloudClient)
+        mock_client = MagicMock(spec=ICloudClient)
         syncer.icloud_client = mock_client
 
         # Mock authentication
@@ -213,17 +216,17 @@ def test_end_to_end_album_filtering():
         # Mock filtered photos - should only include personal album photos
         mock_photos = [
             {
-                'id': 'photo1',
-                'filename': 'personal1.jpg',
-                'size': 1024,
-                'album_name': 'Personal Album'
+                "id": "photo1",
+                "filename": "personal1.jpg",
+                "size": 1024,
+                "album_name": "Personal Album",
             },
             {
-                'id': 'photo2',
-                'filename': 'main_library.jpg',
-                'size': 2048,
-                'album_name': None  # Main library photo
-            }
+                "id": "photo2",
+                "filename": "main_library.jpg",
+                "size": 2048,
+                "album_name": None,  # Main library photo
+            },
         ]
 
         mock_client.list_photos_from_filtered_albums.return_value = iter(mock_photos)
@@ -244,8 +247,8 @@ def test_end_to_end_album_filtering():
 
         # Check statistics
         stats = syncer.get_stats()
-        assert stats['total_photos'] == 2
-        assert stats['new_downloads'] == 2  # In dry run mode
+        assert stats["total_photos"] == 2
+        assert stats["new_downloads"] == 2  # In dry run mode
 
         print("✅ End-to-end album filtering works correctly")
         print(f"   - Total photos processed: {stats['total_photos']}")

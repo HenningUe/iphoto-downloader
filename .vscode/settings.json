@@ -15,11 +15,23 @@
     "python.defaultInterpreterPath": "./.venv/Scripts/python",
     "python.terminal.activateEnvironment": true,
     "python.envFile": "${workspaceFolder}/.env",
+    // Ruff Configuration
+    "python.linting.enabled": true,
+    "python.linting.ruffEnabled": true,
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": false,
+    "python.linting.mypyEnabled": false,
+    "ruff.showNotifications": "onError",
+    "ruff.lint.enable": true,
     "[python]": {
-        "editor.defaultFormatter": "ms-python.python",
-        "editor.formatOnSave": true
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        }
     },
     "editor.formatOnSave": true,
+    // Legacy linter args (kept for reference but disabled above)
     "autopep8.args": [
         "--max-line-length=100"
     ],

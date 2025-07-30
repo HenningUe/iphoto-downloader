@@ -2,29 +2,24 @@
 Pushover notification service for 2FA authentication notifications.
 """
 
-import requests
 import logging
-from typing import Optional
 from dataclasses import dataclass
 
+import requests
 
 logger = logging.getLogger(__name__)
 
 
-PUSHOVER_PRIORITY = {
-    "low": -1,
-    "normal": 0,
-    "high": 1,
-    "emergency": 2
-}
+PUSHOVER_PRIORITY = {"low": -1, "normal": 0, "high": 1, "emergency": 2}
 
 
 @dataclass
 class PushoverConfig:
     """Configuration for Pushover notifications."""
+
     api_token: str
     user_key: str
-    device: Optional[str] = None
+    device: str | None = None
 
     def __post_init__(self):
         if not self.api_token:
@@ -72,7 +67,7 @@ class PushoverService:
                 "message": message,
                 "priority": PUSHOVER_PRIORITY["high"],
                 "url": web_server_url,
-                "url_title": "Enter 2FA Code"
+                "url_title": "Enter 2FA Code",
             }
 
             # Add device if specified
@@ -81,11 +76,7 @@ class PushoverService:
 
             logger.info("Sending 2FA notification via Pushover")
 
-            response = requests.post(
-                self.PUSHOVER_API_URL,
-                data=payload,
-                timeout=10
-            )
+            response = requests.post(self.PUSHOVER_API_URL, data=payload, timeout=10)
 
             if response.status_code == 200:
                 response_data = response.json()
@@ -94,12 +85,14 @@ class PushoverService:
                     return True
                 else:
                     logger.error(
-                        f"Pushover API error: {response_data.get('errors', 'Unknown error')}")
+                        f"Pushover API error: {response_data.get('errors', 'Unknown error')}"
+                    )
                     return False
             else:
                 logger.error(
                     f"Pushover API request failed with status {response.status_code}: "
-                    f"{response.text}")
+                    f"{response.text}"
+                )
                 return False
 
         except requests.exceptions.RequestException as e:
@@ -118,8 +111,7 @@ class PushoverService:
         """
         try:
             title = "iPhoto Downloader - Authentication Successful"
-            message = ("2FA authentication completed successfully. "
-                       "Photo sync will continue.")
+            message = "2FA authentication completed successfully. Photo sync will continue."
 
             payload = {
                 "token": self.config.api_token,
@@ -134,11 +126,7 @@ class PushoverService:
 
             logger.info("Sending authentication success notification.")
 
-            response = requests.post(
-                self.PUSHOVER_API_URL,
-                data=payload,
-                timeout=10
-            )
+            response = requests.post(self.PUSHOVER_API_URL, data=payload, timeout=10)
 
             if response.status_code == 200:
                 response_data = response.json()
@@ -147,12 +135,14 @@ class PushoverService:
                     return True
                 else:
                     logger.error(
-                        f"Pushover API error: {response_data.get('errors', 'Unknown error')}")
+                        f"Pushover API error: {response_data.get('errors', 'Unknown error')}"
+                    )
                     return False
             else:
                 logger.error(
                     f"Pushover API request failed with status {response.status_code}: "
-                    f"{response.text}")
+                    f"{response.text}"
+                )
                 return False
 
         except requests.exceptions.RequestException as e:
@@ -181,10 +171,12 @@ class PushoverService:
             # Truncate error message if too long for Pushover
             max_message_length = 1000
             if len(error_message) > max_message_length:
-                error_message = error_message[:max_message_length - 3] + "..."
+                error_message = error_message[: max_message_length - 3] + "..."
 
-            message = (f"An unexpected error occurred:\n\n{error_message}\n\n"
-                       "Please check the application logs for more details.")
+            message = (
+                f"An unexpected error occurred:\n\n{error_message}\n\n"
+                "Please check the application logs for more details."
+            )
 
             payload = {
                 "token": self.config.api_token,
@@ -199,11 +191,7 @@ class PushoverService:
 
             logger.info("Sending error notification via Pushover")
 
-            response = requests.post(
-                self.PUSHOVER_API_URL,
-                data=payload,
-                timeout=10
-            )
+            response = requests.post(self.PUSHOVER_API_URL, data=payload, timeout=10)
 
             if response.status_code == 200:
                 response_data = response.json()
@@ -212,12 +200,14 @@ class PushoverService:
                     return True
                 else:
                     logger.error(
-                        f"Pushover API error: {response_data.get('errors', 'Unknown error')}")
+                        f"Pushover API error: {response_data.get('errors', 'Unknown error')}"
+                    )
                     return False
             else:
                 logger.error(
                     f"Pushover API request failed with status {response.status_code}: "
-                    f"{response.text}")
+                    f"{response.text}"
+                )
                 return False
 
         except requests.exceptions.RequestException as e:
@@ -243,7 +233,7 @@ class PushoverService:
                 "user": self.config.user_key,
                 "title": title,
                 "message": message,
-                "priority": 0
+                "priority": 0,
             }
 
             if self.config.device:
@@ -251,11 +241,7 @@ class PushoverService:
 
             logger.info("Sending test notification via Pushover")
 
-            response = requests.post(
-                self.PUSHOVER_API_URL,
-                data=payload,
-                timeout=10
-            )
+            response = requests.post(self.PUSHOVER_API_URL, data=payload, timeout=10)
 
             if response.status_code == 200:
                 response_data = response.json()
@@ -264,12 +250,14 @@ class PushoverService:
                     return True
                 else:
                     logger.error(
-                        f"Pushover API error: {response_data.get('errors', 'Unknown error')}")
+                        f"Pushover API error: {response_data.get('errors', 'Unknown error')}"
+                    )
                     return False
             else:
                 logger.error(
                     f"Pushover API request failed with status {response.status_code}: "
-                    f"{response.text}")
+                    f"{response.text}"
+                )
                 return False
 
         except requests.exceptions.RequestException as e:

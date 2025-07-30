@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import pytest
+
 """
 Test script for Pushover notification configuration.
 
@@ -7,12 +8,13 @@ This script allows you to test your Pushover notification setup
 without running the full iPhoto Downloader.
 """
 
-from iphoto_downloader.logger import setup_logging
+import logging
+import sys
+from pathlib import Path
+
 from auth2fa.pushover_service import PushoverService as PushoverNotificationService
 from iphoto_downloader.config import KeyringConfig, get_config
-import sys
-import logging
-from pathlib import Path
+from iphoto_downloader.logger import setup_logging
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -40,14 +42,17 @@ def test_pushover_config():
     # Check if Pushover is enabled
     if not config.enable_pushover:
         logger.warning(
-            "Pushover notifications are disabled. Set ENABLE_PUSHOVER=true in your .env file.")
+            "Pushover notifications are disabled. Set ENABLE_PUSHOVER=true in your .env file."
+        )
         return False
 
     # Get Pushover configuration
     pushover_config = config.get_pushover_config()
     if not pushover_config:
-        msg = ("Pushover configuration is incomplete. Check PUSHOVER_API_TOKEN and "
-               "PUSHOVER_USER_KEY in your .env file.")
+        msg = (
+            "Pushover configuration is incomplete. Check PUSHOVER_API_TOKEN and "
+            "PUSHOVER_USER_KEY in your .env file."
+        )
         raise ValueError(msg)
 
     logger.info("Pushover configuration found:")

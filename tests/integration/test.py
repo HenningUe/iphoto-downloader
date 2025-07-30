@@ -1,5 +1,5 @@
 from iphoto_downloader.config import get_config
-from iphoto_downloader.icloud_client import iCloudClient
+from iphoto_downloader.icloud_client import ICloudClient
 from iphoto_downloader.logger import setup_logging
 
 
@@ -8,7 +8,7 @@ def test_interactive_2fa_authentication():
 
     config = get_config()
     setup_logging(config.get_log_level())  # Set up logging for interactive tests
-    client = iCloudClient(config)
+    client = ICloudClient(config)
 
     print("\n🔐 Starting interactive 2FA test...")
     print("💡 This test requires manual 2FA code input")

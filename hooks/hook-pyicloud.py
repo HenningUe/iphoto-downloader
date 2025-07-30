@@ -3,7 +3,7 @@ PyInstaller hook for pyicloud library.
 This ensures that all pyicloud services and dependencies are included in the build.
 """
 
-from PyInstaller.utils.hooks import collect_submodules, collect_data_files
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 # Collect all submodules from pyicloud
 hiddenimports = collect_submodules('pyicloud')

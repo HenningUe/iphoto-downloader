@@ -1,14 +1,18 @@
 """Main entry point for iPhoto Downloader Tool."""
 
+import re
 import sys
 
 from auth2fa.pushover_service import PushoverService
-from iphoto_downloader.config import get_config, BaseConfig
+from iphoto_downloader.config import BaseConfig, get_config
 from iphoto_downloader.continuous_runner import run_execution_mode
 from iphoto_downloader.delivery_artifacts import DeliveryArtifactsManager
 from iphoto_downloader.instance_manager import InstanceManager
-from iphoto_downloader.logger import setup_logging, get_logger
-from iphoto_downloader.manage_credentials import icloud_store_credentials, pushover_store_credentials
+from iphoto_downloader.logger import get_logger, setup_logging
+from iphoto_downloader.manage_credentials import (
+    icloud_store_credentials,
+    pushover_store_credentials,
+)
 from iphoto_downloader.version import get_version
 
 
@@ -27,19 +31,21 @@ def main() -> None:
         # Handle delivery artifacts for 'Delivered' mode
         delivery_manager = DeliveryArtifactsManager()
         should_continue = delivery_manager.handle_delivered_mode_startup()
-        
+
         if not should_continue:
             # First-time setup completed, user needs to configure settings
-            print("\n🎯 Setup complete! Please run the application again after configuring settings.")
+            print(
+                "\n🎯 Setup complete! Please run the application again after configuring settings."
+            )
             input("Press Enter to exit...")
             sys.exit(0)
-        
+
         # Get initial config to determine operating mode
         config = get_config()
 
         # Check multi-instance control before proceeding
         instance_manager = InstanceManager(config.allow_multi_instance)
-        
+
         # Set up logging with config
         setup_logging(config.get_log_level())
         logger = get_logger()
@@ -152,26 +158,25 @@ def sanitize_error_message(error: Exception) -> str:
     # Remove common sensitive patterns
     sensitive_patterns = [
         # Passwords, tokens, keys
-        r'password[=:]\s*[^\s]+',
-        r'token[=:]\s*[^\s]+',
-        r'key[=:]\s*[^\s]+',
-        r'secret[=:]\s*[^\s]+',
+        r"password[=:]\s*[^\s]+",
+        r"token[=:]\s*[^\s]+",
+        r"key[=:]\s*[^\s]+",
+        r"secret[=:]\s*[^\s]+",
         # File paths that might contain usernames
-        r'[cC]:\\[uU]sers\\[^\\]+',
-        r'/[hH]ome/[^/]+',
+        r"[cC]:\\[uU]sers\\[^\\]+",
+        r"/[hH]ome/[^/]+",
         # Email addresses and usernames in URLs
-        r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}',
+        r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}",
     ]
 
-    import re
     sanitized = error_str
     for pattern in sensitive_patterns:
-        sanitized = re.sub(pattern, '[REDACTED]', sanitized, flags=re.IGNORECASE)
+        sanitized = re.sub(pattern, "[REDACTED]", sanitized, flags=re.IGNORECASE)
 
     # Limit message length and add error type
     max_length = 500
     if len(sanitized) > max_length:
-        sanitized = sanitized[:max_length - 3] + "..."
+        sanitized = sanitized[: max_length - 3] + "..."
 
     return f"{error_type}: {sanitized}"
 

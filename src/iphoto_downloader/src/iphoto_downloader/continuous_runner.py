@@ -1,15 +1,14 @@
 """Continuous execution mode implementation for iPhoto Downloader Tool."""
 
 import signal
-import time
 import threading
+import time
 from datetime import datetime, timedelta
-from typing import Optional
 
 from .config import BaseConfig
-from .sync import PhotoSyncer
 from .deletion_tracker import DeletionTracker
 from .logger import get_logger
+from .sync import PhotoSyncer
 
 
 class ContinuousRunner:
@@ -25,7 +24,7 @@ class ContinuousRunner:
         self.logger = get_logger()
         self.running = False
         self.shutdown_requested = False
-        self.last_maintenance_time: Optional[datetime] = None
+        self.last_maintenance_time: datetime | None = None
 
         # Synchronization for maintenance operations
         self.maintenance_lock = threading.Lock()
@@ -87,9 +86,7 @@ class ContinuousRunner:
 
         # Start maintenance thread
         maintenance_thread = threading.Thread(
-            target=self._maintenance_worker,
-            daemon=True,
-            name="MaintenanceWorker"
+            target=self._maintenance_worker, daemon=True, name="MaintenanceWorker"
         )
         maintenance_thread.start()
 
@@ -139,9 +136,7 @@ class ContinuousRunner:
                     )
                 else:
                     duration_seconds = duration.total_seconds()
-                    self.logger.error(
-                        f"❌ Sync cycle failed after {duration_seconds:.1f} seconds"
-                    )
+                    self.logger.error(f"❌ Sync cycle failed after {duration_seconds:.1f} seconds")
 
             finally:
                 # Ensure proper cleanup
@@ -205,9 +200,7 @@ class ContinuousRunner:
                 self.maintenance_in_progress.set()
 
                 # Create deletion tracker for maintenance operations
-                deletion_tracker = DeletionTracker(
-                    str(self.config.database_path)
-                )
+                deletion_tracker = DeletionTracker(str(self.config.database_path))
 
                 try:
                     # Perform integrity check
@@ -259,11 +252,11 @@ def run_execution_mode(config: BaseConfig) -> bool:
     logger = get_logger()
     runner = ContinuousRunner(config)
 
-    if config.execution_mode == 'single':
+    if config.execution_mode == "single":
         logger.info("Running in single execution mode")
         return runner.run_single_sync()
 
-    elif config.execution_mode == 'continuous':
+    elif config.execution_mode == "continuous":
         logger.info("Running in continuous execution mode")
         try:
             runner.run_continuous_sync()

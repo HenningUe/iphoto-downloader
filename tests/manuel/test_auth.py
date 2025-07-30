@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 import pytest
+
 """Simple authentication test to check if 2FA is required."""
 
-from iphoto_downloader.logger import setup_logging
-from iphoto_downloader.icloud_client import iCloudClient
-from iphoto_downloader.config import get_config, KEYRING_AVAILABLE
 import sys
 from pathlib import Path
+
+from iphoto_downloader.config import KEYRING_AVAILABLE, get_config
+from iphoto_downloader.icloud_client import ICloudClient
+from iphoto_downloader.logger import setup_logging
 
 # Add the src directory to the path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -30,7 +32,7 @@ def test_authentication():
         print(f"📧 Using credentials for: {config.icloud_username}")
 
         # Create client and authenticate
-        client = iCloudClient(config)
+        client = ICloudClient(config)
         print("🔄 Attempting authentication...")
 
         auth_result = client.authenticate()
