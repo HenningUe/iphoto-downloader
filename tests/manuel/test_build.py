@@ -33,17 +33,17 @@ class BuildTester:
         Returns:
             True if test passed, False otherwise
         """
-        print(f"🧪 Running {test_name}...")
+        print(f"[TEST] Running {test_name}...")
         try:
             result = test_func()
             self.test_results[test_name] = result
             if result:
-                print(f"✅ {test_name} PASSED")
+                print(f"[PASS] {test_name} PASSED")
             else:
-                print(f"❌ {test_name} FAILED")
+                print(f"[FAIL] {test_name} FAILED")
             return result
         except Exception as e:
-            print(f"❌ {test_name} FAILED with exception: {e}")
+            print(f"[FAIL] {test_name} FAILED with exception: {e}")
             self.test_results[test_name] = False
             return False
 
@@ -71,7 +71,11 @@ class BuildTester:
         """Test that the executable can start and show help."""
         try:
             result = subprocess.run(
-                [str(self.executable_path), "--help"], check=False, capture_output=True, text=True, timeout=30
+                [str(self.executable_path), "--help"],
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=30,
             )
 
             if result.returncode == 0:
@@ -94,7 +98,11 @@ class BuildTester:
         """Test that the executable can show version information."""
         try:
             result = subprocess.run(
-                [str(self.executable_path), "--version"], check=False, capture_output=True, text=True, timeout=10
+                [str(self.executable_path), "--version"],
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
 
             # Version command might not be implemented yet, so accept various exit codes
@@ -124,7 +132,12 @@ class BuildTester:
 
             try:
                 result = subprocess.run(
-                    [str(self.executable_path)], check=False, capture_output=True, text=True, timeout=15, env=env
+                    [str(self.executable_path)],
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
+                    env=env,
                 )
 
                 # In Delivered mode without settings, app should terminate gracefully
@@ -220,8 +233,8 @@ class BuildTester:
 
     def run_all_tests(self) -> dict[str, bool]:
         """Run all tests and return results."""
-        print(f"🧪 Testing executable on {platform.system()} {platform.release()}")
-        print(f"📁 Executable: {self.executable_path}")
+        print(f"[TEST] Testing executable on {platform.system()} {platform.release()}")
+        print(f"[PATH] Executable: {self.executable_path}")
         print("=" * 60)
 
         tests = [
@@ -242,18 +255,18 @@ class BuildTester:
         total = len(self.test_results)
 
         print("=" * 60)
-        print(f"📊 Test Results: {passed}/{total} tests passed")
+        print(f"[RESULTS] Test Results: {passed}/{total} tests passed")
 
         if passed == total:
-            print("🎉 All tests passed! Executable is ready for distribution.")
+            print("[SUCCESS] All tests passed! Executable is ready for distribution.")
             return self.test_results
         else:
-            print("❌ Some tests failed. Please review and fix issues.")
+            print("[FAIL] Some tests failed. Please review and fix issues.")
 
             # Show failed tests
             failed_tests = [name for name, result in self.test_results.items() if not result]
             if failed_tests:
-                print("\n❌ Failed tests:")
+                print("\n[FAIL] Failed tests:")
                 for test in failed_tests:
                     print(f"   - {test}")
 
@@ -269,7 +282,7 @@ def main():
     args = parser.parse_args()
 
     if not Path(args.executable).exists():
-        print(f"❌ Executable not found: {args.executable}")
+        print(f"[FAIL] Executable not found: {args.executable}")
         sys.exit(1)
 
     tester = BuildTester(args.executable)
@@ -285,13 +298,13 @@ def main():
 
         passed = sum(1 for result in tester.test_results.values() if result)
         total = len(tester.test_results)
-        print(f"\n📊 Quick Test: {passed}/{total} tests passed")
+        print(f"\n[RESULTS] Quick Test: {passed}/{total} tests passed")
 
         if passed == total:
-            print("✅ Basic tests passed")
+            print("[PASS] Basic tests passed")
             sys.exit(0)
         else:
-            print("❌ Basic tests failed")
+            print("[FAIL] Basic tests failed")
             sys.exit(1)
     else:
         # Full test suite

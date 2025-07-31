@@ -116,7 +116,8 @@ jobs:
 
     - name: Test built executables
       run: |
-        uv run python tests/manuel/test_build.py dist\iphoto_downloader.exe --summary-only
+        $env:PYTHONIOENCODING = "utf-8"
+        uv run python tests/manuel/test_build.py "dist\iphoto_downloader.exe" --summary-only
 
     - name: Create Windows artifacts directory
       run: |
@@ -206,9 +207,11 @@ jobs:
         name: linux-executables
         path: linux-executables/
 
-    - name: Install snapcraft
+    - name: Install snapcraft and LXD
       run: |
         sudo snap install snapcraft --classic
+        sudo snap install lxd
+        sudo lxd init --auto
 
     - name: Create Snap package structure
       run: |
@@ -440,9 +443,11 @@ jobs:
         name: snap-package
         path: snap-package/
 
-    - name: Install snapcraft
+    - name: Install snapcraft and LXD
       run: |
         sudo snap install snapcraft --classic
+        sudo snap install lxd
+        sudo lxd init --auto
 
     - name: Prepare Snap Store submission
       run: |
