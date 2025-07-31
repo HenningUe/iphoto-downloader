@@ -1,5 +1,6 @@
 """Main entry point for iPhoto Downloader Tool."""
 
+import argparse
 import codecs
 import contextlib
 import io
@@ -22,6 +23,27 @@ from iphoto_downloader.version import get_version
 
 def main() -> None:
     """Main entry point for the application."""
+
+    # Handle command line arguments before any setup
+    parser = argparse.ArgumentParser(
+        description="iPhoto Downloader Tool - Sync photos from iCloud to local storage",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  iphoto_downloader              Run the sync process
+  iphoto_downloader --help       Show this help message
+
+For detailed configuration and usage instructions, visit:
+https://github.com/HenningUe/iphoto-downloader/blob/main/USER-GUIDE.md
+        """.strip(),
+    )
+
+    parser.add_argument(
+        "--version", action="version", version=f"iPhoto Downloader Tool v{get_version()}"
+    )
+
+    # Parse arguments - this will handle --help and --version automatically
+    parser.parse_args()
 
     # Set UTF-8 encoding for stdout/stderr to handle Unicode characters on Windows
     # This is particularly important for PyInstaller executables

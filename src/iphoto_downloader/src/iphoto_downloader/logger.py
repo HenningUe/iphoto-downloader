@@ -19,7 +19,7 @@ def setup_logging(log_level: int = logging.INFO) -> None:
     """
 
     # Create logs directory if it doesn't exist
-    get_log_dir_path().mkdir(exist_ok=True)
+    get_log_dir_path().mkdir(parents=True, exist_ok=True)
 
     # Configure logging
     logging.basicConfig(

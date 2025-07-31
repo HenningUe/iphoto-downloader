@@ -197,3 +197,5 @@ logs/
 2FA_IMPLEMENTATION_SUMMARY.md
 2FA_SESSION_ANALYSIS.md
 VERSION
+locks/
+test_results.txt

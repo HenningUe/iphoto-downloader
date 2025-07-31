@@ -6,7 +6,7 @@ import os
 import shutil
 import sys
 
-from iphoto_downloader import logger
+from iphoto_downloader.logger import setup_logging
 from iphoto_downloader.config import KeyringConfig, get_config
 from iphoto_downloader.delivery_artifacts import DeliveryArtifactsManager
 from iphoto_downloader.icloud_client import ICloudClient
@@ -21,7 +21,7 @@ def main():
     print(" ")
     print("For help, visit: https://github.com/HenningUe/iphoto-downloader/blob/main/USER-GUIDE.md")
 
-    logger.setup_logging()
+    setup_logging()
     # Handle delivery artifacts for 'Delivered' mode
     delivery_manager = DeliveryArtifactsManager()
     should_continue = delivery_manager.handle_delivered_mode_startup()
