@@ -1,6 +1,7 @@
 """Main entry point for iPhoto Downloader Tool."""
 
 import codecs
+import contextlib
 import io
 import os
 import re
@@ -21,12 +22,12 @@ from iphoto_downloader.version import get_version
 
 def main() -> None:
     """Main entry point for the application."""
+
     # Set UTF-8 encoding for stdout/stderr to handle Unicode characters on Windows
     # This is particularly important for PyInstaller executables
     if sys.platform.startswith("win"):
         # Set environment variable for proper UTF-8 handling
         os.environ["PYTHONIOENCODING"] = "utf-8"
-
         # Replace stdout and stderr with UTF-8 writers
         try:
             sys.stdout = codecs.getwriter("utf-8")(sys.stdout.buffer, "strict")
@@ -45,7 +46,20 @@ def main() -> None:
     config = None
     logger = None
 
+    def safe_input(prompt: str = ""):
+        # Only prompt if running interactively
+        if sys.stdin.isatty():
+            with contextlib.suppress(EOFError):
+                input(prompt)
+
     try:
+        # Get initial config to determine operating mode
+        config = get_config()
+
+        # Set up logging with config (must be before DeliveryArtifactsManager)
+        setup_logging(config.get_log_level())
+        logger = get_logger()
+
         # Handle delivery artifacts for 'Delivered' mode
         delivery_manager = DeliveryArtifactsManager()
         should_continue = delivery_manager.handle_delivered_mode_startup()
@@ -55,18 +69,11 @@ def main() -> None:
             print(
                 "\n🎯 Setup complete! Please run the application again after configuring settings."
             )
-            input("Press Enter to exit...")
+            safe_input("Press Enter to exit...")
             sys.exit(0)
-
-        # Get initial config to determine operating mode
-        config = get_config()
 
         # Check multi-instance control before proceeding
         instance_manager = InstanceManager(config.allow_multi_instance)
-
-        # Set up logging with config
-        setup_logging(config.get_log_level())
-        logger = get_logger()
 
         # Enforce single instance if required (will exit if another instance is running)
         with instance_manager.instance_context():
@@ -95,13 +102,13 @@ def main() -> None:
             else:
                 logger.error("❌ Application failed")
                 print("\n❌ Application failed!")
-                input("Press Enter to exit...")
+                safe_input("Press Enter to exit...")
                 sys.exit(1)
 
     except KeyboardInterrupt:
         # Handle global keyboard interrupt
         print("\n🛑 Application interrupted by user")
-        input("Press Enter to exit...")
+        safe_input("Press Enter to exit...")
         sys.exit(130)
     except Exception as e:
         # Global exception handler - catch any unhandled exceptions
@@ -123,7 +130,7 @@ def main() -> None:
                     logger.error(f"Failed to send error notification: {notification_error}")
 
         # Ensure graceful application shutdown
-        input("Press Enter to exit...")
+        safe_input("Press Enter to exit...")
         sys.exit(1)
 
 
