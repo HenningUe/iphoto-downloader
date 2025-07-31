@@ -116,7 +116,7 @@ jobs:
 
     - name: Test built executables
       run: |
-        uv run python test_build.py --quick
+        uv run python tests/manuel/test_build.py dist\iphoto_downloader.exe --summary-only
 
     - name: Create Windows artifacts directory
       run: |
@@ -177,7 +177,7 @@ jobs:
 
     - name: Test built executables
       run: |
-        uv run python test_build.py --quick
+        uv run python tests/manuel/test_build.py dist/iphoto_downloader --summary-only
 
     - name: Create Linux artifacts directory
       run: |
