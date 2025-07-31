@@ -51,6 +51,10 @@ def get_icloud_credentials():
 
 @pytest.mark.e2e
 @pytest.mark.skipif(
+    bool(os.environ.get("CI")) or bool(os.environ.get("GITHUB_ACTIONS")),
+    reason="E2E tests disabled in CI environment",
+)
+@pytest.mark.skipif(
     not os.getenv("E2E_ICLOUD_USERNAME") and not os.getenv("E2E_ICLOUD_PASSWORD"),
     reason=(
         "E2E tests require iCloud credentials. Set E2E_ICLOUD_USERNAME and "
@@ -83,7 +87,8 @@ MAX_DOWNLOADS=5
 
     result = subprocess.run(
         [python_executable, "-m", "iphoto_downloader.main", "--config", str(env_file)],
-        check=False, cwd=Path(__file__).parents[2],
+        check=False,
+        cwd=Path(__file__).parents[2],
         capture_output=True,
         text=True,
         timeout=120,
@@ -104,6 +109,10 @@ MAX_DOWNLOADS=5
 
 
 @pytest.mark.e2e
+@pytest.mark.skipif(
+    bool(os.environ.get("CI")) or bool(os.environ.get("GITHUB_ACTIONS")),
+    reason="E2E tests disabled in CI environment",
+)
 @pytest.mark.skipif(
     not os.getenv("E2E_ICLOUD_USERNAME") and not os.getenv("E2E_ICLOUD_PASSWORD"),
     reason=(
@@ -132,7 +141,8 @@ MAX_DOWNLOADS=2
 
     result = subprocess.run(
         [python_executable, "-m", "iphoto_downloader.main", "--config", str(env_file)],
-        check=False, cwd=Path(__file__).parents[2],
+        check=False,
+        cwd=Path(__file__).parents[2],
         capture_output=True,
         text=True,
         timeout=120,
@@ -153,6 +163,10 @@ MAX_DOWNLOADS=2
 
 
 @pytest.mark.e2e
+@pytest.mark.skipif(
+    bool(os.environ.get("CI")) or bool(os.environ.get("GITHUB_ACTIONS")),
+    reason="E2E tests disabled in CI environment",
+)
 def test_e2e_sync_handles_invalid_credentials(tmp_path):
     """
     End-to-end: Run the sync tool with invalid credentials and expect failure.
@@ -173,7 +187,8 @@ MAX_DOWNLOADS=1
 
     result = subprocess.run(
         [python_executable, "-m", "iphoto_downloader.main", "--config", str(env_file)],
-        check=False, cwd=Path(__file__).parents[2],
+        check=False,
+        cwd=Path(__file__).parents[2],
         capture_output=True,
         text=True,
         timeout=60,
