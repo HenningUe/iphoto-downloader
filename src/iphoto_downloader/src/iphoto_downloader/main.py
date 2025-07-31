@@ -1,5 +1,8 @@
 """Main entry point for iPhoto Downloader Tool."""
 
+import codecs
+import io
+import os
 import re
 import sys
 
@@ -18,6 +21,21 @@ from iphoto_downloader.version import get_version
 
 def main() -> None:
     """Main entry point for the application."""
+    # Set UTF-8 encoding for stdout/stderr to handle Unicode characters on Windows
+    # This is particularly important for PyInstaller executables
+    if sys.platform.startswith("win"):
+        # Set environment variable for proper UTF-8 handling
+        os.environ["PYTHONIOENCODING"] = "utf-8"
+
+        # Replace stdout and stderr with UTF-8 writers
+        try:
+            sys.stdout = codecs.getwriter("utf-8")(sys.stdout.buffer, "strict")
+            sys.stderr = codecs.getwriter("utf-8")(sys.stderr.buffer, "strict")
+        except Exception:
+            # If buffer attribute doesn't exist, create new streams
+            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="strict")
+            sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="strict")
+
     version = get_version()
     print(f"🌟 iPhoto Downloader Tool v{version}")
     print("=" * 60)
