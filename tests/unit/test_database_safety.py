@@ -23,20 +23,34 @@ class TestDatabaseSafety:
 
     def test_create_backup(self, temp_dir):
         """Test that database backup is created successfully."""
+        # Clean up any existing backup files first
+        existing_backups = glob.glob(str(temp_dir / "test.backup_*.db"))
+        for backup in existing_backups:
+            Path(backup).unlink(missing_ok=True)
+
         tracker = DeletionTracker(str(temp_dir / "test.db"))
+
+        # Note: DeletionTracker constructor already creates a backup via ensure_database_safety()
+        # Check how many backups exist after initialization
+        initial_backups = glob.glob(str(temp_dir / "test.backup_*.db"))
+        initial_count = len(initial_backups)
 
         # Add some test data
         tracker.add_downloaded_photo("test_photo", "test.jpg", "/test/path", 1024, "Album1")
 
-        # Create backup
+        # Create another backup
         assert tracker.create_backup(max_backups=3) is True
 
-        # Verify backup file exists
+        # Verify backup files exist (should be initial + 1 more)
         backup_files = glob.glob(str(temp_dir / "test.backup_*.db"))
-        assert len(backup_files) == 1
+        expected_count = initial_count + 1
+        assert len(backup_files) == expected_count, (
+            f"Expected {expected_count} backup files, found {len(backup_files)}: {backup_files}"
+        )
 
-        # Verify backup contains the data
-        backup_conn = sqlite3.connect(backup_files[0])
+        # Verify the most recent backup contains the data
+        backup_files.sort()  # Sort to get the most recent
+        backup_conn = sqlite3.connect(backup_files[-1])
         try:
             cursor = backup_conn.cursor()
             cursor.execute("SELECT COUNT(*) FROM downloaded_photos")
