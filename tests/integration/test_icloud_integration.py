@@ -56,6 +56,10 @@ class TestiCloudIntegration:
 
     def test_config_loads_with_keyring_credentials(self):
         """Test that configuration loads credentials from keyring."""
+        # Skip this test in CI environments where credentials won't be available
+        if os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"):
+            pytest.skip("Skipping credential test in CI environment")
+
         # Get config after environment setup
         config = get_config()
 
@@ -69,6 +73,7 @@ class TestiCloudIntegration:
         # Note: sync_directory path testing removed due to environment variable handling complexity
         assert config.dry_run is True
 
+    @pytest.mark.slow
     def test_icloud_authentication_without_2fa(self):
         """Test iCloud authentication when 2FA is not required."""
         config = get_config()
@@ -147,6 +152,7 @@ class TestiCloudIntegration:
 
             print(f"📸 First photo: {first_photo['filename']}")
 
+    @pytest.mark.slow
     def test_full_sync_dry_run(self):
         """Test full sync operation in dry run mode."""
         config = get_config()
@@ -171,8 +177,8 @@ class TestiCloudIntegration:
                 raise
 
 
-# @pytest.mark.integration
-# @pytest.mark.slow
+@pytest.mark.integration
+@pytest.mark.slow
 class TestiCloudInteractive:
     """Interactive integration tests that require manual intervention for 2FA."""
 

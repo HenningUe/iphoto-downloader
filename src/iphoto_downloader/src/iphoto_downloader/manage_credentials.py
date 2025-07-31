@@ -6,10 +6,10 @@ import os
 import shutil
 import sys
 
-from iphoto_downloader.logger import setup_logging
 from iphoto_downloader.config import KeyringConfig, get_config
 from iphoto_downloader.delivery_artifacts import DeliveryArtifactsManager
 from iphoto_downloader.icloud_client import ICloudClient
+from iphoto_downloader.logger import setup_logging
 from iphoto_downloader.version import get_version
 
 
