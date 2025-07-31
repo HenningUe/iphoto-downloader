@@ -212,6 +212,7 @@ jobs:
         sudo snap install snapcraft --classic
         sudo snap install lxd
         sudo lxd init --auto
+        sudo usermod -a -G lxd $USER
 
     - name: Create Snap package structure
       run: |
@@ -293,7 +294,8 @@ jobs:
 
     - name: Build Snap package
       run: |
-        snapcraft pack
+        # Use sg to run snapcraft with lxd group permissions
+        sg lxd -c "snapcraft pack"
 
     - name: Upload Snap package artifact
       uses: actions/upload-artifact@v4
@@ -448,6 +450,7 @@ jobs:
         sudo snap install snapcraft --classic
         sudo snap install lxd
         sudo lxd init --auto
+        sudo usermod -a -G lxd $USER
 
     - name: Prepare Snap Store submission
       run: |
