@@ -165,7 +165,7 @@ jobs:
       timeout-minutes: 8
       run: |
         echo "Running fast integration tests..."
-        uv run pytest tests/integration/ -k "not slow" -v
+        uv run pytest tests/integration/ -k "not slow" -v --cov-fail-under=25
 
     - name: Test executable compatibility (Linux)
       if: runner.os == 'Linux'
