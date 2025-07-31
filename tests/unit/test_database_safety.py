@@ -3,6 +3,7 @@
 import glob
 import sqlite3
 import tempfile
+import time
 from pathlib import Path
 
 import pytest
@@ -30,18 +31,20 @@ class TestDatabaseSafety:
 
         tracker = DeletionTracker(str(temp_dir / "test.db"))
 
-        # Note: DeletionTracker constructor already creates a backup via ensure_database_safety()
-        # Check how many backups exist after initialization
+        # Note: DeletionTracker constructor may create backup(s) via ensure_database_safety()
+        # However, if multiple backups are created within the same second, they overwrite each other
+        # due to timestamp collision (YYYYMMDD_HHMMSS format has only second precision)
         initial_backups = glob.glob(str(temp_dir / "test.backup_*.db"))
         initial_count = len(initial_backups)
 
         # Add some test data
         tracker.add_downloaded_photo("test_photo", "test.jpg", "/test/path", 1024, "Album1")
 
-        # Create another backup
+        # Wait a bit to ensure different timestamp, then create another backup
+        time.sleep(1.1)
         assert tracker.create_backup(max_backups=3) is True
 
-        # Verify backup files exist (should be initial + 1 more)
+        # Verify backup files exist (should be at least the initial count + 1 more)
         backup_files = glob.glob(str(temp_dir / "test.backup_*.db"))
         expected_count = initial_count + 1
         assert len(backup_files) == expected_count, (
@@ -65,12 +68,10 @@ class TestDatabaseSafety:
 
     def test_cleanup_old_backups(self, temp_dir):
         """Test that old backup files are cleaned up properly."""
-        import time
-
         tracker = DeletionTracker(str(temp_dir / "test.db"))
 
         # Create multiple backups with slight delays to ensure different timestamps
-        for i in range(5):
+        for _ in range(5):
             assert tracker.create_backup(max_backups=3) is True
             time.sleep(1.1)  # Ensure different timestamps
 
