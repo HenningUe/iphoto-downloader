@@ -120,7 +120,7 @@ catch {
 
 # Verify required files exist
 Write-Host "Verifying required files..." -ForegroundColor Yellow
-$RequiredFiles = @("USER-GUIDE.md", ".env.example", "iphoto_downloader.spec")
+$RequiredFiles = @("USER-GUIDE.md", ".env.example", "iphoto_downloader.spec", "iphoto_downloader_credentials.spec")
 foreach ($file in $RequiredFiles) {
     if (-not (Test-Path $file)) {
         Write-Error "Required file missing: $file"
@@ -137,10 +137,10 @@ if (-not $CredentialsOnly) {
     Write-Host "Building main iPhoto Downloader executable..." -ForegroundColor Cyan
     try {
         if ($uvCommand.Source) {
-            & $uvCommand run pyinstaller iphoto_downloader.spec --distpath $OutputDir --workpath build
+            & $uvCommand run python -m PyInstaller iphoto_downloader.spec --distpath $OutputDir --workpath build
         }
         else {
-            uv run pyinstaller iphoto_downloader.spec --distpath $OutputDir --workpath build
+            uv run python -m PyInstaller iphoto_downloader.spec --distpath $OutputDir --workpath build
         }
         Write-Host "Main executable build completed successfully" -ForegroundColor Green
     }
@@ -155,10 +155,10 @@ if (-not $MainOnly) {
     Write-Host "Building credentials manager executable..." -ForegroundColor Cyan
     try {
         if ($uvCommand.Source) {
-            & $uvCommand run pyinstaller iphoto_downloader_credentials.spec --distpath $OutputDir --workpath build
+            & $uvCommand run python -m PyInstaller iphoto_downloader_credentials.spec --distpath $OutputDir --workpath build
         }
         else {
-            uv run pyinstaller iphoto_downloader_credentials.spec --distpath $OutputDir --workpath build
+            uv run python -m PyInstaller iphoto_downloader_credentials.spec --distpath $OutputDir --workpath build
         }
         Write-Host "Credentials manager build completed successfully" -ForegroundColor Green
     }
