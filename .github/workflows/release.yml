@@ -207,12 +207,9 @@ jobs:
         name: linux-executables
         path: linux-executables/
 
-    - name: Install snapcraft and LXD
+    - name: Install snapcraft
       run: |
         sudo snap install snapcraft --classic
-        sudo snap install lxd
-        sudo lxd init --auto
-        sudo usermod -a -G lxd $USER
 
     - name: Create Snap package structure
       run: |
@@ -294,8 +291,8 @@ jobs:
 
     - name: Build Snap package
       run: |
-        # Use sg to run snapcraft with lxd group permissions
-        sg lxd -c "snapcraft pack"
+        # Use destructive mode to build directly on host (no LXD containers needed)
+        snapcraft pack --destructive-mode
 
     - name: Upload Snap package artifact
       uses: actions/upload-artifact@v4
@@ -445,12 +442,9 @@ jobs:
         name: snap-package
         path: snap-package/
 
-    - name: Install snapcraft and LXD
+    - name: Install snapcraft
       run: |
         sudo snap install snapcraft --classic
-        sudo snap install lxd
-        sudo lxd init --auto
-        sudo usermod -a -G lxd $USER
 
     - name: Prepare Snap Store submission
       run: |
