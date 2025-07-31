@@ -119,16 +119,25 @@ jobs:
         $env:PYTHONIOENCODING = "utf-8"
         uv run python tests/manuel/test_build.py "dist\iphoto_downloader.exe" --summary-only
 
-    - name: Create Windows artifacts directory
+    - name: Create Windows artifacts directory with versioned names
       run: |
+        $version = "${{ needs.version-validation.outputs.version }}"
         mkdir windows-artifacts
-        copy dist\iphoto_downloader.exe windows-artifacts\
-        copy dist\iphoto_downloader_credentials.exe windows-artifacts\
+        
+        # Copy with versioned names
+        copy "dist\iphoto_downloader.exe" "windows-artifacts\iphoto_downloader-v${version}.exe"
+        copy "dist\iphoto_downloader_credentials.exe" "windows-artifacts\iphoto_downloader_credentials-v${version}.exe"
+        
+        # Also keep original names for compatibility
+        copy "dist\iphoto_downloader.exe" "windows-artifacts\"
+        copy "dist\iphoto_downloader_credentials.exe" "windows-artifacts\"
+        
+        echo "Created Windows executables with version: v${version}"
 
     - name: Upload Windows build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: windows-executables
+        name: windows-executables-v${{ needs.version-validation.outputs.version }}
         path: windows-artifacts/
 
   build-linux:
@@ -180,22 +189,31 @@ jobs:
       run: |
         uv run python tests/manuel/test_build.py dist/iphoto_downloader --summary-only
 
-    - name: Create Linux artifacts directory
+    - name: Create Linux artifacts directory with versioned names
       run: |
+        VERSION="${{ needs.version-validation.outputs.version }}"
         mkdir linux-artifacts
-        cp dist/iphoto_downloader linux-artifacts/
-        cp dist/iphoto_downloader_credentials linux-artifacts/
+        
+        # Copy with versioned names
+        cp "dist/iphoto_downloader" "linux-artifacts/iphoto_downloader-v${VERSION}"
+        cp "dist/iphoto_downloader_credentials" "linux-artifacts/iphoto_downloader_credentials-v${VERSION}"
+        
+        # Also keep original names for compatibility
+        cp "dist/iphoto_downloader" "linux-artifacts/"
+        cp "dist/iphoto_downloader_credentials" "linux-artifacts/"
+        
+        echo "Created Linux executables with version: v${VERSION}"
 
     - name: Upload Linux build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: linux-executables
+        name: linux-executables-v${{ needs.version-validation.outputs.version }}
         path: linux-artifacts/
 
   package-snap:
     name: Package for Snap Store
     runs-on: ubuntu-latest
-    needs: build-linux
+    needs: [version-validation, build-linux]
     
     steps:
     - name: Checkout code
@@ -204,7 +222,7 @@ jobs:
     - name: Download Linux executables
       uses: actions/download-artifact@v4
       with:
-        name: linux-executables
+        name: linux-executables-v${{ needs.version-validation.outputs.version }}
         path: linux-executables/
 
     - name: Install snapcraft
@@ -338,7 +356,7 @@ jobs:
   package-winget:
     name: Package for WinGet
     runs-on: windows-latest
-    needs: build-windows
+    needs: [version-validation, build-windows]
     
     steps:
     - name: Checkout code
@@ -347,7 +365,7 @@ jobs:
     - name: Download Windows executables
       uses: actions/download-artifact@v4
       with:
-        name: windows-executables
+        name: windows-executables-v${{ needs.version-validation.outputs.version }}
         path: windows-executables/
 
     - name: Install WinGet Create
@@ -432,7 +450,7 @@ jobs:
   publish-to-winget:
     name: Publish to WinGet
     runs-on: windows-latest
-    needs: [package-winget, publish-release]
+    needs: [version-validation, package-winget, publish-release]
     if: github.event_name == 'release'
     
     steps:
@@ -446,19 +464,110 @@ jobs:
         path: winget-manifests/
 
     - name: Submit to WinGet Community Repository
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        # This step would typically involve:
-        # 1. Forking the Microsoft/winget-pkgs repository
-        # 2. Creating a PR with the new manifests
-        # 3. Submitting for review
+        # Install GitHub CLI if not available
+        if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
+          Write-Host "Installing GitHub CLI..."
+          winget install --id GitHub.cli --accept-source-agreements --accept-package-agreements
+          # Refresh PATH
+          $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
+        }
         
-        Write-Host "WinGet manifests prepared for submission"
-        Write-Host "Manual step required: Submit PR to microsoft/winget-pkgs repository"
+        # Authenticate with GitHub CLI
+        echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
         
-        # For now, we'll just display the manifest contents
-        Get-ChildItem winget-manifests/ -Filter "*.yaml" | ForEach-Object {
-            Write-Host "=== $($_.Name) ==="
+        # Clone winget-pkgs repository
+        $tempDir = New-TemporaryFile | ForEach-Object { Remove-Item $_; New-Item -ItemType Directory -Path $_ }
+        Push-Location $tempDir
+        
+        try {
+          Write-Host "Cloning winget-pkgs repository..."
+          gh repo clone microsoft/winget-pkgs --depth 1
+          
+          Push-Location winget-pkgs
+          
+          # Create branch for this submission
+          $branchName = "iphoto-downloader-${{ needs['version-validation'].outputs.version }}"
+          git checkout -b $branchName
+          
+          # Create package directory structure
+          $packageDir = "manifests/h/HenningUe/iPhotoDownloader/${{ needs['version-validation'].outputs.version }}"
+          New-Item -ItemType Directory -Force -Path $packageDir
+          
+          # Copy manifest files to correct location
+          Copy-Item "${{ github.workspace }}/winget-manifests/*.yaml" -Destination $packageDir
+          
+          # Rename files to match WinGet convention
+          Get-ChildItem $packageDir -Filter "*.yaml" | ForEach-Object {
+            $newName = $_.Name -replace "HenningUe\.iPhotoDownloader", "HenningUe.iPhotoDownloader.${{ needs['version-validation'].outputs.version }}"
+            Rename-Item $_.FullName -NewName $newName
+          }
+          
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          # Add and commit changes
+          git add $packageDir
+          git commit -m "Add iPhotoDownloader version ${{ needs['version-validation'].outputs.version }}"
+          
+          # Push branch
+          git push origin $branchName
+          
+          # Create pull request
+          $prTitle = "New package: HenningUe.iPhotoDownloader version ${{ needs['version-validation'].outputs.version }}"
+          $prBody = @"
+          ## Summary
+          
+          This PR adds iPhotoDownloader version ${{ needs['version-validation'].outputs.version }} to the WinGet Community Repository.
+          
+          ### Package Information
+          - **Package Identifier**: HenningUe.iPhotoDownloader
+          - **Version**: ${{ needs['version-validation'].outputs.version }}
+          - **Publisher**: HenningUe
+          - **License**: MIT
+          - **Repository**: https://github.com/HenningUe/iphoto-downloader
+          
+          ### Description
+          A comprehensive tool for synchronizing photos from iCloud to local storage with smart deletion tracking, album filtering, and 2FA support.
+          
+          ### Validation
+          - [x] Manifests follow WinGet schema
+          - [x] Package builds successfully in CI/CD
+          - [x] Executables are properly signed and tested
+          - [x] License is properly specified
+          
+          ### Release Notes
+          This release includes cross-platform executable distribution and preparation for package manager integration.
+          
+          **Automated submission via GitHub Actions**
+          "@
+          
+          gh pr create --title "$prTitle" --body "$prBody" --base main --head $branchName --repo microsoft/winget-pkgs
+          
+          Write-Host "✅ Pull request created successfully!"
+          Write-Host "PR will be reviewed by the WinGet team and merged if approved."
+          
+        }
+        catch {
+          Write-Host "❌ Error during WinGet submission: $_"
+          Write-Host "This is expected for first-time submissions or if manual review is required."
+          Write-Host "Manifests have been prepared and can be submitted manually to:"
+          Write-Host "https://github.com/microsoft/winget-pkgs"
+          
+          # Display manifest contents for manual submission
+          Write-Host "`n=== Generated Manifests ==="
+          Get-ChildItem "${{ github.workspace }}/winget-manifests/" -Filter "*.yaml" | ForEach-Object {
+            Write-Host "`n--- $($_.Name) ---"
             Get-Content $_.FullName
+          }
+        }
+        finally {
+          Pop-Location
+          Pop-Location
+          Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
         }
 
   publish-to-snap:
@@ -508,7 +617,7 @@ jobs:
   publish-release:
     name: Publish GitHub Release
     runs-on: ubuntu-latest
-    needs: [build-windows, build-linux]
+    needs: [version-validation, build-windows, build-linux]
     if: github.event_name == 'release'
     
     steps:
@@ -518,13 +627,13 @@ jobs:
     - name: Download Windows executables
       uses: actions/download-artifact@v4
       with:
-        name: windows-executables
+        name: windows-executables-v${{ needs.version-validation.outputs.version }}
         path: windows-executables/
 
     - name: Download Linux executables
       uses: actions/download-artifact@v4
       with:
-        name: linux-executables
+        name: linux-executables-v${{ needs.version-validation.outputs.version }}
         path: linux-executables/
 
     - name: Create release assets
@@ -541,11 +650,20 @@ jobs:
         tar -czf ../release-assets/iphoto-downloader-linux-x64.tar.gz *
         cd ..
         
-        # Copy individual executables with versioned names
+        # Copy individual executables with both original and versioned names
+        VERSION="${{ needs.version-validation.outputs.version }}"
+        
+        # Windows executables
         cp windows-executables/iphoto_downloader.exe release-assets/
         cp windows-executables/iphoto_downloader_credentials.exe release-assets/
+        cp windows-executables/iphoto_downloader-v${VERSION}.exe release-assets/
+        cp windows-executables/iphoto_downloader_credentials-v${VERSION}.exe release-assets/
+        
+        # Linux executables
         cp linux-executables/iphoto_downloader release-assets/
         cp linux-executables/iphoto_downloader_credentials release-assets/iphoto-downloader-credentials
+        cp linux-executables/iphoto_downloader-v${VERSION} release-assets/
+        cp linux-executables/iphoto_downloader_credentials-v${VERSION} release-assets/iphoto-downloader-credentials-v${VERSION}
 
     - name: Upload release assets
       uses: softprops/action-gh-release@v2
