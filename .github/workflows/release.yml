@@ -10,6 +10,12 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  packages: write
+
 jobs:
   version-validation:
     name: Validate and Prepare Version
