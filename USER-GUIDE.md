@@ -23,11 +23,13 @@ Complete guide for installing, configuring, and using the iPhoto Downloader Tool
 
 #### Option 1: Download Executable (Recommended)
 1. Go to the [Releases page](https://github.com/HenningUe/iphoto-downloader/releases)
-2. Download the latest `iphoto_downloader.exe` and `iphoto_downloader_credentials.exe`
+2. Download the latest `iphoto_downloader.zip` and extract it
 3. Place both files in a dedicated folder (e.g., `C:\iPhotoDownloader\`)
 4. Run `iphoto_downloader.exe` for the first time to set up configuration files
+5. Run `iphoto_downloader_credentials.exe` to set your credentials
 
 #### Option 2: Install via WinGet
+NOT YET WORKING :-(
 ```powershell
 winget install HenningUe.iPhotoDownloader
 ```
@@ -46,12 +48,13 @@ cd iphoto-downloader
 
 #### Option 1: Download Executable (Recommended)
 1. Go to the [Releases page](https://github.com/HenningUe/iphoto-downloader/releases)
-2. Download the latest `iphoto_downloader` and `iphoto_downloader_credentials` binaries
+2. Download the latest `iphoto_downloader.tar.gz` and extract it
 3. Make them executable:
    ```bash
    chmod +x iphoto_downloader iphoto_downloader_credentials
    ```
 4. Run `./iphoto_downloader` for the first time to set up configuration files
+5. Run `./iphoto_downloader_credentials` to set your credentials
 
 #### Option 2: Install via APT (Ubuntu/Debian)
 ```bash

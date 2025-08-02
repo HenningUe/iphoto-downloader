@@ -16,9 +16,9 @@ A uv monorepo workspace for iCloud photo download tools and utilities.
 
 ## 🏗️ Why another tool?
 - Apple's notorious icloud windows app downloads fotos only with weird names
-- pycloud downloader comes with various limitations, that I 
-   - missing possibility to download shared albums
-   - missing notification via pushover
+- pycloud downloader  s missing some features that I miss.
+   - missing possibility to easily download shared albums
+   - missing notification via pushover for new 2FA requests
    - missing configuration via setting-file
    - missing continuous execution mode
 
@@ -73,41 +73,6 @@ authentication.
    ```bash
    uv run iphoto-downloader
    ```
-
-## 📁 Workspace Structure
-
-```
-iphoto-downloader/
-├── shared/
-│   └── auth2fa/              # 2FA authentication package
-│       ├── src/
-│       │   └── auth2fa/
-│       │       ├── __init__.py
-│       │       ├── authenticator.py
-│       │       └── web_server.py
-│       ├── pyproject.toml
-│       └── README.md
-├── src/
-│   └── iphoto_downloader/    # Main application package
-│       ├── src/
-│       │   └── iphoto_downloader/
-│       │       ├── __init__.py
-│       │       ├── main.py
-│       │       ├── sync.py
-│       │       ├── icloud_client.py
-│       │       ├── config.py
-│       │       └── deletion_tracker.py
-│       ├── pyproject.toml
-│       ├── README.md
-├── tests/                   # Test files
-│   ├── unit/
-│   └── integration/
-├── logs/                    # Application logs
-├── pyproject.toml          # Workspace configuration
-├── uv.lock                 # Lock file
-├── .env.example           # Environment template
-└── README.md              # This file
-```
 
 ## 🔧 Development
 
@@ -183,26 +148,6 @@ the appropriate configuration class:
    DRY_RUN=false
    LOG_LEVEL=INFO
    ```
-
-The application uses **polymorphism** to handle different credential storage
-strategies:
-
-- First checks for credentials in environment variables
-- If not found and keyring is available, retrieves them from your system's
-  keyring
-- On Windows: Uses Windows Credential Manager
-- On macOS: Uses Keychain
-- On Linux: Uses Secret Service
-
-**Benefits of the polymorphic design:**
-
-- 🔧 **Automatic fallback**: Seamlessly switches between keyring and
-  environment-only modes
-- 🔐 **Security first**: Credentials are encrypted by your operating system when
-  using keyring
-- 🚫 **No plain text passwords**: Keep sensitive data out of configuration files
-- 🔄 **Transparent operation**: Same interface regardless of storage method
-- 🔒 **OS integration**: Works with your system's native credential storage
 
 ## 🧪 Development
 
