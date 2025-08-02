@@ -475,8 +475,9 @@ jobs:
           $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
         }
         
-        # Authenticate with GitHub CLI
-        echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+        # Authenticate with GitHub CLI using token
+        $env:GH_TOKEN = "${{ secrets.GITHUB_TOKEN }}"
+        gh auth status
         
         # Clone winget-pkgs repository
         $tempDir = New-TemporaryFile | ForEach-Object { Remove-Item $_; New-Item -ItemType Directory -Path $_ }
@@ -487,6 +488,10 @@ jobs:
           gh repo clone microsoft/winget-pkgs -- --depth 1
           
           Push-Location winget-pkgs
+          
+          # Configure git with GitHub Actions bot credentials
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
           # Create branch for this submission
           $branchName = "iphoto-downloader-${{ needs['version-validation'].outputs.version }}"
@@ -505,18 +510,29 @@ jobs:
             Rename-Item $_.FullName -NewName $newName
           }
           
-          # Configure git
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          
           # Add and commit changes
           git add $packageDir
           git commit -m "Add iPhotoDownloader version ${{ needs['version-validation'].outputs.version }}"
           
-          # Push branch
-          git push origin $branchName
+          # Create a fork first (required for external contributors)
+          Write-Host "Creating fork of winget-pkgs repository..."
+          try {
+            gh repo fork microsoft/winget-pkgs --clone=false --remote=false
+            Write-Host "Fork created successfully"
+          }
+          catch {
+            Write-Host "Fork may already exist or creation failed: $_"
+          }
           
-          # Create pull request
+          # Set up remote for the fork
+          $forkRemote = "https://github.com/${{ github.actor }}/winget-pkgs.git"
+          git remote add fork $forkRemote
+          
+          # Push branch to fork
+          Write-Host "Pushing branch to fork..."
+          git push fork $branchName
+          
+          # Create pull request from fork to upstream
           $prTitle = "New package: HenningUe.iPhotoDownloader version ${{ needs['version-validation'].outputs.version }}"
           $prBody = "## Summary`n`n"
           $prBody += "This PR adds iPhotoDownloader version ${{ needs['version-validation'].outputs.version }} to the WinGet Community Repository.`n`n"
@@ -537,7 +553,8 @@ jobs:
           $prBody += "This release includes cross-platform executable distribution and preparation for package manager integration.`n`n"
           $prBody += "**Automated submission via GitHub Actions**"
           
-          gh pr create --title "$prTitle" --body "$prBody" --base main --head $branchName --repo microsoft/winget-pkgs
+          Write-Host "Creating pull request..."
+          gh pr create --title "$prTitle" --body "$prBody" --base main --head "${{ github.actor }}:$branchName" --repo microsoft/winget-pkgs
           
           Write-Host "✅ Pull request created successfully!"
           Write-Host "PR will be reviewed by the WinGet team and merged if approved."
@@ -555,6 +572,13 @@ jobs:
             Write-Host "`n--- $($_.Name) ---"
             Get-Content $_.FullName
           }
+          
+          Write-Host "`n=== Manual Submission Instructions ==="
+          Write-Host "1. Fork https://github.com/microsoft/winget-pkgs"
+          Write-Host "2. Create directory: manifests/h/HenningUe/iPhotoDownloader/${{ needs['version-validation'].outputs.version }}"
+          Write-Host "3. Copy the manifest files shown above to that directory"
+          Write-Host "4. Create a pull request with the title: 'New package: HenningUe.iPhotoDownloader version ${{ needs['version-validation'].outputs.version }}'"
+          Write-Host "5. Include the PR body content shown above"
         }
         finally {
           Pop-Location
