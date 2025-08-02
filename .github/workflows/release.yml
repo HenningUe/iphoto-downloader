@@ -629,10 +629,10 @@ jobs:
           ### Downloads
           
           **Windows:**
-          - 📦 [Complete Windows Package](./iphoto-downloader-windows-x64-v${{ needs.version-validation.outputs.version }}.zip) - Both executables in one ZIP
+          - 📦 [Complete Windows Package](https://github.com/HenningUe/iphoto-downloader/releases/download/${{ github.event.release.tag_name }}/iphoto-downloader-windows-x64-v${{ needs.version-validation.outputs.version }}.zip) - Both executables in one ZIP
           
           **Linux:**
-          - 📦 [Complete Linux Package](./iphoto-downloader-linux-x64-v${{ needs.version-validation.outputs.version }}.tar.gz) - Both executables in one archive
+          - 📦 [Complete Linux Package](https://github.com/HenningUe/iphoto-downloader/releases/download/${{ github.event.release.tag_name }}/iphoto-downloader-linux-x64-v${{ needs.version-validation.outputs.version }}.tar.gz) - Both executables in one archive
           
           **Source Code:**
           - GitHub automatically provides source code as ZIP and TAR.GZ archives
