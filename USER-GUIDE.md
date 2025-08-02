@@ -28,6 +28,12 @@ Complete guide for installing, configuring, and using the iPhoto Downloader Tool
 4. Run `iphoto_downloader.exe` for the first time to set up configuration files
 5. Run `iphoto_downloader_credentials.exe` to set your credentials
 
+**⚠️ Windows Defender Warning**
+If Windows Defender shows a security warning:
+- Click "More info" → "Run anyway" (the files are safe)
+- To permanently allow: Add the executable folder to Windows Defender exclusions
+- See [Windows Defender Guide](docs/WINDOWS_DEFENDER_GUIDE.md) for detailed instructions
+
 #### Option 2: Install via WinGet
 NOT YET WORKING :-(
 ```powershell

@@ -75,14 +75,11 @@ https://github.com/HenningUe/iphoto-downloader/blob/main/USER-GUIDE.md
                 input(prompt)
 
     try:
-        # Get initial config to determine operating mode
-        config = get_config()
+        # Set up basic logging first (needed by DeliveryArtifactsManager)
+        setup_logging()
 
-        # Set up logging with config (must be before DeliveryArtifactsManager)
-        setup_logging(config.get_log_level())
-        logger = get_logger()
-
-        # Handle delivery artifacts for 'Delivered' mode
+        # Handle delivery artifacts for 'Delivered' mode BEFORE loading config
+        # This ensures template files are created before config validation
         delivery_manager = DeliveryArtifactsManager()
         should_continue = delivery_manager.handle_delivered_mode_startup()
 
@@ -93,6 +90,13 @@ https://github.com/HenningUe/iphoto-downloader/blob/main/USER-GUIDE.md
             )
             safe_input("Press Enter to exit...")
             sys.exit(0)
+
+        # Now that delivery artifacts are handled, get config
+        config = get_config()
+
+        # Set up logging with proper config level
+        setup_logging(config.get_log_level())
+        logger = get_logger()
 
         # Check multi-instance control before proceeding
         instance_manager = InstanceManager(config.allow_multi_instance)

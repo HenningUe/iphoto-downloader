@@ -119,7 +119,7 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,  # Disable UPX compression to reduce false positives
     upx_exclude=[],
     runtime_tmpdir=None,
     console=True,
@@ -129,4 +129,6 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     icon='iphoto-downloader-main.png',
+    # Add version information to make executable appear more legitimate
+    version='VERSION_INFO.txt',
 )
