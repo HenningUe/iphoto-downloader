@@ -467,124 +467,71 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        # Install GitHub CLI if not available
-        if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
-          Write-Host "Installing GitHub CLI..."
-          winget install --id GitHub.cli --accept-source-agreements --accept-package-agreements
-          # Refresh PATH
-          $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
+        Write-Host "=== WinGet Package Submission ==="
+        Write-Host ""
+        Write-Host "⚠️  Automatic submission to WinGet requires special permissions that GitHub Actions doesn't have."
+        Write-Host "The manifests have been generated and are ready for manual submission."
+        Write-Host ""
+        
+        # Display manifest contents for manual submission
+        Write-Host "=== Generated WinGet Manifests ==="
+        Get-ChildItem "${{ github.workspace }}/winget-manifests/" -Filter "*.yaml" | ForEach-Object {
+          Write-Host ""
+          Write-Host "--- $($_.Name) ---"
+          Get-Content $_.FullName
         }
         
-        # Authenticate with GitHub CLI using token
-        $env:GH_TOKEN = "${{ secrets.GITHUB_TOKEN }}"
-        gh auth status
-        
-        # Clone winget-pkgs repository
-        $tempDir = New-TemporaryFile | ForEach-Object { Remove-Item $_; New-Item -ItemType Directory -Path $_ }
-        Push-Location $tempDir
-        
-        try {
-          Write-Host "Cloning winget-pkgs repository..."
-          gh repo clone microsoft/winget-pkgs -- --depth 1
-          
-          Push-Location winget-pkgs
-          
-          # Configure git with GitHub Actions bot credentials
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          
-          # Create branch for this submission
-          $branchName = "iphoto-downloader-${{ needs['version-validation'].outputs.version }}"
-          git checkout -b $branchName
-          
-          # Create package directory structure
-          $packageDir = "manifests/h/HenningUe/iPhotoDownloader/${{ needs['version-validation'].outputs.version }}"
-          New-Item -ItemType Directory -Force -Path $packageDir
-          
-          # Copy manifest files to correct location
-          Copy-Item "${{ github.workspace }}/winget-manifests/*.yaml" -Destination $packageDir
-          
-          # Rename files to match WinGet convention
-          Get-ChildItem $packageDir -Filter "*.yaml" | ForEach-Object {
-            $newName = $_.Name -replace "HenningUe\.iPhotoDownloader", "HenningUe.iPhotoDownloader.${{ needs['version-validation'].outputs.version }}"
-            Rename-Item $_.FullName -NewName $newName
-          }
-          
-          # Add and commit changes
-          git add $packageDir
-          git commit -m "Add iPhotoDownloader version ${{ needs['version-validation'].outputs.version }}"
-          
-          # Create a fork first (required for external contributors)
-          Write-Host "Creating fork of winget-pkgs repository..."
-          try {
-            gh repo fork microsoft/winget-pkgs --clone=false --remote=false
-            Write-Host "Fork created successfully"
-          }
-          catch {
-            Write-Host "Fork may already exist or creation failed: $_"
-          }
-          
-          # Set up remote for the fork
-          $forkRemote = "https://github.com/${{ github.actor }}/winget-pkgs.git"
-          git remote add fork $forkRemote
-          
-          # Push branch to fork
-          Write-Host "Pushing branch to fork..."
-          git push fork $branchName
-          
-          # Create pull request from fork to upstream
-          $prTitle = "New package: HenningUe.iPhotoDownloader version ${{ needs['version-validation'].outputs.version }}"
-          $prBody = "## Summary`n`n"
-          $prBody += "This PR adds iPhotoDownloader version ${{ needs['version-validation'].outputs.version }} to the WinGet Community Repository.`n`n"
-          $prBody += "### Package Information`n"
-          $prBody += "- **Package Identifier**: HenningUe.iPhotoDownloader`n"
-          $prBody += "- **Version**: ${{ needs['version-validation'].outputs.version }}`n"
-          $prBody += "- **Publisher**: HenningUe`n"
-          $prBody += "- **License**: MIT`n"
-          $prBody += "- **Repository**: https://github.com/HenningUe/iphoto-downloader`n`n"
-          $prBody += "### Description`n"
-          $prBody += "A comprehensive tool for synchronizing photos from iCloud to local storage with smart deletion tracking, album filtering, and 2FA support.`n`n"
-          $prBody += "### Validation`n"
-          $prBody += "- [x] Manifests follow WinGet schema`n"
-          $prBody += "- [x] Package builds successfully in CI/CD`n"
-          $prBody += "- [x] Executables are properly signed and tested`n"
-          $prBody += "- [x] License is properly specified`n`n"
-          $prBody += "### Release Notes`n"
-          $prBody += "This release includes cross-platform executable distribution and preparation for package manager integration.`n`n"
-          $prBody += "**Automated submission via GitHub Actions**"
-          
-          Write-Host "Creating pull request..."
-          gh pr create --title "$prTitle" --body "$prBody" --base main --head "${{ github.actor }}:$branchName" --repo microsoft/winget-pkgs
-          
-          Write-Host "✅ Pull request created successfully!"
-          Write-Host "PR will be reviewed by the WinGet team and merged if approved."
-          
-        }
-        catch {
-          Write-Host "❌ Error during WinGet submission: $_"
-          Write-Host "This is expected for first-time submissions or if manual review is required."
-          Write-Host "Manifests have been prepared and can be submitted manually to:"
-          Write-Host "https://github.com/microsoft/winget-pkgs"
-          
-          # Display manifest contents for manual submission
-          Write-Host "`n=== Generated Manifests ==="
-          Get-ChildItem "${{ github.workspace }}/winget-manifests/" -Filter "*.yaml" | ForEach-Object {
-            Write-Host "`n--- $($_.Name) ---"
-            Get-Content $_.FullName
-          }
-          
-          Write-Host "`n=== Manual Submission Instructions ==="
-          Write-Host "1. Fork https://github.com/microsoft/winget-pkgs"
-          Write-Host "2. Create directory: manifests/h/HenningUe/iPhotoDownloader/${{ needs['version-validation'].outputs.version }}"
-          Write-Host "3. Copy the manifest files shown above to that directory"
-          Write-Host "4. Create a pull request with the title: 'New package: HenningUe.iPhotoDownloader version ${{ needs['version-validation'].outputs.version }}'"
-          Write-Host "5. Include the PR body content shown above"
-        }
-        finally {
-          Pop-Location
-          Pop-Location
-          Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
-        }
+        Write-Host ""
+        Write-Host "=== Manual Submission Instructions ==="
+        Write-Host "To submit this package to WinGet Community Repository:"
+        Write-Host ""
+        Write-Host "1. 🍴 Fork the repository:"
+        Write-Host "   - Go to: https://github.com/microsoft/winget-pkgs"
+        Write-Host "   - Click 'Fork' to create your own copy"
+        Write-Host ""
+        Write-Host "2. 📁 Create the package directory:"
+        Write-Host "   - In your fork, create: manifests/h/HenningUe/iPhotoDownloader/${{ needs['version-validation'].outputs.version }}/"
+        Write-Host ""
+        Write-Host "3. 📄 Add the manifest files:"
+        Write-Host "   - Copy the three YAML files shown above to the directory"
+        Write-Host "   - Name them exactly as shown (with version numbers)"
+        Write-Host ""
+        Write-Host "4. 🔄 Create a Pull Request:"
+        Write-Host "   - Title: 'New package: HenningUe.iPhotoDownloader version ${{ needs['version-validation'].outputs.version }}'"
+        Write-Host "   - Description:"
+        Write-Host ""
+        Write-Host "## Summary"
+        Write-Host ""
+        Write-Host "This PR adds iPhotoDownloader version ${{ needs['version-validation'].outputs.version }} to the WinGet Community Repository."
+        Write-Host ""
+        Write-Host "### Package Information"
+        Write-Host "- **Package Identifier**: HenningUe.iPhotoDownloader"
+        Write-Host "- **Version**: ${{ needs['version-validation'].outputs.version }}"
+        Write-Host "- **Publisher**: HenningUe"
+        Write-Host "- **License**: MIT"
+        Write-Host "- **Repository**: https://github.com/HenningUe/iphoto-downloader"
+        Write-Host ""
+        Write-Host "### Description"
+        Write-Host "A comprehensive tool for synchronizing photos from iCloud to local storage with smart deletion tracking, album filtering, and 2FA support."
+        Write-Host ""
+        Write-Host "### Validation"
+        Write-Host "- [x] Manifests follow WinGet schema"
+        Write-Host "- [x] Package builds successfully in CI/CD"
+        Write-Host "- [x] Executables are properly signed and tested"
+        Write-Host "- [x] License is properly specified"
+        Write-Host ""
+        Write-Host "### Release Notes"
+        Write-Host "This release includes cross-platform executable distribution and preparation for package manager integration."
+        Write-Host ""
+        Write-Host "**Automated submission via GitHub Actions**"
+        Write-Host ""
+        Write-Host "5. 🎯 Alternative: Use WinGet Create Tool"
+        Write-Host "   - Download: https://github.com/microsoft/winget-create/releases"
+        Write-Host "   - Run: wingetcreate.exe new HenningUe.iPhotoDownloader"
+        Write-Host ""
+        Write-Host "📋 The manifests are also available as build artifacts for easy download."
+        Write-Host ""
+        Write-Host "✅ WinGet package preparation completed successfully!"
 
   publish-to-snap:
     name: Publish to Snap Store
