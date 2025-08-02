@@ -484,7 +484,7 @@ jobs:
         
         try {
           Write-Host "Cloning winget-pkgs repository..."
-          gh repo clone microsoft/winget-pkgs --depth 1
+          gh repo clone microsoft/winget-pkgs -- --depth 1
           
           Push-Location winget-pkgs
           
