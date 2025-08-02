@@ -391,56 +391,50 @@ jobs:
         New-Item -ItemType Directory -Force -Path "winget-manifests"
         
         # Create version manifest
-        $versionManifest = @"
-        PackageIdentifier: HenningUe.iPhotoDownloader
-        PackageVersion: $version
-        DefaultLocale: en-US
-        ManifestType: version
-        ManifestVersion: 1.2.0
-        "@
+        $versionManifest = "PackageIdentifier: HenningUe.iPhotoDownloader`n"
+        $versionManifest += "PackageVersion: $version`n"
+        $versionManifest += "DefaultLocale: en-US`n"
+        $versionManifest += "ManifestType: version`n"
+        $versionManifest += "ManifestVersion: 1.2.0"
         
         # Create installer manifest
-        $installerManifest = @"
-        PackageIdentifier: HenningUe.iPhotoDownloader
-        PackageVersion: $version
-        Installers:
-        - Architecture: x64
-          InstallerType: exe
-          InstallerUrl: https://github.com/HenningUe/iphoto-downloader/releases/download/${{ github.event.release.tag_name || github.event.inputs.version }}/iphoto_downloader.exe
-          InstallerSha256: # Will be calculated by WinGet team
-          InstallerSwitches:
-            Silent: ""
-            SilentWithProgress: ""
-        ManifestType: installer
-        ManifestVersion: 1.2.0
-        "@
+        $installerManifest = "PackageIdentifier: HenningUe.iPhotoDownloader`n"
+        $installerManifest += "PackageVersion: $version`n"
+        $installerManifest += "Installers:`n"
+        $installerManifest += "- Architecture: x64`n"
+        $installerManifest += "  InstallerType: exe`n"
+        $installerManifest += "  InstallerUrl: https://github.com/HenningUe/iphoto-downloader/releases/download/${{ github.event.release.tag_name || github.event.inputs.version }}/iphoto_downloader.exe`n"
+        $installerManifest += "  InstallerSha256: # Will be calculated by WinGet team`n"
+        $installerManifest += "  InstallerSwitches:`n"
+        $installerManifest += "    Silent: `"`"`n"
+        $installerManifest += "    SilentWithProgress: `"`"`n"
+        $installerManifest += "ManifestType: installer`n"
+        $installerManifest += "ManifestVersion: 1.2.0"
         
         # Create locale manifest
-        $localeManifest = @"
-        PackageIdentifier: HenningUe.iPhotoDownloader
-        PackageVersion: $version
-        PackageLocale: en-US
-        Publisher: HenningUe
-        PublisherUrl: https://github.com/HenningUe
-        PublisherSupportUrl: https://github.com/HenningUe/iphoto-downloader/issues
-        Author: HenningUe
-        PackageName: iPhoto Downloader
-        PackageUrl: https://github.com/HenningUe/iphoto-downloader
-        License: MIT
-        LicenseUrl: https://github.com/HenningUe/iphoto-downloader/blob/main/LICENSE
-        Copyright: Copyright (c) HenningUe
-        ShortDescription: iPhoto Downloader Tool with intelligent deletion tracking
-        Description: A comprehensive tool for synchronizing photos from iCloud to local storage with smart deletion tracking, album filtering, and 2FA support.
-        Moniker: iphoto-downloader
-        Tags:
-        - icloud
-        - photos
-        - sync
-        - backup
-        - photo-management
-        ManifestType: defaultLocale
-        ManifestVersion: 1.2.0
-        "@
+        $localeManifest = "PackageIdentifier: HenningUe.iPhotoDownloader`n"
+        $localeManifest += "PackageVersion: $version`n"
+        $localeManifest += "PackageLocale: en-US`n"
+        $localeManifest += "Publisher: HenningUe`n"
+        $localeManifest += "PublisherUrl: https://github.com/HenningUe`n"
+        $localeManifest += "PublisherSupportUrl: https://github.com/HenningUe/iphoto-downloader/issues`n"
+        $localeManifest += "Author: HenningUe`n"
+        $localeManifest += "PackageName: iPhoto Downloader`n"
+        $localeManifest += "PackageUrl: https://github.com/HenningUe/iphoto-downloader`n"
+        $localeManifest += "License: MIT`n"
+        $localeManifest += "LicenseUrl: https://github.com/HenningUe/iphoto-downloader/blob/main/LICENSE`n"
+        $localeManifest += "Copyright: Copyright (c) HenningUe`n"
+        $localeManifest += "ShortDescription: iPhoto Downloader Tool with intelligent deletion tracking`n"
+        $localeManifest += "Description: A comprehensive tool for synchronizing photos from iCloud to local storage with smart deletion tracking, album filtering, and 2FA support.`n"
+        $localeManifest += "Moniker: iphoto-downloader`n"
+        $localeManifest += "Tags:`n"
+        $localeManifest += "- icloud`n"
+        $localeManifest += "- photos`n"
+        $localeManifest += "- sync`n"
+        $localeManifest += "- backup`n"
+        $localeManifest += "- photo-management`n"
+        $localeManifest += "ManifestType: defaultLocale`n"
+        $localeManifest += "ManifestVersion: 1.2.0"
         
         # Save manifests
         $versionManifest | Out-File -FilePath "winget-manifests/HenningUe.iPhotoDownloader.yaml" -Encoding UTF8
@@ -524,32 +518,24 @@ jobs:
           
           # Create pull request
           $prTitle = "New package: HenningUe.iPhotoDownloader version ${{ needs['version-validation'].outputs.version }}"
-          $prBody = @"
-          ## Summary
-          
-          This PR adds iPhotoDownloader version ${{ needs['version-validation'].outputs.version }} to the WinGet Community Repository.
-          
-          ### Package Information
-          - **Package Identifier**: HenningUe.iPhotoDownloader
-          - **Version**: ${{ needs['version-validation'].outputs.version }}
-          - **Publisher**: HenningUe
-          - **License**: MIT
-          - **Repository**: https://github.com/HenningUe/iphoto-downloader
-          
-          ### Description
-          A comprehensive tool for synchronizing photos from iCloud to local storage with smart deletion tracking, album filtering, and 2FA support.
-          
-          ### Validation
-          - [x] Manifests follow WinGet schema
-          - [x] Package builds successfully in CI/CD
-          - [x] Executables are properly signed and tested
-          - [x] License is properly specified
-          
-          ### Release Notes
-          This release includes cross-platform executable distribution and preparation for package manager integration.
-          
-          **Automated submission via GitHub Actions**
-          "@
+          $prBody = "## Summary`n`n"
+          $prBody += "This PR adds iPhotoDownloader version ${{ needs['version-validation'].outputs.version }} to the WinGet Community Repository.`n`n"
+          $prBody += "### Package Information`n"
+          $prBody += "- **Package Identifier**: HenningUe.iPhotoDownloader`n"
+          $prBody += "- **Version**: ${{ needs['version-validation'].outputs.version }}`n"
+          $prBody += "- **Publisher**: HenningUe`n"
+          $prBody += "- **License**: MIT`n"
+          $prBody += "- **Repository**: https://github.com/HenningUe/iphoto-downloader`n`n"
+          $prBody += "### Description`n"
+          $prBody += "A comprehensive tool for synchronizing photos from iCloud to local storage with smart deletion tracking, album filtering, and 2FA support.`n`n"
+          $prBody += "### Validation`n"
+          $prBody += "- [x] Manifests follow WinGet schema`n"
+          $prBody += "- [x] Package builds successfully in CI/CD`n"
+          $prBody += "- [x] Executables are properly signed and tested`n"
+          $prBody += "- [x] License is properly specified`n`n"
+          $prBody += "### Release Notes`n"
+          $prBody += "This release includes cross-platform executable distribution and preparation for package manager integration.`n`n"
+          $prBody += "**Automated submission via GitHub Actions**"
           
           gh pr create --title "$prTitle" --body "$prBody" --base main --head $branchName --repo microsoft/winget-pkgs
           
@@ -645,31 +631,21 @@ jobs:
     - name: Create release assets
       run: |
         mkdir release-assets
-        
-        # Package Windows executables
-        cd windows-executables
-        zip ../release-assets/iphoto-downloader-windows-x64.zip *
-        cd ..
-        
-        # Package Linux executables
-        cd linux-executables
-        tar -czf ../release-assets/iphoto-downloader-linux-x64.tar.gz *
-        cd ..
-        
-        # Copy individual executables with both original and versioned names
         VERSION="${{ needs.version-validation.outputs.version }}"
         
-        # Windows executables
-        cp windows-executables/iphoto_downloader.exe release-assets/
-        cp windows-executables/iphoto_downloader_credentials.exe release-assets/
-        cp windows-executables/iphoto_downloader-v${VERSION}.exe release-assets/
-        cp windows-executables/iphoto_downloader_credentials-v${VERSION}.exe release-assets/
+        # Package Windows executables with version suffix
+        cd windows-executables
+        zip "../release-assets/iphoto-downloader-windows-x64-v${VERSION}.zip" iphoto_downloader.exe iphoto_downloader_credentials.exe
+        cd ..
         
-        # Linux executables
-        cp linux-executables/iphoto_downloader release-assets/
-        cp linux-executables/iphoto_downloader_credentials release-assets/iphoto-downloader-credentials
-        cp linux-executables/iphoto_downloader-v${VERSION} release-assets/
-        cp linux-executables/iphoto_downloader_credentials-v${VERSION} release-assets/iphoto-downloader-credentials-v${VERSION}
+        # Package Linux executables with version suffix
+        cd linux-executables
+        tar -czf "../release-assets/iphoto-downloader-linux-x64-v${VERSION}.tar.gz" iphoto_downloader iphoto_downloader_credentials
+        cd ..
+        
+        # Create source code ZIP (this will be done automatically by GitHub as well)
+        echo "Release assets created with version suffix: v${VERSION}"
+        ls -la release-assets/
 
     - name: Upload release assets
       uses: softprops/action-gh-release@v2
@@ -682,14 +658,13 @@ jobs:
           ### Downloads
           
           **Windows:**
-          - 📦 [Complete Windows Package](./iphoto-downloader-windows-x64.zip) - Both executables in one ZIP
-          - 🖼️ [Main Application (iphoto_downloader.exe)](./iphoto_downloader.exe)
-          - 🔐 [Credentials Manager (iphoto_downloader_credentials.exe)](./iphoto_downloader_credentials.exe)
+          - 📦 [Complete Windows Package](./iphoto-downloader-windows-x64-v${{ needs.version-validation.outputs.version }}.zip) - Both executables in one ZIP
           
           **Linux:**
-          - 📦 [Complete Linux Package](./iphoto-downloader-linux-x64.tar.gz) - Both executables in one archive
-          - 🖼️ [Main Application (iphoto_downloader)](./iphoto_downloader)
-          - 🔐 [Credentials Manager (iphoto-downloader-credentials)](./iphoto-downloader-credentials)
+          - 📦 [Complete Linux Package](./iphoto-downloader-linux-x64-v${{ needs.version-validation.outputs.version }}.tar.gz) - Both executables in one archive
+          
+          **Source Code:**
+          - GitHub automatically provides source code as ZIP and TAR.GZ archives
           
           ### Installation
           
@@ -698,27 +673,30 @@ jobs:
           winget install HenningUe.iPhotoDownloader
           ```
           
-          **Linux (via APT):**
+          **Linux (Manual Installation):**
           ```bash
-          # APT repository submission in progress
-          # Manual installation for now:
-          wget https://github.com/HenningUe/iphoto-downloader/releases/download/${{ github.event.release.tag_name }}/iphoto-downloader-linux-x64.tar.gz
-          tar -xzf iphoto-downloader-linux-x64.tar.gz
+          # Download and extract
+          wget https://github.com/HenningUe/iphoto-downloader/releases/download/${{ github.event.release.tag_name }}/iphoto-downloader-linux-x64-v${{ needs.version-validation.outputs.version }}.tar.gz
+          tar -xzf iphoto-downloader-linux-x64-v${{ needs.version-validation.outputs.version }}.tar.gz
+          
+          # Install to system path
           sudo mv iphoto_downloader /usr/local/bin/
-          sudo mv iphoto_downloader_credentials /usr/local/bin/iphoto-downloader-credentials
+          sudo mv iphoto_downloader_credentials /usr/local/bin/
+          sudo chmod +x /usr/local/bin/iphoto_downloader*
           ```
           
           ### What's New
           - Full CI/CD pipeline with automatic builds
           - Cross-platform executable distribution
-          - Preparation for WinGet and APT package managers
+          - Package manager integration (WinGet for Windows, Snap for Linux)
           
           ### Getting Started
-          1. Download the appropriate executable for your platform
-          2. Run the credentials manager first to set up your iCloud credentials
-          3. Configure your sync settings
-          4. Start syncing your photos!
+          1. Download the appropriate package for your platform
+          2. Extract the executables from the archive
+          3. Run `iphoto_downloader_credentials` first to set up your iCloud credentials
+          4. Configure your sync settings in the created settings file
+          5. Run `iphoto_downloader` to start syncing your photos!
           
-          For detailed instructions, see the [README](https://github.com/HenningUe/iphoto-downloader/blob/main/USER-GUIDE.md).
+          For detailed instructions, see the [User Guide](https://github.com/HenningUe/iphoto-downloader/blob/main/USER-GUIDE.md).
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

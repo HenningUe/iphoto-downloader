@@ -282,6 +282,9 @@ automatically using **GitHub Actions**.
     Windows Package Manager.
   - The linux executable shall be published automatically to APT (Advanced
     Packaging Tool), i.e. the ubuntu package manager
+  - The release in the github.downloads section should contain two ZIP files, one for Windows and one for Linux (Ubuntu). Each ZIP file should contain the respective executables “iphoto_downloader” and “iphoto_downloader_credentials.” In addition, the source code should be available as a ZIP file in the download section. No other files should be included. The zip files should include the version name as a suffix.
+
+Translated with DeepL.com (free version)
 
 ---
 
