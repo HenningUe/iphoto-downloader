@@ -12,12 +12,12 @@ main_script = src_path / 'iphoto_downloader' / 'main.py'
 datas = []
 
 # Include repository files directly for delivery artifacts
-repo_readme = Path('README.md')
+repo_user_guide = Path('USER-GUIDE.md')
 repo_env_example = Path('.env.example')
 version_file = Path('VERSION')
 
-if repo_readme.exists():
-    datas.append((str(repo_readme), '.'))
+if repo_user_guide.exists():
+    datas.append((str(repo_user_guide), '.'))
 
 if repo_env_example.exists():
     datas.append((str(repo_env_example), '.'))

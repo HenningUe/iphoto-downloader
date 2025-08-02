@@ -227,7 +227,7 @@ class DeliveryArtifactsManager:
         print("4. Run the application again to start syncing")
         print("\n💡 TIP: Your iCloud and Pushover credentials will be")
         print("   stored securely when you run the application.")
-        print("\n🔧 Settings folder: {self.settings_folder}")
+        print(f"\n🔧 Settings folder: {self.settings_folder}")
         print("=" * 60)
 
         print("Shall the file-explorer open the settings folder [y/N]? ", end="")

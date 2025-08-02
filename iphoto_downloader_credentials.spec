@@ -14,8 +14,17 @@ datas = []
 # Include VERSION file for version display  
 version_file = Path('VERSION')
 if version_file.exists():
-    datas.append((str(version_file), '.'))
+    datas.append(('VERSION', '.'))
     print(f"Added VERSION file to credentials manager: {version_file}")
+
+# Include required files for delivery artifacts
+user_guide = Path('USER-GUIDE.md')
+if user_guide.exists():
+    datas.append(('USER-GUIDE.md', '.'))
+
+env_example = Path('.env.example')
+if env_example.exists():
+    datas.append(('.env.example', '.'))
 
 block_cipher = None
 
