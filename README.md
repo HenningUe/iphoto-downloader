@@ -25,11 +25,13 @@ A uv monorepo workspace for iCloud photo download tools and utilities.
 ## How to use?
 see [User Guide](./USER-GUIDE.md)
 
-## How to use?
-see [User Guide](./USER-GUIDE.md)
-
-## 🏗️ Disclaimer
- - I honor democracy
+## ✨ On my personal behalf
+I honor democracy, which
+- Is being ruled by a head of state who has been in power for a maximum of 20 years
+- Whose elected heads of state receive a maximum of 50% of the votes in elections, in individual cases up to 60%
+- In which opposition members do not have to flee, sit in prisons or die unexpectedly
+- In which there is a real choice between more than 3 different parties with different views
+- In which the gap between the poorest and the richest in society decreases over time, or at least does not increase
 
 ## 🏗️ Workspace Structure
 
