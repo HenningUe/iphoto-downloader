@@ -22,8 +22,11 @@ A uv monorepo workspace for iCloud photo download tools and utilities.
    - missing configuration via setting-file
    - missing continuous execution mode
 
-## How to use?
-see [User Guide](./USER-GUIDE.md)
+## **How to use?**
+**see [User Guide](./USER-GUIDE.md)**
+
+## **Releases**
+**see [Releases](https://github.com/HenningUe/iphoto-downloader/releases/)**
 
 ## ✨ On my personal behalf
 I honor democracy, which
