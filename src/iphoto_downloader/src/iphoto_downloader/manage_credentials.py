@@ -103,7 +103,7 @@ def icloud_check_credentials():
         print("✅ iCloud Credentials are stored in keyring")
         if config.icloud_username and config.icloud_password:
             print(f"📧 Username: {config.icloud_username}")
-            print("🔑 Password: *** (hidden)")
+            print(f"📧 Password: {config.icloud_password}")
         else:
             print("⚠️ Credentials found in keyring but couldn't retrieve them")
     else:
@@ -157,7 +157,7 @@ def pushover_store_credentials():
         print("❌ User-key cannot be empty.")
         return
 
-    api_token = getpass.getpass("Enter your pushover API token: ").strip()
+    api_token = input("Enter your pushover API token: ").strip()
     if not api_token:
         print("❌ API token cannot be empty.")
         return
