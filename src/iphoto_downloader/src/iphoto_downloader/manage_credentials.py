@@ -34,6 +34,7 @@ def main():
 
     while True:
         print("\nOptions:")
+        print("0. Cancel")
         print("1. iCloud - Store credentials in keyring")
         print("2. iCloud - Check stored credentials")
         print("3. iCloud - Delete stored credentials")
@@ -42,9 +43,10 @@ def main():
         print("6. Pushover - Check stored credentials")
         print("7. Pushover - Delete stored credentials")
 
-        choice = input("\nEnter your choice (1-7): ").strip()
-
-        if choice == "1":
+        choice = input("\nEnter your choice (0-7): ").strip()
+        if choice == "0":
+            break
+        elif choice == "1":
             icloud_store_credentials()
         elif choice == "2":
             icloud_check_credentials()
@@ -62,6 +64,7 @@ def main():
             print("❌ Invalid choice. Please try again.")
             continue
         break
+    input("\nPress any key to exit")
 
 
 def icloud_store_credentials():
