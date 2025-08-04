@@ -114,6 +114,18 @@ class TwoFAHandler(BaseHTTPRequestHandler):
                 return;
             }
 
+            // Show immediate feedback that code is being processed
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = 'Validating 2FA code...';
+            messageEl.style.display = 'block';
+            messageEl.style.color = '#007bff';
+            
+            // Disable the submit button to prevent double submission
+            const submitBtn = document.querySelector('.submit-button');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Validating...';
+
             // Send as URL-encoded form data instead of FormData
             const params = new URLSearchParams();
             params.append('code', code);
@@ -127,16 +139,50 @@ class TwoFAHandler(BaseHTTPRequestHandler):
             })
             .then(response => response.json())
             .then(data => {
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                
                 if (data.success) {
                     document.getElementById('2fa-code').value = '';
-                    updateStatus();
+                    
+                    // Check if immediate redirect is requested
+                    if (data.authenticated && data.redirect) {
+                        // Show immediate success feedback
+                        const messageEl = document.getElementById('message');
+                        messageEl.textContent = data.message || 'Authentication successful!';
+                        messageEl.style.display = 'block';
+                        messageEl.style.color = '#28a745';
+                        
+                        // Hide the form
+                        document.getElementById('2fa-form').style.display = 'none';
+                        
+                        // Update status display
+                        const statusEl = document.getElementById('status');
+                        statusEl.textContent = '✅ Authentication successful!';
+                        statusEl.className = 'status-authenticated';
+                        
+                        // Redirect after a short delay to let user see success message
+                        setTimeout(() => {
+                            window.location.href = data.redirect;
+                        }, 1500);
+                    } else {
+                        // Fallback to status polling for compatibility
+                        updateStatus();
+                    }
                 } else {
-                    alert(data.message || 'Failed to submit code');
+                    messageEl.textContent = data.message || 'Failed to submit code';
+                    messageEl.style.color = '#dc3545';
                 }
             })
             .catch(error => {
+                // Re-enable submit button on error
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                
                 console.error('Code submission failed:', error);
-                alert('Failed to submit code');
+                messageEl.textContent = 'Failed to submit code';
+                messageEl.style.color = '#dc3545';
             });
         }
 
@@ -710,6 +756,15 @@ button:hover {
                         "session_id": id(twofa_server),
                     },
                 )
+                # Return success with redirect instruction
+                self._serve_json_response(
+                    {
+                        "success": True,
+                        "authenticated": True,
+                        "message": "Authentication successful!",
+                        "redirect": "/success",
+                    }
+                )
             else:
                 get_logger(__name__).warning(
                     f"2FA code validation failed for {client_ip}",
@@ -719,8 +774,9 @@ button:hover {
                         "session_id": id(twofa_server) if twofa_server else None,
                     },
                 )
-
-            self._serve_json_response({"success": success})
+                self._serve_json_response(
+                    {"success": False, "message": "Invalid 2FA code. Please try again."}
+                )
 
         except Exception as e:
             get_logger(__name__).error(f"Error handling 2FA submission: {e}")
@@ -1088,7 +1144,8 @@ class TwoFAWebServer:
             self.logger.info("2FA code submitted via web interface")
 
             # Validate code format
-            if not code or len(code) != 6 or not code.isdigit():
+            NUMB_DIGITS_2FA = 6
+            if not code or len(code) != NUMB_DIGITS_2FA or not code.isdigit():
                 self.set_state(
                     "waiting_for_code", "Invalid code format. Please enter a 6-digit number."
                 )
