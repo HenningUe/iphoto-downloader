@@ -28,7 +28,7 @@ class TwoFAHandler(BaseHTTPRequestHandler):
         """Override to use our logger instead of stderr."""
         get_logger(__name__).debug("HTTP: " + format % args)
 
-    def do_GET(self):
+    def do_GET(self):  # noqa: N802
         """Handle GET requests."""
         parsed_path = urlparse(self.path)
 
@@ -43,7 +43,7 @@ class TwoFAHandler(BaseHTTPRequestHandler):
         else:
             self._serve_404()
 
-    def do_POST(self):
+    def do_POST(self):  # noqa: N802
         """Handle POST requests."""
         parsed_path = urlparse(self.path)
 
@@ -119,7 +119,7 @@ class TwoFAHandler(BaseHTTPRequestHandler):
             messageEl.textContent = 'Validating 2FA code...';
             messageEl.style.display = 'block';
             messageEl.style.color = '#007bff';
-            
+
             // Disable the submit button to prevent double submission
             const submitBtn = document.querySelector('.submit-button');
             const originalText = submitBtn.textContent;
@@ -142,10 +142,10 @@ class TwoFAHandler(BaseHTTPRequestHandler):
                 // Re-enable submit button
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
-                
+
                 if (data.success) {
                     document.getElementById('2fa-code').value = '';
-                    
+
                     // Check if immediate redirect is requested
                     if (data.authenticated && data.redirect) {
                         // Show immediate success feedback
@@ -153,15 +153,15 @@ class TwoFAHandler(BaseHTTPRequestHandler):
                         messageEl.textContent = data.message || 'Authentication successful!';
                         messageEl.style.display = 'block';
                         messageEl.style.color = '#28a745';
-                        
+
                         // Hide the form
                         document.getElementById('2fa-form').style.display = 'none';
-                        
+
                         // Update status display
                         const statusEl = document.getElementById('status');
                         statusEl.textContent = '✅ Authentication successful!';
                         statusEl.className = 'status-authenticated';
-                        
+
                         // Redirect after a short delay to let user see success message
                         setTimeout(() => {
                             window.location.href = data.redirect;
@@ -179,7 +179,7 @@ class TwoFAHandler(BaseHTTPRequestHandler):
                 // Re-enable submit button on error
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
-                
+
                 console.error('Code submission failed:', error);
                 messageEl.textContent = 'Failed to submit code';
                 messageEl.style.color = '#dc3545';
@@ -503,7 +503,7 @@ button:hover {
         function updateCountdown() {
             const countdownEl = document.getElementById('countdown');
             const autoCloseInfo = document.querySelector('.auto-close-info');
-            
+
             if (countdownEl) {
                 countdownEl.textContent = countdown;
                 countdown--;
@@ -511,7 +511,7 @@ button:hover {
                 if (countdown < 0) {
                     // Clear the interval
                     clearInterval(countdownInterval);
-                    
+
                     // Show completion message since auto-close rarely works
                     showCompletionMessage();
                 }
@@ -525,17 +525,17 @@ button:hover {
                     ✅ Authentication completed! Please close this browser window.
                 </p>
             `;
-            
+
             // Update the close button
             const button = document.querySelector('.close-button');
             button.innerHTML = '✅ Close This Window (Ctrl+W)';
             button.onclick = function() {
                 showCloseInstructions();
             };
-            
+
             // Update page title to indicate completion
             document.title = "✅ 2FA Complete - Please close this window";
-            
+
             // Flash the browser icon/title to get user attention
             flashTitle();
         }
@@ -544,7 +544,7 @@ button:hover {
             // Try window.close() first (works if opened by script)
             try {
                 window.close();
-                
+
                 // Check after a short delay if window is still open
                 setTimeout(function() {
                     // If we're still here, window.close() didn't work
@@ -562,7 +562,7 @@ button:hover {
             button.style.background = '#6c757d';
             button.style.cursor = 'default';
             button.onclick = null;
-            
+
             // Also show instruction in the info section
             const info = document.querySelector('.info-section');
             info.innerHTML = `
@@ -575,10 +575,10 @@ button:hover {
                     • Or click the ❌ button in your browser tab
                 </small></p>
             `;
-            
+
             // Update page title
             document.title = "✅ 2FA Complete - Please close this window";
-        
+
             // Flash the title
             flashTitle();
         }
@@ -590,7 +590,7 @@ button:hover {
                 document.title = flash ? "🔔 " + originalTitle : originalTitle;
                 flash = !flash;
             }, 1000);
-            
+
             // Stop flashing after 10 seconds
             setTimeout(function() {
                 clearInterval(flashInterval);
@@ -654,7 +654,7 @@ button:hover {
             # Get status from the server instance
             server = self.server
             if hasattr(server, "twofa_server"):
-                twofa_server: TwoFAWebServer = server.twofa_server
+                twofa_server: TwoFAWebServer = server.twofa_server  # type: ignore
                 if twofa_server:
                     status_data = twofa_server.get_status()
                 else:
@@ -690,7 +690,7 @@ button:hover {
                 self._serve_json_response({"success": False, "message": "Server not initialized"})
                 return
 
-            twofa_server: TwoFAWebServer = server.twofa_server
+            twofa_server: TwoFAWebServer = server.twofa_server  # type: ignore
             if not twofa_server:
                 self._serve_json_response({"success": False, "message": "Server not initialized"})
                 return
@@ -787,7 +787,7 @@ button:hover {
         try:
             server = self.server
             if hasattr(server, "twofa_server"):
-                twofa_server: TwoFAWebServer = server.twofa_server
+                twofa_server: TwoFAWebServer = server.twofa_server  # type: ignore
                 if twofa_server:
                     success = twofa_server.request_new_2fa()
                     self._serve_json_response({"success": success})
@@ -938,17 +938,21 @@ class TwoFAWebServer:
         current_time = time.time()
 
         # Clean old attempts (older than 1 hour)
+        MAX_ATTEMPTS_AGES_IN_SECONDS = 3600  # 1 hour
         self.attempt_times[client_ip] = [
             attempt_time
             for attempt_time in self.attempt_times[client_ip]
-            if current_time - attempt_time < 3600
+            if current_time - attempt_time < MAX_ATTEMPTS_AGES_IN_SECONDS
         ]
 
         attempts = self.attempt_times[client_ip]
 
         # Check attempts in last minute
+        MAX_TIME_BETWEEN_ATTEMPTS = 60  # seconds
         recent_attempts = [
-            attempt_time for attempt_time in attempts if current_time - attempt_time < 60
+            attempt_time
+            for attempt_time in attempts
+            if current_time - attempt_time < MAX_TIME_BETWEEN_ATTEMPTS
         ]
 
         if len(recent_attempts) >= self.max_attempts_per_minute:
@@ -1018,7 +1022,7 @@ class TwoFAWebServer:
 
             # Create and configure server
             self.server = HTTPServer((self.host, self.port), TwoFAHandler)
-            self.server.twofa_server = self  # Reference for handlers
+            self.server.twofa_server = self  # Reference for handlers  # type: ignore
 
             # Start server in separate thread
             self.server_thread = threading.Thread(target=self.server.serve_forever, daemon=True)
