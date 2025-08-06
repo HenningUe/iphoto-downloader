@@ -21,5 +21,22 @@ dependencies = [
     "requests>=2.31.0",
 ]
 
+[project.optional-dependencies]
+# E2E Testing dependencies
+testing = [
+    "beautifulsoup4>=4.12.0",     # For cloud-friendly HTTP testing
+    "selenium>=4.15.0",           # For browser automation testing
+    "webdriver-manager>=4.0.0",   # For automatic WebDriver management
+]
+# Cloud-only testing (minimal dependencies for cloud environments)
+testing-cloud = [
+    "beautifulsoup4>=4.12.0",     # For HTTP-based testing without browser
+]
+# Full browser testing (for development environments)
+testing-browser = [
+    "selenium>=4.15.0",           # For full browser automation
+    "webdriver-manager>=4.0.0",   # For Chrome/Firefox driver management
+]
+
 [tool.uv.sources]
 auth2fa = { path = "." }

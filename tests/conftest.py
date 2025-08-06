@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 # Add the source directories to Python path
-project_root = Path(__file__).parent
+project_root = Path(__file__).parent.parent  # Go up to project root
 sys.path.insert(0, str(project_root / "src" / "iphoto_downloader" / "src"))
 sys.path.insert(0, str(project_root / "shared" / "auth2fa" / "src"))
 
