@@ -63,17 +63,13 @@ class PhotoSyncer:
                 return False
 
             # Validate that specified albums exist (if any are specified)
-            if (
-                self.config.personal_album_names_to_include
-                or self.config.shared_album_names_to_include
-            ):
-                self.logger.info("🔍 Validating specified album names...")
-                try:
-                    self.config.validate_albums_exist(self.icloud_client)
-                    self.logger.info("✅ All specified albums found")
-                except ValueError as e:
-                    self.logger.error(f"❌ Album validation failed: {e}")
-                    return False
+            self.logger.info("🔍 Validating specified album names...")
+            try:
+                self.config.validate_albums_exist(self.icloud_client)
+                self.logger.info("✅ All specified albums found")
+            except ValueError as e:
+                self.logger.error(f"❌ Album validation failed: {e}")
+                return False
 
             # Get local files
             local_files = self._get_local_files()

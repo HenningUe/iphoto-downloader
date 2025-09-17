@@ -1,15 +1,14 @@
 """Configuration management for iPhoto Downloader Tool."""
 
-import logging
+import logging  # noqa
 import os
 import sys
 from abc import ABC
 from pathlib import Path
 
 import keyring
-from dotenv import load_dotenv
-
 from auth2fa.pushover_service import PushoverConfig
+from dotenv import load_dotenv
 
 # Check if keyring is available and functional
 try:
@@ -65,8 +64,22 @@ class BaseConfig(ABC):  # noqa
             else []
         )
 
+        personal_albums_str = os.getenv("PERSONAL_ALBUM_NAMES_TO_EXCLUDE", "")
+        self.personal_album_names_to_exclude: list[str] = (
+            [name.strip() for name in personal_albums_str.split(",") if name.strip()]
+            if personal_albums_str
+            else []
+        )
+
         shared_albums_str = os.getenv("SHARED_ALBUM_NAMES_TO_INCLUDE", "")
         self.shared_album_names_to_include: list[str] = (
+            [name.strip() for name in shared_albums_str.split(",") if name.strip()]
+            if shared_albums_str
+            else []
+        )
+
+        shared_albums_str = os.getenv("SHARED_ALBUM_NAMES_TO_EXCLUDE", "")
+        self.shared_album_names_to_exclude: list[str] = (
             [name.strip() for name in shared_albums_str.split(",") if name.strip()]
             if shared_albums_str
             else []
@@ -223,7 +236,8 @@ class BaseConfig(ABC):  # noqa
         # Validate multi-instance control settings
         if not isinstance(self.allow_multi_instance, bool):
             errors.append(
-                f"ALLOW_MULTI_INSTANCE must be a boolean (true/false), got: {self.allow_multi_instance}"
+                f"ALLOW_MULTI_INSTANCE must be a boolean (true/false), got: "
+                f"{self.allow_multi_instance}"
             )
 
         # Validate database path configuration
@@ -418,30 +432,41 @@ class BaseConfig(ABC):  # noqa
         Raises:
             ValueError: If any specified albums don't exist
         """
-        from iphoto_downloader.sync import ICloudClient
+        from iphoto_downloader.sync import ICloudClient  # noqa
 
         missing_albums = []
         icloud_client_typed: ICloudClient = icloud_client
-        # Check personal albums if specified
-        if self.personal_album_names_to_include:
-            available_albums, _, missing_personal = icloud_client_typed.verify_albums_exist(
-                self.personal_album_names_to_include
-            )
-            if missing_personal:
-                missing_albums.extend([f"Personal: {name}" for name in missing_personal])
-                missing_albums.append(
-                    f"(Note: existing personal albums: {', '.join(available_albums)})"
-                )
+        cst_props_to_check = []
 
-        # Check shared albums if specified
-        if self.shared_album_names_to_include:
-            available_albums, _, missing_shared = icloud_client_typed.verify_albums_exist(
-                self.shared_album_names_to_include
+        if self.include_personal_albums:
+            cst_props_to_check.extend(
+                [
+                    dict(name="personal_album_names_to_include", album_type="personal"),
+                    dict(name="personal_album_names_to_exclude", album_type="personal"),
+                ]
             )
-            if missing_shared:
-                missing_albums.extend([f"Shared: {name}" for name in missing_shared])
+        if self.include_shared_albums:
+            cst_props_to_check.extend(
+                [
+                    dict(name="shared_album_names_to_include", album_type="shared"),
+                    dict(name="shared_album_names_to_exclude", album_type="shared"),
+                ]
+            )
+
+        for prop in cst_props_to_check:
+            album_names = getattr(self, prop["name"])
+            if not album_names:
+                continue
+            album_type: str = prop["album_type"]
+            available_albums, _, missing_albums = icloud_client_typed.verify_albums_exist(
+                album_names
+            )
+            if missing_albums:
+                missing_albums.extend(
+                    [f"{album_type.capitalize()}: {name}" for name in missing_albums]
+                )
                 missing_albums.append(
-                    f"(Note: existing shared albums: {', '.join(available_albums)})"
+                    f"(Note: existing {album_type} albums: {', '.join(available_albums)})"
                 )
 
         if missing_albums:

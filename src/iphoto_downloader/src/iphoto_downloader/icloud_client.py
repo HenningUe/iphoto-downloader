@@ -4,11 +4,10 @@ import time
 import typing as t
 from pathlib import Path
 
+from auth2fa import Auth2FAConfig, PushoverConfig, handle_2fa_authentication
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import PyiCloudAPIResponseException, PyiCloudFailedLoginException
 from pyicloud.services.photos import AlbumContainer, BasePhotoAlbum
-
-from auth2fa import Auth2FAConfig, PushoverConfig, handle_2fa_authentication
 
 from .config import BaseConfig
 from .logger import get_logger
@@ -497,24 +496,26 @@ class ICloudClient:
             album_name = album_info["name"]
 
             # Filter by album type (personal vs shared)
-            if is_shared:
-                if not config.include_shared_albums:
-                    continue
-                # Check shared album allow-list
-                if (
-                    config.shared_album_names_to_include
-                    and album_name not in config.shared_album_names_to_include
-                ):
-                    continue
-            else:
-                if not config.include_personal_albums:
-                    continue
-                # Check personal album allow-list
-                if (
-                    config.personal_album_names_to_include
-                    and album_name not in config.personal_album_names_to_include
-                ):
-                    continue
+            do_incl_at_all = (
+                config.include_shared_albums if is_shared else config.include_personal_albums
+            )
+            incl_list = (
+                config.shared_album_names_to_include
+                if is_shared
+                else config.personal_album_names_to_include
+            )
+            excl_list = (
+                config.shared_album_names_to_exclude
+                if is_shared
+                else config.personal_album_names_to_exclude
+            )
+            if not do_incl_at_all:
+                continue
+            # Check album allow-list
+            if incl_list and album_name not in incl_list:
+                continue
+            if excl_list and album_name in excl_list:
+                continue
 
             yield album_info
 
@@ -651,4 +652,6 @@ def cleanup_sessions(max_age_days: int = 30, session_dir: Path | None = None) ->
             f"({total_size / 1024:.1f} KB freed)"
         )
     else:
+        logger.debug("No expired session files found to clean up")
+        logger.debug("No expired session files found to clean up")
         logger.debug("No expired session files found to clean up")

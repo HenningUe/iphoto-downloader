@@ -33,12 +33,24 @@ automatically using **GitHub Actions**.
      an allow-list. If the allow-list is empty all are included. As the
      allow-list is defined in the .env file the list-items shall be comma
      separated. Parameter of shall be 'personal_album_names_to_include'
+   - It shall be possible to specify which personal albums shall NOT be included
+     via a block-list. The allow-list and the block-list shall be usable
+     together. I.e. after applying the allow-list, the block-list shall be
+     applied on the remaining items. As the block-list is defined in the .env
+     file the list-items shall be comma separated. Parameter of shall be
+     'personal_album_names_to_exclude'
    - It shall be possible to specify whether shared albums shall be included at
      all. Parameter of type bool shall be 'include_shared_albums'
    - It shall be possible to specify which shared albums shall be included via
      an allow-list. If the allow-list is empty all are included. As the
      allow-list is defined in the .env file the list-items shall be comma
      separated. Parameter of shall be 'shared_album_names_to_include'
+   - It shall be possible to specify which shared albums shall NOT be included
+     via a block-list. The allow-list and the block-list shall be usable
+     together. I.e. after applying the allow-list, the block-list shall be
+     applied on the remaining items. As the block-list is defined in the .env
+     file the list-items shall be comma separated. Parameter of shall be
+     'shared_album_names_to_exclude'
    - For each album a separate folder shall be created underneath
      'SYNC_DIRECTORY'. Photos should be placed in the corresponding subfolder of
      their album.
@@ -282,10 +294,18 @@ automatically using **GitHub Actions**.
     Windows Package Manager.
   - The linux executable shall be published automatically to APT (Advanced
     Packaging Tool), i.e. the ubuntu package manager
-  - The release in the github.downloads section should contain two ZIP files, one for Windows and one for Linux (Ubuntu). Each ZIP file should contain the respective executables “iphoto_downloader” and “iphoto_downloader_credentials.” In addition, the source code should be available as a ZIP file in the download section. No other files should be included. The zip files should include the version name as a suffix.
-  - The executables should not trigger a virus alert, e.g. Mircosoft Defender or similar tools.
-  - The executable shall be submitted to virustotal (https://www.virustotal.com/gui/home/upload) as false-positive
-  - The executable shall be submitted to microsoft antivirus (https://www.microsoft.com/en-us/wdsi/filesubmission) as false-positive
+  - The release in the github.downloads section should contain two ZIP files,
+    one for Windows and one for Linux (Ubuntu). Each ZIP file should contain the
+    respective executables “iphoto_downloader” and
+    “iphoto_downloader_credentials.” In addition, the source code should be
+    available as a ZIP file in the download section. No other files should be
+    included. The zip files should include the version name as a suffix.
+  - The executables should not trigger a virus alert, e.g. Mircosoft Defender or
+    similar tools.
+  - The executable shall be submitted to virustotal
+    (https://www.virustotal.com/gui/home/upload) as false-positive
+  - The executable shall be submitted to microsoft antivirus
+    (https://www.microsoft.com/en-us/wdsi/filesubmission) as false-positive
 
 ---
 
