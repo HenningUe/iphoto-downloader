@@ -65,7 +65,7 @@ max-complexity = 10
 # Import organization
 known-first-party = ["iphoto_downloader", "auth2fa"]
 force-single-line = false
-combine-as-imports = true
+# combine-as-imports = true
 
 [lint.pydocstyle]
 # Docstring conventions

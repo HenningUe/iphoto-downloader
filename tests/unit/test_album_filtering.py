@@ -23,7 +23,7 @@ class TestAlbumFiltering(unittest.TestCase):
         self.mock_config = Mock(spec=BaseConfig)
 
         # Create mock iCloud client with proper patching
-        with patch("iphoto_downloader.icloud_client.ICloudClient") as mock_client_class:
+        with patch("iphoto_downloader.icloud_client.ICloudClient"):
             self.client = Mock()
             self.client._api = Mock()
             self.client._api.photos = Mock()
@@ -60,7 +60,9 @@ class TestAlbumFiltering(unittest.TestCase):
         config.include_personal_albums = True
         config.include_shared_albums = False
         config.personal_album_names_to_include = ["Family", "Vacation"]
+        config.personal_album_names_to_exclude = []
         config.shared_album_names_to_include = []
+        config.shared_album_names_to_exclude = []
 
         # Get filtered albums
         filtered_albums = list(self.real_client.get_filtered_albums(config))
@@ -79,7 +81,9 @@ class TestAlbumFiltering(unittest.TestCase):
         config.include_personal_albums = False
         config.include_shared_albums = True
         config.personal_album_names_to_include = []
+        config.personal_album_names_to_exclude = []
         config.shared_album_names_to_include = ["Wedding", "Party"]
+        config.shared_album_names_to_exclude = []
 
         # Get filtered albums
         filtered_albums = list(self.real_client.get_filtered_albums(config))
@@ -98,7 +102,9 @@ class TestAlbumFiltering(unittest.TestCase):
         config.include_personal_albums = True
         config.include_shared_albums = True
         config.personal_album_names_to_include = ["Family"]
+        config.personal_album_names_to_exclude = []
         config.shared_album_names_to_include = ["Wedding"]
+        config.shared_album_names_to_exclude = []
 
         # Get filtered albums
         filtered_albums = list(self.real_client.get_filtered_albums(config))
@@ -117,7 +123,9 @@ class TestAlbumFiltering(unittest.TestCase):
         config.include_personal_albums = True
         config.include_shared_albums = False
         config.personal_album_names_to_include = None
+        config.personal_album_names_to_exclude = None
         config.shared_album_names_to_include = []
+        config.shared_album_names_to_exclude = None
 
         # Get filtered albums
         filtered_albums = list(self.real_client.get_filtered_albums(config))
@@ -137,7 +145,9 @@ class TestAlbumFiltering(unittest.TestCase):
         config.include_personal_albums = False
         config.include_shared_albums = True
         config.personal_album_names_to_include = []
+        config.personal_album_names_to_exclude = None
         config.shared_album_names_to_include = None
+        config.shared_album_names_to_exclude = None
 
         # Get filtered albums
         filtered_albums = list(self.real_client.get_filtered_albums(config))
@@ -157,7 +167,9 @@ class TestAlbumFiltering(unittest.TestCase):
         config.include_personal_albums = False
         config.include_shared_albums = False
         config.personal_album_names_to_include = []
+        config.personal_album_names_to_exclude = None
         config.shared_album_names_to_include = []
+        config.shared_album_names_to_exclude = None
 
         # Get filtered albums
         filtered_albums = list(self.real_client.get_filtered_albums(config))
@@ -168,13 +180,17 @@ class TestAlbumFiltering(unittest.TestCase):
     def test_empty_allowlist_excludes_all_albums(self):
         """Test that empty allowlist still includes all albums (empty list is falsy)."""
         # Create config with empty personal allowlist - this should include ALL personal albums
-        # because empty list is falsy, so the condition (config.personal_album_names_to_include and ...)
+        # because empty list is falsy, so the condition
+        # (config.personal_album_names_to_include and ...)
         # evaluates to False and no filtering is applied
         config = Mock(spec=BaseConfig)
         config.include_personal_albums = True
         config.include_shared_albums = True
-        config.personal_album_names_to_include = []  # Empty list = falsy = no filtering = include all
+        # Empty list = falsy = no filtering = include all
+        config.personal_album_names_to_include = []
+        config.personal_album_names_to_exclude = None
         config.shared_album_names_to_include = ["Wedding"]
+        config.shared_album_names_to_exclude = None
 
         # Get filtered albums
         filtered_albums = list(self.real_client.get_filtered_albums(config))
@@ -195,7 +211,9 @@ class TestAlbumFiltering(unittest.TestCase):
         config.include_personal_albums = True
         config.include_shared_albums = False
         config.personal_album_names_to_include = ["Family", "NonExistent"]
+        config.personal_album_names_to_exclude = None
         config.shared_album_names_to_include = []
+        config.shared_album_names_to_exclude = None
 
         # Get filtered albums
         filtered_albums = list(self.real_client.get_filtered_albums(config))
@@ -211,7 +229,9 @@ class TestAlbumFiltering(unittest.TestCase):
         config.include_personal_albums = True
         config.include_shared_albums = False
         config.personal_album_names_to_include = ["family"]  # lowercase
+        config.personal_album_names_to_exclude = None
         config.shared_album_names_to_include = []
+        config.shared_album_names_to_exclude = None
 
         # Get filtered albums
         filtered_albums = list(self.real_client.get_filtered_albums(config))
@@ -230,7 +250,9 @@ class TestAlbumFiltering(unittest.TestCase):
         config.include_personal_albums = True
         config.include_shared_albums = True
         config.personal_album_names_to_include = None
+        config.personal_album_names_to_exclude = None
         config.shared_album_names_to_include = None
+        config.shared_album_names_to_exclude = None
 
         # Get filtered albums
         filtered_albums = list(client.get_filtered_albums(config))
@@ -250,7 +272,9 @@ class TestAlbumFiltering(unittest.TestCase):
         config.include_personal_albums = True
         config.include_shared_albums = True
         config.personal_album_names_to_include = None
+        config.personal_album_names_to_exclude = None
         config.shared_album_names_to_include = None
+        config.shared_album_names_to_exclude = None
 
         # Get filtered albums
         filtered_albums = list(client.get_filtered_albums(config))

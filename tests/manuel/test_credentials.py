@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-import pytest
-
 """Test script for credential manager functionality."""
 
 import os
 import sys
 from pathlib import Path
 
-from iphoto_downloader.config import KeyringConfig
+import pytest
+
+from iphoto_downloader.config import get_config
 
 # Add the src directory to the path so we can import our modules
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -27,7 +27,7 @@ def test_keyring_helper():
     os.environ["ICLOUD_PASSWORD"] = "temp"
 
     try:
-        config = KeyringConfig()
+        config = get_config()
         print("✅ KeyringConfig created successfully!")
 
         # Test if methods exist

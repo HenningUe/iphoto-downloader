@@ -1,5 +1,6 @@
 """Unit tests for multi-instance control functionality."""
 
+import contextlib
 import os
 import tempfile
 import unittest
@@ -32,10 +33,8 @@ class TestInstanceManager(unittest.TestCase):
             self.test_lock_file.unlink()
 
         # Clean up temp directory
-        try:
+        with contextlib.suppress(OSError):
             os.rmdir(self.temp_dir)
-        except OSError:
-            pass
 
     @patch("iphoto_downloader.instance_manager.get_logger")
     @patch("iphoto_downloader.instance_manager.get_app_data_folder_path")
@@ -249,9 +248,9 @@ class TestInstanceManager(unittest.TestCase):
             patch.object(manager, "check_and_acquire_lock", return_value=False),
             patch.object(manager, "get_running_instance_info", return_value="Process ID: 12345"),
             self.assertRaises(SystemExit) as cm,
+            manager.instance_context(),
         ):
-            with manager.instance_context():
-                pass
+            pass
 
         self.assertEqual(cm.exception.code, 1)
         mock_print.assert_any_call(
@@ -272,9 +271,9 @@ class TestInstanceManager(unittest.TestCase):
         with (
             patch.object(manager, "check_and_acquire_lock", return_value=True),
             patch.object(manager, "release_lock") as mock_release,
+            manager.instance_context(),
         ):
-            with manager.instance_context():
-                executed = True
+            executed = True
 
         self.assertTrue(executed)
         mock_release.assert_called_once()
@@ -296,14 +295,14 @@ class TestValidateMultiInstanceConfig(unittest.TestCase):
     def test_validate_invalid_type(self):
         """Test validation with invalid type."""
         with self.assertRaises(ValueError) as cm:
-            validate_multi_instance_config("true")
+            validate_multi_instance_config("false")  # type: ignore
 
         self.assertIn("allow_multi_instance must be a boolean", str(cm.exception))
 
     def test_validate_invalid_number(self):
         """Test validation with number instead of boolean."""
         with self.assertRaises(ValueError) as cm:
-            validate_multi_instance_config(1)
+            validate_multi_instance_config(1)  # type: ignore
 
         self.assertIn("allow_multi_instance must be a boolean", str(cm.exception))
 
@@ -327,7 +326,7 @@ class TestEnforceSingleInstance(unittest.TestCase):
     def test_enforce_single_instance_invalid_config(self):
         """Test enforce_single_instance with invalid configuration."""
         with self.assertRaises(ValueError):
-            enforce_single_instance("false")
+            enforce_single_instance("false")  # type: ignore
 
 
 if __name__ == "__main__":

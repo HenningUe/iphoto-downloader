@@ -2,7 +2,7 @@
 
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -100,8 +100,8 @@ class TestKeyringConfig:
         assert config.sync_directory.name == "test_photos"
         assert config.dry_run is True
         assert config.log_level == "DEBUG"
-        assert config.max_downloads == 100
-        assert config.max_file_size_mb == 50
+        assert config.max_downloads == 100  # noqa
+        assert config.max_file_size_mb == 50  # noqa
 
     def test_init_with_keyring_credentials(self, temp_dir, clean_env, mock_keyring):
         """Test initialization with keyring credentials."""
@@ -254,7 +254,8 @@ class TestKeyringConfig:
 
         config = KeyringConfig(env_file)
 
-        assert config.get_log_level() == 10  # DEBUG level
+        cst_must_be_debug_lvl = 10
+        assert config.get_log_level() == cst_must_be_debug_lvl
 
     def test_string_representation_hides_sensitive_data(self, temp_dir, clean_env, mock_keyring):
         """Test that string representation hides sensitive data."""
@@ -337,13 +338,17 @@ class TestAlbumFilteringConfig:
         env_file = temp_dir / ".env"
         env_file.write_text(
             "PERSONAL_ALBUM_NAMES_TO_INCLUDE=Album1,Album2,Album3\n"
+            "PERSONAL_ALBUM_NAMES_TO_EXCLUDE=Excluded1,Excluded2\n"
             "SHARED_ALBUM_NAMES_TO_INCLUDE=Shared1, Shared2 , Shared3\n"
+            "SHARED_ALBUM_NAMES_TO_EXCLUDE=SharedExcluded1,SharedExcluded2\n"
         )
 
         config = KeyringConfig(env_file)
 
         assert config.personal_album_names_to_include == ["Album1", "Album2", "Album3"]
+        assert config.personal_album_names_to_exclude == ["Excluded1", "Excluded2"]
         assert config.shared_album_names_to_include == ["Shared1", "Shared2", "Shared3"]
+        assert config.shared_album_names_to_exclude == ["SharedExcluded1", "SharedExcluded2"]
 
     def test_empty_album_names(self, temp_dir, clean_env):
         """Test handling of empty album name lists."""
@@ -370,7 +375,6 @@ class TestAlbumFilteringConfig:
 
     def test_validate_albums_exist_with_missing_albums(self, temp_dir, clean_env):
         """Test album existence validation with missing albums."""
-        from unittest.mock import MagicMock
 
         env_file = temp_dir / ".env"
         env_file.write_text(
@@ -400,7 +404,6 @@ class TestAlbumFilteringConfig:
 
     def test_validate_albums_exist_all_found(self, temp_dir, clean_env):
         """Test album existence validation when all albums are found."""
-        from unittest.mock import MagicMock
 
         env_file = temp_dir / ".env"
         env_file.write_text(

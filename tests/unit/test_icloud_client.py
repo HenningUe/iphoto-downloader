@@ -1,11 +1,13 @@
 """Unit tests for iCloud client module."""
 
+import os
+import time
 from unittest.mock import MagicMock, Mock, mock_open, patch
 
 import pytest
 
 from iphoto_downloader.config import get_config
-from iphoto_downloader.icloud_client import ICloudClient
+from iphoto_downloader.icloud_client import ICloudClient, cleanup_sessions
 from iphoto_downloader.logger import setup_logging
 
 
@@ -362,7 +364,6 @@ class TestICloudClient:
 
     def test_cleanup_expired_sessions(self, mock_config, tmp_path):
         """Test cleanup of expired session files."""
-        import time
 
         # Create a temporary session directory
         session_dir = tmp_path / "sessions"
@@ -375,7 +376,6 @@ class TestICloudClient:
         old_file = session_dir / "old_session.txt"
         old_file.write_text("old session data")
         old_time = current_time - (40 * 24 * 60 * 60)  # 40 days ago
-        import os
 
         os.utime(old_file, (old_time, old_time))
 
@@ -410,9 +410,6 @@ class TestICloudClient:
 
     def test_cleanup_sessions_standalone(self, tmp_path):
         """Test standalone cleanup_sessions function."""
-        import time
-
-        from iphoto_downloader.icloud_client import cleanup_sessions
 
         # Create test files
         session_dir = tmp_path / "sessions"
@@ -422,7 +419,6 @@ class TestICloudClient:
         old_file.write_text("old data")
         # Manually set old timestamp
         old_time = time.time() - (40 * 24 * 60 * 60)
-        import os
 
         os.utime(old_file, (old_time, old_time))
 
@@ -584,7 +580,6 @@ class TestICloudClient:
 
     def test_get_filtered_albums_personal_only(self, mock_config):
         """Test filtering to personal albums only."""
-        from unittest.mock import MagicMock
 
         client = ICloudClient(mock_config)
 
@@ -593,7 +588,9 @@ class TestICloudClient:
         mock_filter_config.include_personal_albums = True
         mock_filter_config.include_shared_albums = False
         mock_filter_config.personal_album_names_to_include = []
+        mock_filter_config.personal_album_names_to_exclude = None
         mock_filter_config.shared_album_names_to_include = []
+        mock_filter_config.shared_album_names_to_exclude = None
 
         # Mock albums - mix of personal and shared
         mock_personal = MagicMock()
@@ -634,7 +631,6 @@ class TestICloudClient:
 
     def test_get_filtered_albums_with_allowlist(self, mock_config):
         """Test filtering albums with allow-list."""
-        from unittest.mock import MagicMock
 
         client = ICloudClient(mock_config)
 
@@ -643,7 +639,9 @@ class TestICloudClient:
         mock_filter_config.include_personal_albums = True
         mock_filter_config.include_shared_albums = True
         mock_filter_config.personal_album_names_to_include = ["Allowed Personal"]
+        mock_filter_config.personal_album_names_to_exclude = None
         mock_filter_config.shared_album_names_to_include = ["Allowed Shared"]
+        mock_filter_config.shared_album_names_to_exclude = None
 
         # Mock albums
         mock_allowed_personal = MagicMock()
@@ -695,7 +693,6 @@ class TestICloudClient:
 
     def test_list_photos_from_filtered_albums(self, mock_config):
         """Test listing photos from filtered albums."""
-        from unittest.mock import MagicMock
 
         client = ICloudClient(mock_config)
 
@@ -704,7 +701,9 @@ class TestICloudClient:
         mock_filter_config.include_personal_albums = True
         mock_filter_config.include_shared_albums = False
         mock_filter_config.personal_album_names_to_include = []
+        mock_filter_config.personal_album_names_to_exclude = None
         mock_filter_config.shared_album_names_to_include = []
+        mock_filter_config.shared_album_names_to_exclude = None
 
         # Mock main library photos
         mock_main_photo = MagicMock()

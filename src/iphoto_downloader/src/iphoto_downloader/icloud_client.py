@@ -1,8 +1,8 @@
 """iCloud authentication and API interaction."""
 
+from pathlib import Path  # noqa
 import time
 import typing as t
-from pathlib import Path
 
 from auth2fa import Auth2FAConfig, PushoverConfig, handle_2fa_authentication
 from pyicloud import PyiCloudService
@@ -614,9 +614,6 @@ def cleanup_sessions(max_age_days: int = 30, session_dir: Path | None = None) ->
         max_age_days: Maximum age in days for session files (default: 30)
         session_dir: Optional custom session directory path
     """
-    import time
-
-    from .logger import get_logger
 
     logger = get_logger()
 
@@ -652,6 +649,11 @@ def cleanup_sessions(max_age_days: int = 30, session_dir: Path | None = None) ->
             f"({total_size / 1024:.1f} KB freed)"
         )
     else:
+        logger.debug("No expired session files found to clean up")
+        logger.debug("No expired session files found to clean up")
+        logger.debug("No expired session files found to clean up")
+        logger.debug("No expired session files found to clean up")
+        logger.debug("No expired session files found to clean up")
         logger.debug("No expired session files found to clean up")
         logger.debug("No expired session files found to clean up")
         logger.debug("No expired session files found to clean up")

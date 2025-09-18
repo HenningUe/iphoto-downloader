@@ -1,6 +1,9 @@
 {
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "never"
+    },
     "python.analysis.typeCheckingMode": "standard",
-    "python.analysis.autoImportCompletions": true,
+    "python.analysis.autoImportCompletions": false,
     "python.analysis.completeFunctionParens": true,
     "python.analysis.autoSearchPaths": true,
     "python.analysis.diagnosticMode": "workspace",
@@ -27,7 +30,7 @@
         "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
-            "source.organizeImports": "explicit"
+            "source.organizeImports": "never"
         }
     },
     "editor.formatOnSave": true,

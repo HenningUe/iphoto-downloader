@@ -197,7 +197,8 @@ class InstanceManager:
             if running_info:
                 print(f"   Running instance: {running_info}")
             print(
-                "   To allow multiple instances, set ALLOW_MULTI_INSTANCE=true in your configuration."
+                "   To allow multiple instances, "
+                "set ALLOW_MULTI_INSTANCE=true in your configuration."
             )
             print("   Application will now exit.")
             sys.exit(1)

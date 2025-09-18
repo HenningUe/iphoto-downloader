@@ -35,7 +35,9 @@ class TestSyncIntegration:
         config.max_downloads = 0
         config.max_file_size_mb = 0
         config.personal_album_names_to_include = []  # Add empty list
+        config.personal_album_names_to_exclude = []  # Add empty list
         config.shared_album_names_to_include = []  # Add empty list
+        config.shared_album_names_to_exclude = []  # Add empty list
         config.ensure_sync_directory.return_value = None
         config.get_log_level.return_value = 20  # INFO level
         config.validate_albums_exist.return_value = None  # Add this method

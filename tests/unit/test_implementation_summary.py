@@ -1,5 +1,7 @@
 """Tests summary file documenting completed test implementation."""
 
+import os
+
 import unittest
 
 
@@ -8,28 +10,24 @@ class TestSummary(unittest.TestCase):
 
     def test_2fa_system_tests_created(self):
         """Verify 2FA system tests file was created."""
-        import os
 
         test_file = "tests/unit/test_2fa_system.py"
         self.assertTrue(os.path.exists(test_file))
 
     def test_album_filtering_tests_created(self):
         """Verify album filtering tests file was created."""
-        import os
 
         test_file = "tests/unit/test_album_filtering.py"
         self.assertTrue(os.path.exists(test_file))
 
     def test_enhanced_tracking_tests_created(self):
         """Verify enhanced tracking tests file was created."""
-        import os
 
         test_file = "tests/unit/test_enhanced_tracking.py"
         self.assertTrue(os.path.exists(test_file))
 
     def test_database_path_config_tests_exist(self):
         """Verify database path configuration tests exist."""
-        import os
 
         test_file = "tests/unit/test_database_path_config.py"
         self.assertTrue(os.path.exists(test_file))
