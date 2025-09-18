@@ -76,7 +76,9 @@ class Auth2FAE2ETest:
             # Essential headless options for cloud environments
             chrome_options.add_argument("--headless=new")  # Use new headless mode
             chrome_options.add_argument("--no-sandbox")  # Required for Docker/cloud
-            chrome_options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
+            chrome_options.add_argument(
+                "--disable-dev-shm-usage"
+            )  # Overcome limited resource problems
             chrome_options.add_argument("--disable-gpu")  # Disable GPU hardware acceleration
             chrome_options.add_argument("--disable-software-rasterizer")
             chrome_options.add_argument("--disable-background-timer-throttling")
@@ -145,10 +147,8 @@ class Auth2FAE2ETest:
     def _try_firefox_fallback(self) -> bool:
         """Try Firefox as fallback for cloud environments."""
         try:
-            from selenium.webdriver.firefox.options import \
-                Options as FirefoxOptions
-            from selenium.webdriver.firefox.service import \
-                Service as FirefoxService
+            from selenium.webdriver.firefox.options import Options as FirefoxOptions
+            from selenium.webdriver.firefox.service import Service as FirefoxService
 
             firefox_options = FirefoxOptions()
             firefox_options.add_argument("--headless")
@@ -159,6 +159,7 @@ class Auth2FAE2ETest:
 
             try:
                 from webdriver_manager.firefox import GeckoDriverManager
+
                 service = FirefoxService(GeckoDriverManager().install())
                 self.driver = webdriver.Firefox(service=service, options=firefox_options)
             except ImportError:
@@ -176,7 +177,7 @@ class Auth2FAE2ETest:
             print("   • Docker: Use selenium/standalone-chrome image")
             print("   • Alternative: Use requests + BeautifulSoup (see Option 2)")
             return False
-    
+
     def setup_auth2fa_server(self) -> bool:
         """Setup and start the auth2fa web server."""
         try:
@@ -430,7 +431,7 @@ class Auth2FAE2ETest:
                         print("   ✅ Success indicators found!")
                         break
                 except Exception:
-                    continue
+                    pass
             else:
                 print("   ⚠️  No success indicators found in 5 seconds")
 

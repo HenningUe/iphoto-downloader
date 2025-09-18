@@ -458,12 +458,12 @@ class BaseConfig(ABC):  # noqa
             if not album_names:
                 continue
             album_type: str = prop["album_type"]
-            available_albums, _, missing_albums = icloud_client_typed.verify_albums_exist(
+            available_albums, _, current_missing = icloud_client_typed.verify_albums_exist(
                 album_names
             )
-            if missing_albums:
+            if current_missing:
                 missing_albums.extend(
-                    [f"{album_type.capitalize()}: {name}" for name in missing_albums]
+                    [f"{album_type.capitalize()}: {name}" for name in current_missing]
                 )
                 missing_albums.append(
                     f"(Note: existing {album_type} albums: {', '.join(available_albums)})"

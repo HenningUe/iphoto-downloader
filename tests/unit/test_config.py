@@ -386,18 +386,29 @@ class TestAlbumFilteringConfig:
 
         # Mock icloud_client
         mock_client = MagicMock()
-        mock_client.verify_albums_exist.side_effect = [
-            (
-                ["all_albums"],
-                ["Existing"],
-                ["Missing"],
-            ),  # Personal albums - (all, existing, missing)
-            (
-                ["all_albums"],
-                ["SharedExisting"],
-                ["SharedMissing"],
-            ),  # Shared albums - (all, existing, missing)
-        ]
+        responses = iter(
+            [
+                (
+                    ["all_albums"],
+                    ["Existing"],
+                    ["Missing"],
+                ),  # Personal albums - (all, existing, missing)
+                (
+                    ["all_albums"],
+                    ["SharedExisting"],
+                    ["SharedMissing"],
+                ),  # Shared albums - (all, existing, missing)
+            ]
+        )
+
+        def side_effect(*args, **kwargs):
+            try:
+                return next(responses)
+            except StopIteration:
+                # Return a default value if called more times than expected
+                return (["all_albums"], [], [])
+
+        mock_client.verify_albums_exist.side_effect = side_effect
 
         with pytest.raises(ValueError, match="The following specified albums do not exist"):
             config.validate_albums_exist(mock_client)
@@ -415,10 +426,21 @@ class TestAlbumFilteringConfig:
 
         # Mock icloud_client
         mock_client = MagicMock()
-        mock_client.verify_albums_exist.side_effect = [
-            (["all_albums"], ["Album1", "Album2"], []),  # Personal albums - all found
-            (["all_albums"], ["Shared1", "Shared2"], []),  # Shared albums - all found
-        ]
+        responses = iter(
+            [
+                (["all_albums"], ["Album1", "Album2"], []),  # Personal albums - all found
+                (["all_albums"], ["Shared1", "Shared2"], []),  # Shared albums - all found
+            ]
+        )
+
+        def side_effect(*args, **kwargs):
+            try:
+                return next(responses)
+            except StopIteration:
+                # Return a default value if called more times than expected
+                return (["all_albums"], [], [])
+
+        mock_client.verify_albums_exist.side_effect = side_effect
 
         # Should not raise an exception
         config.validate_albums_exist(mock_client)
