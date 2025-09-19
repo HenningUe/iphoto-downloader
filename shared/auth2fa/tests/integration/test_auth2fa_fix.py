@@ -46,7 +46,7 @@ def test_successful_authentication_response():
         print("   ✅ submit_2fa_code returned True (success)")
     else:
         print("   ❌ submit_2fa_code returned False (failed)")
-        return False
+        pytest.fail("submit_2fa_code returned False (failed)")
 
     # Check that state was set to authenticated
     status = server.get_status()
@@ -54,17 +54,16 @@ def test_successful_authentication_response():
         print("   ✅ Server state is 'authenticated'")
     else:
         print(f"   ❌ Server state is '{status['state']}', expected 'authenticated'")
-        return False
+        pytest.fail(f"Server state is '{status['state']}', expected 'authenticated'")
 
     # Check status message
     if status["status"] == "✅ Authentication successful!":
         print("   ✅ Status message is correct")
     else:
         print(f"   ❌ Status message is '{status['status']}', expected success message")
-        return False
+        pytest.fail(f"Status message is '{status['status']}', expected success message")
 
     print("   ✅ All authentication response tests passed!")
-    return True
 
 
 def test_failed_authentication_response():
@@ -89,7 +88,7 @@ def test_failed_authentication_response():
         print("   ✅ submit_2fa_code returned False (failed as expected)")
     else:
         print("   ❌ submit_2fa_code returned True (should have failed)")
-        return False
+        pytest.fail("submit_2fa_code returned True (should have failed)")
 
     # Check that state was set to failed
     status = server.get_status()
@@ -97,10 +96,9 @@ def test_failed_authentication_response():
         print("   ✅ Server state is 'failed'")
     else:
         print(f"   ❌ Server state is '{status['state']}', expected 'failed'")
-        return False
+        pytest.fail(f"Server state is '{status['state']}', expected 'failed'")
 
     print("   ✅ All failed authentication tests passed!")
-    return True
 
 
 def test_invalid_code_format():
@@ -116,7 +114,7 @@ def test_invalid_code_format():
         result = server.submit_2fa_code(code)
         if result:
             print(f"   ❌ Invalid code '{code}' was accepted (should be rejected)")
-            return False
+            pytest.fail(f"Invalid code '{code}' was accepted (should be rejected)")
         else:
             print(f"   ✅ Invalid code '{code}' was properly rejected")
 
@@ -126,10 +124,9 @@ def test_invalid_code_format():
         print("   ✅ Server state is 'waiting_for_code' after invalid code")
     else:
         print(f"   ❌ Server state is '{status['state']}', expected 'waiting_for_code'")
-        return False
+        pytest.fail(f"Server state is '{status['state']}', expected 'waiting_for_code'")
 
     print("   ✅ All invalid code format tests passed!")
-    return True
 
 
 def simulate_web_submission():

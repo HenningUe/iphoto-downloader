@@ -23,7 +23,7 @@ def test_success_page():
 
     if not server.start():
         print("❌ Failed to start web server")
-        return False
+        pytest.fail("Failed to start web server")
 
     print(f"✅ Web server started at: {server.get_url()}")
     print(f"🌐 Success page available at: {server.get_url()}/success")
@@ -41,7 +41,6 @@ def test_success_page():
 
     server.stop()
     print("🛑 Web server stopped")
-    return True
 
 
 if __name__ == "__main__":

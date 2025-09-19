@@ -51,9 +51,37 @@ ENABLE_PUSHOVER=false
         # Restore original working directory
         os.chdir(self.original_cwd)
 
-        # Clean up temporary directory
+        # Clean up temporary directory with retry for Windows file locking
         if Path(self.temp_dir).exists():
-            shutil.rmtree(self.temp_dir)
+            import time
+            max_attempts = 3
+            for attempt in range(max_attempts):
+                try:
+                    shutil.rmtree(self.temp_dir)
+                    break
+                except PermissionError as e:
+                    if attempt < max_attempts - 1:
+                        print(f"Attempt {attempt + 1}: File locked, retrying in 1 second...")
+                        time.sleep(1)
+                    else:
+                        print(f"Warning: Could not clean up temp directory: {e}")
+                        # Try to remove files individually
+                        try:
+                            for root, dirs, files in os.walk(self.temp_dir, topdown=False):
+                                for file in files:
+                                    try:
+                                        os.chmod(os.path.join(root, file), 0o777)
+                                        os.remove(os.path.join(root, file))
+                                    except (OSError, PermissionError):
+                                        pass
+                                for dir_name in dirs:
+                                    try:
+                                        os.rmdir(os.path.join(root, dir_name))
+                                    except (OSError, PermissionError):
+                                        pass
+                            os.rmdir(self.temp_dir)
+                        except (OSError, PermissionError):
+                            pass  # Ignore if we still can't clean up
 
         # Clean up environment variables (if any were set)
         env_vars_to_clean = [
