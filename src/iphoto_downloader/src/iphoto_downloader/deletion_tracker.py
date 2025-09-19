@@ -621,7 +621,14 @@ class DeletionTracker:
                 (photo_name, source_album_name, photo_id, deleted_at, file_size, original_path)
                 VALUES (?, ?, ?, ?, ?, ?)
             """,
-                (filename, source_album, photo_id, datetime.now(), file_size, original_path),
+                (
+                    filename,
+                    source_album,
+                    photo_id,
+                    datetime.now().isoformat(),
+                    file_size,
+                    original_path,
+                ),
             )
             conn.commit()
         self.logger.debug(f"📝 Recorded deleted photo: {filename} from {source_album}")
@@ -780,7 +787,14 @@ class DeletionTracker:
                     (photo_name, source_album_name, photo_id, local_path, downloaded_at, file_size)
                     VALUES (?, ?, ?, ?, ?, ?)
                 """,
-                    (filename, source_album, photo_id, local_path, datetime.now(), file_size),
+                    (
+                        filename,
+                        source_album,
+                        photo_id,
+                        local_path,
+                        datetime.now().isoformat(),
+                        file_size,
+                    ),
                 )
                 conn.commit()
             self.logger.debug(

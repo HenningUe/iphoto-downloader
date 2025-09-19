@@ -99,7 +99,7 @@ def test_database_safety_integration():
         # Write error to file for debugging
         with open("test_error.log", "w") as f:
             f.write(f"Test failed with error: {e}\n")
-        return False, test_results
+        assert False, f"Test failed with error: {e}"
 
     # All tests should pass
     all_passed = all(test_results.values())
@@ -125,16 +125,14 @@ def test_database_safety_integration():
         f.write("• recover_from_backup() → Called when corruption detected\n")
         f.write("• close() → Available for cleanup\n")
 
-    return all_passed, test_results
+    # Ensure all tests passed
+    for test_name, passed in test_results.items():
+        assert passed, f"Test failed: {test_name}"
+    
+    assert all_passed, f"Some tests failed: {[k for k, v in test_results.items() if not v]}"
 
 
 if __name__ == "__main__":
-    success, results = test_database_safety_integration()
+    test_database_safety_integration()
 
-    # Write simple status file
-    with open("test_status.txt", "w") as f:
-        if success:
-            f.write("SUCCESS: All database safety methods are properly integrated!")
-        else:
-            f.write("FAILURE: Some database safety methods are not working correctly.")
-            f.write(f"\nFailed tests: {[k for k, v in results.items() if not v]}")
+    print("SUCCESS: All database safety methods are properly integrated!")

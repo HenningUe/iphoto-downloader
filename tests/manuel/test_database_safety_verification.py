@@ -139,7 +139,14 @@ def test_database_safety_integration():
     except Exception as e:
         results.append(f"❌ PhotoSyncer integration test: FAIL - {e}")
 
-    return results
+    # Check all results for failures
+    failed_tests = [result for result in results if "❌" in result]
+    if failed_tests:
+        failed_msg = f"{len(failed_tests)} tests failed: " + "; ".join(failed_tests)
+        assert False, failed_msg
+    
+    # All tests passed
+    assert True, f"All {len(results)} tests passed"
 
 
 def main():
@@ -174,5 +181,4 @@ def main():
 
 
 if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)
+    main()

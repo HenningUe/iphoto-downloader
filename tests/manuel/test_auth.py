@@ -50,22 +50,22 @@ def test_authentication():
                 print("   1. Check your Apple device for a 2FA code")
                 print("   2. Enter the code using client.handle_2fa(code)")
 
-                return "2fa_required"
+                pytest.skip("2FA required - skipping test")
             else:
                 print("✅ No 2FA required - full authentication successful!")
                 print("📊 Can now access iCloud Photos API")
-                return True
+                assert True
         else:
             print("❌ Authentication failed")
             print("💡 This could be due to:")
             print("   - Invalid credentials")
             print("   - Network issues")
             print("   - iCloud service issues")
-            return False
+            assert False, "Authentication failed"
 
     except Exception as e:
         print(f"❌ Error during authentication: {e}")
-        return False
+        assert False, f"Error during authentication: {e}"
 
 
 if __name__ == "__main__":

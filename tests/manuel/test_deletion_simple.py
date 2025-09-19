@@ -71,14 +71,14 @@ def test_simple_deletion_tracking():
         logger.info("✅ Deletion stats work correctly")
 
         logger.info("🎉 Simple deletion tracking test passed!")
-        return True
+        # Test passed
 
     except Exception as e:
         logger.error(f"❌ Test failed: {e}")
         import traceback
 
         traceback.print_exc()
-        return False
+        assert False, f"Test failed: {e}"
 
     finally:
         tracker.close()
@@ -154,17 +154,17 @@ def test_deletion_prevention_logic():
             logger.info("✅ Photo would be correctly skipped during sync (no re-download)")
         else:
             logger.error("❌ Photo would be re-downloaded (WRONG!)")
-            return False
+            assert False, "Photo would be re-downloaded when it should be skipped"
 
         logger.info("🎉 Deletion prevention logic test passed!")
-        return True
+        # Test passed
 
     except Exception as e:
         logger.error(f"❌ Test failed: {e}")
         import traceback
 
         traceback.print_exc()
-        return False
+        assert False, f"Test failed: {e}"
 
     finally:
         tracker.close()

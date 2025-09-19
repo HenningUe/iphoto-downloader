@@ -154,7 +154,7 @@ def test_album_sync_functionality():
 
         print("✅ Album name sanitization test passed!")
 
-        return True
+        # Test passed
 
 
 @pytest.mark.manual
@@ -231,7 +231,7 @@ def test_album_client_methods():
 
     print("✅ ICloudClient album methods test passed!")
 
-    return True
+    # Test passed
 
 
 if __name__ == "__main__":

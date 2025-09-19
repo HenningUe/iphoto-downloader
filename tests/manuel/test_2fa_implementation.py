@@ -64,14 +64,14 @@ def test_2fa_implementation():
             else:
                 print("✅ No 2FA required - ready for photo operations")
 
-            return True
+            assert True
         else:
             print("❌ Authentication failed")
-            return False
+            assert False, "Authentication failed"
 
     except Exception as e:
         print(f"❌ Error during test: {e}")
-        return False
+        assert False, f"Error during test: {e}"
 
 
 @pytest.mark.manual
@@ -93,11 +93,11 @@ def test_syncer_integration():
         print("💡 2FA handling is now implemented in PhotoSyncer._handle_2fa()")
         print("💡 Sessions will be stored in: %USERPROFILE%\\iphoto_downloader\\sessions")
 
-        return True
+        assert True
 
     except Exception as e:
         print(f"❌ Error creating PhotoSyncer: {e}")
-        return False
+        assert False, f"Error creating PhotoSyncer: {e}"
     finally:
         # Clean up environment
         os.environ.pop("DRY_RUN", None)

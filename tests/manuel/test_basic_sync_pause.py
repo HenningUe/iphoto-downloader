@@ -87,13 +87,14 @@ def test_threading_synchronization():
 
     if sync_waited and maintenance_completed:
         print("✅ TEST PASSED: Sync properly waited for maintenance to complete")
-        return True
+        assert True
     else:
-        print(
-            f"❌ TEST FAILED: sync_waited={sync_waited}, "
+        error_msg = (
+            f"Sync failed to wait properly: sync_waited={sync_waited}, "
             f"maintenance_completed={maintenance_completed}"
         )
-        return False
+        print(f"❌ TEST FAILED: {error_msg}")
+        assert False, error_msg
 
 
 @pytest.mark.manual
@@ -122,10 +123,10 @@ def test_no_maintenance_interference():
 
     if sync_proceeded:
         print("✅ TEST PASSED: Sync proceeded normally without maintenance")
-        return True
+        assert True
     else:
         print("❌ TEST FAILED: Sync did not proceed when no maintenance was active")
-        return False
+        assert False, "Sync did not proceed when no maintenance was active"
 
 
 if __name__ == "__main__":
