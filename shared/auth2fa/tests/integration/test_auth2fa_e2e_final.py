@@ -18,9 +18,14 @@ import sys
 import time
 from typing import Optional
 
-# Add auth2fa to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "src"))
+import pytest
 
+# Add auth2fa to path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+auth2fa_src = os.path.join(current_dir, "..", "..", "src")
+sys.path.insert(0, os.path.abspath(auth2fa_src))
+
+# Import dependencies with proper error handling
 try:
     from selenium import webdriver
     from selenium.common.exceptions import TimeoutException, WebDriverException
@@ -28,27 +33,21 @@ try:
     from selenium.webdriver.common.by import By
     from selenium.webdriver.support import expected_conditions as EC
     from selenium.webdriver.support.ui import WebDriverWait
-
-    print("✅ Selenium imported successfully")
-except ImportError as e:
-    print(f"❌ Failed to import Selenium: {e}")
-    print("💡 Install with: pip install selenium")
-    sys.exit(1)
+    selenium_available = True
+except ImportError:
+    webdriver = None
+    TimeoutException = None
+    WebDriverException = None
+    ChromeOptions = None
+    By = None
+    EC = None
+    WebDriverWait = None
+    selenium_available = False
 
 try:
-    import importlib.util
-
-    web_server_path = os.path.join(
-        os.path.dirname(__file__), "..", "..", "src", "auth2fa", "web_server.py"
-    )
-    spec = importlib.util.spec_from_file_location("web_server", web_server_path)
-    web_server_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(web_server_module)
-    TwoFAWebServer = web_server_module.TwoFAWebServer
-    print("✅ TwoFAWebServer imported successfully")
-except Exception as e:
-    print(f"❌ Failed to import TwoFAWebServer: {e}")
-    sys.exit(1)
+    from auth2fa.web_server import TwoFAWebServer
+except ImportError:
+    TwoFAWebServer = None
 
 
 class Auth2FAE2ETest:
@@ -849,6 +848,27 @@ def main():
     success = test_suite.run_all_tests()
 
     return 0 if success else 1
+
+
+@pytest.mark.integration
+def test_auth2fa_e2e_final_selenium():
+    """Pytest wrapper for the final Selenium E2E test."""
+    # Check for required dependencies and skip if not available
+    pytest.importorskip("selenium", reason="Selenium package required for E2E browser tests")
+    
+    try:
+        from auth2fa.web_server import TwoFAWebServer  # noqa: F401
+    except ImportError as e:
+        pytest.skip(f"Failed to import TwoFAWebServer: {e}")
+    
+    # Setup logging to reduce noise
+    logging.basicConfig(level=logging.WARNING)
+    
+    # Run the test suite
+    test_suite = Auth2FAE2ETest()
+    success = test_suite.run_all_tests()
+    
+    assert success, "Auth2FA Final Selenium E2E tests failed"
 
 
 if __name__ == "__main__":

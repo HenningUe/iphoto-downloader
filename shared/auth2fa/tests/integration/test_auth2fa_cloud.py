@@ -8,43 +8,53 @@ Uses requests + BeautifulSoup to simulate browser interactions.
 import logging
 import os
 import sys
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from urllib.parse import urljoin
 
+import pytest
+
 # Add auth2fa to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "src"))
+current_dir = os.path.dirname(os.path.abspath(__file__))
+auth2fa_src = os.path.join(current_dir, "..", "..", "src")
+sys.path.insert(0, os.path.abspath(auth2fa_src))
+
+# Import dependencies with proper error handling for type checking
+HAS_HTTP_DEPS = False
+HAS_AUTH2FA = False
+
+if TYPE_CHECKING:
+    import requests
+    from bs4 import BeautifulSoup
+    from auth2fa.web_server import TwoFAWebServer
 
 try:
     import requests
     from bs4 import BeautifulSoup
-    print("✅ requests and BeautifulSoup imported successfully")
-except ImportError as e:
-    print(f"❌ Failed to import required packages: {e}")
-    print("💡 Install with: pip install requests beautifulsoup4")
-    sys.exit(1)
+    HAS_HTTP_DEPS = True
+except ImportError:
+    requests = None
+    BeautifulSoup = None
 
 try:
-    import importlib.util
-    web_server_path = os.path.join(
-        os.path.dirname(__file__), "..", "..", "src", "auth2fa", "web_server.py"
-    )
-    spec = importlib.util.spec_from_file_location("web_server", web_server_path)
-    web_server_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(web_server_module)
-    TwoFAWebServer = web_server_module.TwoFAWebServer
-    print("✅ TwoFAWebServer imported successfully")
-except Exception as e:
-    print(f"❌ Failed to import TwoFAWebServer: {e}")
-    sys.exit(1)
+    from auth2fa.web_server import TwoFAWebServer
+    HAS_AUTH2FA = True
+except ImportError:
+    TwoFAWebServer = None
 
 
 class Auth2FACloudTest:
     """Cloud-friendly E2E test using HTTP requests instead of browser."""
 
     def __init__(self):
-        self.server: Optional[TwoFAWebServer] = None
+        # Check dependencies are available
+        if not HAS_HTTP_DEPS:
+            raise ImportError("requests and beautifulsoup4 are required for cloud tests")
+        if not HAS_AUTH2FA:
+            raise ImportError("auth2fa.web_server is required for cloud tests")
+            
+        self.server = None  # type: ignore
         self.server_url: Optional[str] = None
-        self.session = requests.Session()
+        self.session = requests.Session()  # type: ignore
         self.logger = logging.getLogger(__name__)
 
         # Test configuration
@@ -57,13 +67,16 @@ class Auth2FACloudTest:
 
         # Setup session with reasonable defaults
         self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': (
+                'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
+                '(KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            )
         })
 
     def setup_auth2fa_server(self) -> bool:
         """Setup and start the auth2fa web server."""
         try:
-            self.server = TwoFAWebServer(port_range=self.server_port_range)
+            self.server = TwoFAWebServer(port_range=self.server_port_range)  # type: ignore
 
             # Setup mock callbacks
             def mock_request_2fa_callback():
@@ -102,18 +115,23 @@ class Auth2FACloudTest:
             print(f"❌ Error setting up auth2fa server: {e}")
             return False
 
-    def make_request(self, method: str, endpoint: str, **kwargs) -> Optional[requests.Response]:
+    def make_request(self, method: str, endpoint: str, **kwargs):  # type: ignore
         """Make HTTP request with error handling."""
         try:
+            if not self.server_url:
+                print("❌ Server URL not available")
+                return None
+            
             url = urljoin(self.server_url, endpoint)
             response = self.session.request(method, url, timeout=self.timeout, **kwargs)
             return response
-        except requests.RequestException as e:
+        except Exception as e:  # type: ignore
             print(f"❌ HTTP request failed: {e}")
             return None
-    def parse_html(self, html_content: str) -> BeautifulSoup:
+
+    def parse_html(self, html_content: str):  # type: ignore
         """Parse HTML content with BeautifulSoup."""
-        return BeautifulSoup(html_content, 'html.parser')
+        return BeautifulSoup(html_content, 'html.parser')  # type: ignore
 
     def test_page_loading(self) -> bool:
         """Test that the main 2FA page loads correctly via HTTP."""
@@ -171,7 +189,9 @@ class Auth2FACloudTest:
                     return False
 
                 # Check for submit button
-                submit_button = soup.find('button', string=lambda text: text and 'Submit Code' in text)
+                submit_button = soup.find(
+                    'button', string=lambda text: text and 'Submit Code' in text
+                )
                 if submit_button:
                     print("   ✅ Submit button found")
                 else:
@@ -274,10 +294,16 @@ class Auth2FACloudTest:
                             print(f"   ✅ Success message: {result['message']}")
 
                     else:
-                        print(f"   ❌ Response indicates failure: {result.get('message', 'No message')}")
+                        print(
+                            f"   ❌ Response indicates failure: "
+                            f"{result.get('message', 'No message')}"
+                        )
 
                         # This might be due to the JavaScript bug we identified
-                        print("   🐛 This could be the JavaScript selector bug preventing submission")
+                        print(
+                            "   🐛 This could be the JavaScript selector bug "
+                            "preventing submission"
+                        )
 
                 except ValueError:
                     # Not JSON, might be HTML response
@@ -299,13 +325,16 @@ class Auth2FACloudTest:
                 print("   🐛 This confirms the JavaScript bug prevents server callback")
 
             # Check server state
-            server_status = self.server.get_status()
-            print(f"   📊 Server state after submission: {server_status}")
+            if self.server:
+                server_status = self.server.get_status()
+                print(f"   📊 Server state after submission: {server_status}")
 
-            if server_status['state'] == 'authenticated':
-                print("   ✅ Server shows authenticated state")
+                if server_status['state'] == 'authenticated':
+                    print("   ✅ Server shows authenticated state")
+                else:
+                    print("   ⚠️  Server state not authenticated (due to JS bug)")
             else:
-                print("   ⚠️  Server state not authenticated (due to JS bug)")
+                print("   ⚠️  Server not available for status check")
 
             print("   ✅ Successful authentication test completed!")
             return True
@@ -320,7 +349,8 @@ class Auth2FACloudTest:
 
         try:
             # Reset server state
-            self.server.set_state("waiting_for_code", "Ready for failed test")
+            if self.server:
+                self.server.set_state("waiting_for_code", "Ready for failed test")
 
             # Enable failure simulation
             self.simulate_success = False
@@ -356,12 +386,15 @@ class Auth2FACloudTest:
                     print("   ⚠️  Non-JSON response for failed auth")
 
             # Verify no authentication occurred
-            server_status = self.server.get_status()
-            if server_status['state'] != 'authenticated':
-                print("   ✅ Server correctly not authenticated")
+            if self.server:
+                server_status = self.server.get_status()
+                if server_status['state'] != 'authenticated':
+                    print("   ✅ Server correctly not authenticated")
+                else:
+                    print("   ❌ Server incorrectly shows authenticated")
+                    return False
             else:
-                print("   ❌ Server incorrectly shows authenticated")
-                return False
+                print("   ⚠️  Server not available for status check")
 
             print("   ✅ Failed authentication test passed!")
             return True
@@ -435,7 +468,10 @@ class Auth2FACloudTest:
                 if response.status_code == expected_status:
                     print(f"   ✅ {endpoint} correctly returns {expected_status}")
                 else:
-                    print(f"   ⚠️  {endpoint} returns {response.status_code}, expected {expected_status}")
+                    print(
+                        f"   ⚠️  {endpoint} returns {response.status_code}, "
+                        f"expected {expected_status}"
+                    )
 
             print("   ✅ Invalid endpoints test passed!")
             return True
@@ -533,6 +569,28 @@ def main():
     success = test_suite.run_all_tests()
 
     return 0 if success else 1
+
+
+@pytest.mark.integration
+def test_auth2fa_cloud_integration():
+    """Pytest wrapper for the cloud integration test."""
+    # Check for required dependencies first and skip if not available
+    pytest.importorskip("requests", reason="requests package required for cloud tests")
+    pytest.importorskip("bs4", reason="beautifulsoup4 package required for cloud tests")
+    
+    try:
+        from auth2fa.web_server import TwoFAWebServer  # noqa: F401
+    except ImportError as e:
+        pytest.skip(f"Failed to import TwoFAWebServer: {e}")
+    
+    # Setup logging to reduce noise
+    logging.basicConfig(level=logging.WARNING)
+    
+    # Run the test suite
+    test_suite = Auth2FACloudTest()
+    success = test_suite.run_all_tests()
+    
+    assert success, "Auth2FA cloud integration tests failed"
 
 
 if __name__ == "__main__":

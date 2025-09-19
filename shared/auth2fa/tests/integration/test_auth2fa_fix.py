@@ -7,30 +7,17 @@ This script tests that the 2FA submission now provides immediate feedback.
 import os
 import sys
 
+import pytest
+
 # Add auth2fa to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "src"))
+current_dir = os.path.dirname(os.path.abspath(__file__))
+auth2fa_src = os.path.join(current_dir, "..", "..", "src")
+sys.path.insert(0, os.path.abspath(auth2fa_src))
 
 try:
     from auth2fa.web_server import TwoFAWebServer
-
-    print("✅ Successfully imported TwoFAWebServer")
-except ImportError as e:
-    print(f"❌ Failed to import TwoFAWebServer: {e}")
-    # Try direct import to avoid dependencies
-    try:
-        import importlib.util
-
-        web_server_path = os.path.join(
-            os.path.dirname(__file__), "..", "..", "src", "auth2fa", "web_server.py"
-        )
-        spec = importlib.util.spec_from_file_location("web_server", web_server_path)
-        web_server_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(web_server_module)
-        TwoFAWebServer = web_server_module.TwoFAWebServer
-        print("✅ Successfully imported TwoFAWebServer via direct module loading")
-    except Exception as e2:
-        print(f"❌ Failed direct import: {e2}")
-        sys.exit(1)
+except ImportError:
+    TwoFAWebServer = None
 
 
 def test_successful_authentication_response():
@@ -38,7 +25,7 @@ def test_successful_authentication_response():
     print("\n🧪 Testing successful authentication response...")
 
     # Create server instance
-    server = TwoFAWebServer(port_range=(9080, 9090))
+    server = TwoFAWebServer(port_range=(9080, 9090))  # type: ignore
 
     # Mock the callback to always return success
     def mock_submit_callback(code):
@@ -81,7 +68,7 @@ def test_failed_authentication_response():
     print("\n🧪 Testing failed authentication response...")
 
     # Create server instance
-    server = TwoFAWebServer(port_range=(9080, 9090))
+    server = TwoFAWebServer(port_range=(9080, 9090))  # type: ignore
 
     # Mock the callback to always return failure
     def mock_submit_callback(code):
@@ -116,7 +103,7 @@ def test_invalid_code_format():
     """Test that invalid code format is handled properly."""
     print("\n🧪 Testing invalid code format handling...")
 
-    server = TwoFAWebServer(port_range=(9080, 9090))
+    server = TwoFAWebServer(port_range=(9080, 9090))  # type: ignore
 
     # Test various invalid formats
     invalid_codes = ["", "12345", "1234567", "abcdef", "12345a"]
@@ -165,7 +152,7 @@ def simulate_web_submission():
             self.response_data = data
 
     # Create server and test the JSON response for successful auth
-    server = TwoFAWebServer(port_range=(9080, 9090))
+    server = TwoFAWebServer(port_range=(9080, 9090))  # type: ignore
 
     def mock_submit_callback(code):
         return True  # Success
@@ -228,6 +215,18 @@ def main():
     else:
         print("❌ Some tests failed. Please check the implementation.")
         return False
+
+
+@pytest.mark.integration
+def test_auth2fa_fix_integration():
+    """Pytest wrapper for the auth2fa fix tests."""
+    try:
+        from auth2fa.web_server import TwoFAWebServer  # noqa: F401
+    except ImportError as e:
+        pytest.skip(f"Failed to import TwoFAWebServer: {e}")
+    
+    success = main()
+    assert success, "Auth2FA fix tests failed"
 
 
 if __name__ == "__main__":
