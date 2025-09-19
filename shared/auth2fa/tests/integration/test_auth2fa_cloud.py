@@ -8,25 +8,31 @@ Uses requests + BeautifulSoup to simulate browser interactions.
 import logging
 import os
 import sys
-from typing import Optional, TYPE_CHECKING
+from typing import Optional
 from urllib.parse import urljoin
 
 import pytest
 
-# Add auth2fa to path
-current_dir = os.path.dirname(os.path.abspath(__file__))
-auth2fa_src = os.path.join(current_dir, "..", "..", "src")
-sys.path.insert(0, os.path.abspath(auth2fa_src))
-
-# Import dependencies with proper error handling for type checking
-HAS_HTTP_DEPS = False
-HAS_AUTH2FA = False
-
-if TYPE_CHECKING:
-    import requests
-    from bs4 import BeautifulSoup
+# Import auth2fa with proper path handling
+try:
+    # Try direct import first (works in installed/CI environments)
     from auth2fa.web_server import TwoFAWebServer
+    HAS_AUTH2FA = True
+except ImportError:
+    # Fallback to local path for development
+    import os
+    import sys
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    auth2fa_src = os.path.join(current_dir, "..", "..", "src")
+    sys.path.insert(0, os.path.abspath(auth2fa_src))
+    try:
+        from auth2fa.web_server import TwoFAWebServer
+        HAS_AUTH2FA = True
+    except ImportError:
+        TwoFAWebServer = None
+        HAS_AUTH2FA = False
 
+# Import dependencies with proper error handling
 try:
     import requests
     from bs4 import BeautifulSoup
@@ -34,12 +40,7 @@ try:
 except ImportError:
     requests = None
     BeautifulSoup = None
-
-try:
-    from auth2fa.web_server import TwoFAWebServer
-    HAS_AUTH2FA = True
-except ImportError:
-    TwoFAWebServer = None
+    HAS_HTTP_DEPS = False
 
 
 class Auth2FACloudTest:
@@ -590,7 +591,8 @@ def test_auth2fa_cloud_integration():
     test_suite = Auth2FACloudTest()
     success = test_suite.run_all_tests()
     
-    assert success, "Auth2FA cloud integration tests failed"
+    if not success:
+        pytest.fail("Auth2FA cloud integration tests failed")
 
 
 if __name__ == "__main__":

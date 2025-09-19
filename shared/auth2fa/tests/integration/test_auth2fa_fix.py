@@ -9,15 +9,19 @@ import sys
 
 import pytest
 
-# Add auth2fa to path
-current_dir = os.path.dirname(os.path.abspath(__file__))
-auth2fa_src = os.path.join(current_dir, "..", "..", "src")
-sys.path.insert(0, os.path.abspath(auth2fa_src))
-
+# Import auth2fa with proper error handling
 try:
+    # Try direct import first (works in installed/CI environments)
     from auth2fa.web_server import TwoFAWebServer
 except ImportError:
-    TwoFAWebServer = None
+    # Fallback to local path for development
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    auth2fa_src = os.path.join(current_dir, "..", "..", "src")
+    sys.path.insert(0, os.path.abspath(auth2fa_src))
+    try:
+        from auth2fa.web_server import TwoFAWebServer
+    except ImportError:
+        TwoFAWebServer = None
 
 
 def test_successful_authentication_response():
@@ -226,7 +230,8 @@ def test_auth2fa_fix_integration():
         pytest.skip(f"Failed to import TwoFAWebServer: {e}")
     
     success = main()
-    assert success, "Auth2FA fix tests failed"
+    if not success:
+        pytest.fail("Auth2FA fix tests failed")
 
 
 if __name__ == "__main__":

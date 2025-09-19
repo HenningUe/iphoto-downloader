@@ -10,7 +10,6 @@ This test verifies the complete web interface workflow including:
 """
 
 import logging
-import os
 import sys
 import time
 from typing import Optional, TYPE_CHECKING
@@ -19,11 +18,6 @@ import pytest
 
 if TYPE_CHECKING:
     pass  # No type-only imports needed
-
-# Add auth2fa to path
-current_dir = os.path.dirname(os.path.abspath(__file__))
-auth2fa_src = os.path.join(current_dir, "..", "..", "src")
-sys.path.insert(0, os.path.abspath(auth2fa_src))
 
 # Import dependencies with proper error handling
 try:
@@ -810,7 +804,8 @@ def test_auth2fa_e2e_selenium():
     test_suite = Auth2FAE2ETest()
     success = test_suite.run_all_tests()
     
-    assert success, "Auth2FA Selenium E2E tests failed"
+    if not success:
+        pytest.fail("Auth2FA Selenium E2E tests failed")
 
 
 if __name__ == "__main__":
