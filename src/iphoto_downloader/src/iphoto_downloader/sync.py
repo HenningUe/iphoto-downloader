@@ -1,9 +1,13 @@
 """Core sync logic for iPhoto Downloader Tool."""
 
 import contextlib
+import json
 import os
 import re
+import tempfile
+import time
 import typing as t
+from pathlib import Path
 
 from auth2fa.pushover_service import PushoverService as PushoverNotificationService
 
@@ -38,6 +42,12 @@ class PhotoSyncer:
             "bytes_downloaded": 0,
         }
 
+        # Adaptive sync delay state
+        self._SYNC_DELAY_INITIAL = 60  # 1 minute
+        self._SYNC_DELAY_MAX = 2 * 24 * 60 * 60  # 2 days in seconds
+        self._sync_delay_file = Path(tempfile.gettempdir()) / "iphoto_downloader_sync_delay.json"
+        self._sync_delay_seconds = self._load_sync_delay()
+
     @property
     def logger(self):
         """Get the global logger instance."""
@@ -51,18 +61,25 @@ class PhotoSyncer:
         """
         try:
             self.logger.info("🚀 Starting iphoto-downloader")
-
             # Ensure sync directory exists
             self.config.ensure_sync_directory()
-
+            # Adaptive sync delay: sleep if delay is set
+            if self._sync_delay_seconds > 0:
+                self.logger.info(
+                    f"⏳ Waiting {self._sync_delay_seconds} seconds before sync (adaptive delay)"
+                )
+                time.sleep(self._sync_delay_seconds)
             # Authenticate with iCloud
             if not self.icloud_client.authenticate():
+                self._increase_sync_delay()
                 return False
-
             # Handle 2FA if required
-            if self.icloud_client.requires_2fa() and not self._handle_2fa():
-                return False
-
+            if self.icloud_client.requires_2fa():
+                if not self._handle_2fa():
+                    self._increase_sync_delay()
+                    return False
+                else:
+                    self._reset_sync_delay()
             # Validate that specified albums exist (if any are specified)
             self.logger.info("🔍 Validating specified album names...")
             try:
@@ -71,27 +88,66 @@ class PhotoSyncer:
             except ValueError as e:
                 self.logger.error(f"❌ Album validation failed: {e}")
                 return False
-
             # Get local files
             local_files = self._get_local_files()
             self.logger.info(f"📁 Found {len(local_files)} existing local files")
-
             # Track files that were deleted locally
             self._track_local_deletions(local_files)
-
             # Sync photos
             self._sync_photos(local_files)
-
             # Print summary
             self._print_summary()
-
             self.logger.info("✅ Photo sync completed successfully")
+            self._reset_sync_delay()
             return True
-
         except Exception as e:
             self.logger.error(f"❌ Error during sync: {e}")
             self.stats["errors"] += 1
+            self._increase_sync_delay()
             return False
+
+    def _load_sync_delay(self) -> int:
+        """Load sync delay from JSON file in temp dir."""
+        try:
+            if self._sync_delay_file.exists():
+                with self._sync_delay_file.open("r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    delay = int(data.get("sync_delay_seconds", self._SYNC_DELAY_INITIAL))
+                    return min(delay, self._SYNC_DELAY_MAX)
+        except Exception as e:
+            self.logger.warning(f"⚠️ Could not load sync delay: {e}")
+        return self._SYNC_DELAY_INITIAL
+
+    def _save_sync_delay(self) -> None:
+        """Persist current sync delay to JSON file in temp dir."""
+        try:
+            with self._sync_delay_file.open("w", encoding="utf-8") as f:
+                json.dump({"sync_delay_seconds": self._sync_delay_seconds}, f)
+        except Exception as e:
+            self.logger.warning(f"⚠️ Could not save sync delay: {e}")
+
+    def _increase_sync_delay(self) -> None:
+        """Double the sync delay, cap at max, and persist."""
+        prev = self._sync_delay_seconds
+        self._sync_delay_seconds = min(
+            max(self._sync_delay_seconds * 2, self._SYNC_DELAY_INITIAL),
+            self._SYNC_DELAY_MAX,
+        )
+        self._save_sync_delay()
+        self.logger.info(
+            f"⏫ Increased sync delay from {prev} to {self._sync_delay_seconds} seconds"
+        )
+
+    def _reset_sync_delay(self) -> None:
+        """Reset sync delay to initial and remove persistence file."""
+        if self._sync_delay_seconds != self._SYNC_DELAY_INITIAL:
+            self.logger.info(f"🔄 Resetting sync delay to {self._SYNC_DELAY_INITIAL} seconds")
+        self._sync_delay_seconds = self._SYNC_DELAY_INITIAL
+        try:
+            if self._sync_delay_file.exists():
+                self._sync_delay_file.unlink()
+        except Exception as e:
+            self.logger.warning(f"⚠️ Could not delete sync delay file: {e}")
 
     def _handle_2fa(self) -> bool:
         """Handle two-factor authentication using web server interface.

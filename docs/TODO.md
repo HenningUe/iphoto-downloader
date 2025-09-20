@@ -130,7 +130,8 @@ specified.
         info
   - [x] Implement graceful program termination after file copying
 - [x] Implement **automatic file management in "Delivered" mode**:
-  - [x] Copy USER-GUIDE.md to settings folder on every startup (overwrite existing)
+  - [x] Copy USER-GUIDE.md to settings folder on every startup (overwrite
+        existing)
   - [x] Copy .env.example to settings folder on every startup (overwrite
         existing). Change target file name depending on the context. I.e. either
         ".env" or "settings.ini".
@@ -196,6 +197,17 @@ specified.
 - [x] Log 2FA requests and session states (without sensitive data)
 - [x] Implement **audit trail** for 2FA sessions
 - [x] Add **structured logging** for 2FA events
+
+#### 2.2.7 2FA Sync Delay & Persistence
+
+- [ ] Implement adaptive sync delay when 2FA is not completed:
+  - [ ] Double the time span between sync requests after each failed 2FA (e.g.,
+        8 min, 16 min, ...)
+  - [ ] Cap the maximum delay at 2 days
+- [ ] Persist failed sync-counts in a simple JSON file in the system temp
+      directory
+  - [ ] Ensure delay is restored after app restart
+  - [ ] Delete the file after successful 2FA authentication to reset delay
 
 ### 2.3 Local Deletion Tracking
 
@@ -347,7 +359,8 @@ specified.
 
 - [x] Write **PyInstaller spec** for cross-platform builds:
   - [x] Create `iphoto_downloader.spec` with proper data files inclusion
-  - [x] Include repository `USER-GUIDE.md` and `.env.example` as embedded resources
+  - [x] Include repository `USER-GUIDE.md` and `.env.example` as embedded
+        resources
   - [x] Configure hiddenimports for keyring backends (Windows, macOS, Linux)
   - [x] Set up proper pathex and binaries configuration
   - [x] Ensure delivery artifacts resources are accessible in executable
@@ -559,8 +572,8 @@ specified.
   - [x] **Delivery artifacts management** works correctly:
     - [x] Executable defaults to "Delivered" mode
     - [x] Settings folder is created/detected correctly
-    - [x] Required files (USER-GUIDE.md, settings.ini.template, settings.ini) are
-          copied when missing
+    - [x] Required files (USER-GUIDE.md, settings.ini.template, settings.ini)
+          are copied when missing
     - [x] User receives clear notification about copied files and their purpose
     - [x] Program terminates gracefully after copying files with instruction to
           adjust settings.ini

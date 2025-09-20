@@ -136,6 +136,20 @@ automatically using **GitHub Actions**.
 
 - If 2FA authentication is required, the user shall be notified immediately via
   a Pushover notification.
+- The time span between two synchronization requests shall be increased, if the
+  the user does not enter the 2FA-code via the web-interface. I.e. if there is
+  no valid 2FA-session available. The time-span shall be doubled related to the
+  previous time-span. E.g if the first time span between to requests is 8
+  minutes, the second time span shall be 8 * 2 = 16 minutes. And so on. The
+  maximum time span shall be 2 days. (Note: There is a scenario where the user
+  cannot enter the codes, e.g. because they are absent. In this case,
+  persistent, annoying 2FA requests should be avoided.)
+- The number of failed sync-counts shall be persisted in a simple json file in
+  the system's temp file, to ensure, that the adapted time-span is also applied,
+  if the app was restarted in between. As soon as the 2FA-authentication was
+  successfully established, this file shall be deleted. I.e. the next time the
+  2FA code has to be requested, the time span between two requests shall be the
+  original default synchronization time.
 
 5.3. Notification Content
 
