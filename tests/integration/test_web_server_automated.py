@@ -46,16 +46,18 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 def test_web_interface_automated():
     """Automated test of the web interface using Selenium WebDriver."""
     print("\\n🤖 Starting automated web interface test...")
+    import shutil
+    if not shutil.which("chrome") and not shutil.which("google-chrome"):
+        pytest.skip("Chrome browser is not installed; skipping automated web interface test.")
 
-    # Track received codes and requests
+    # Callback variables
     received_codes = []
     new_2fa_requests = 0
-    server = None
-    driver = None
 
     def on_code_received(code):
+        nonlocal received_codes
         received_codes.append(code)
-        print(f"✅ Code received via web interface: {code}")
+        print(f"📱 Received 2FA code via web interface: ***{code[-2:]} (hidden for security)")
         return True
 
     def on_new_2fa_requested():

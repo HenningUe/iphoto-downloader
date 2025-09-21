@@ -20,6 +20,13 @@ def test_authentication():
     print("🔐 Testing iCloud Authentication")
     print("=" * 40)
 
+
+    import os
+    import pytest
+    username = os.getenv("ICLOUD_USERNAME")
+    password = os.getenv("ICLOUD_PASSWORD")
+    if not username or not password:
+        pytest.skip("iCloud credentials not set in environment; skipping manual auth test.")
     if not KEYRING_AVAILABLE:
         print("❌ Keyring not available")
         return False

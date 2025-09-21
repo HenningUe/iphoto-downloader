@@ -1253,3 +1253,11 @@ class TwoFAWebServer:
         """
         self.request_2fa_callback = request_2fa_callback
         self.submit_code_callback = submit_code_callback
+
+    def is_running(self) -> bool:
+        """Return True if the web server is running."""
+        return (
+            self.server is not None
+            and self.server_thread is not None
+            and self.server_thread.is_alive()
+        )
