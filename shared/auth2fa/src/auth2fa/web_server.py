@@ -1168,7 +1168,8 @@ class TwoFAWebServer:
                     self.set_state("authenticated", "Authentication successful!")
                     self.logger.info("2FA authentication successful")
                 else:
-                    self.set_state("failed", "Invalid 2FA code. Please try again.")
+                    # Always reset to waiting_for_code on failure
+                    self.set_state("waiting_for_code", "Invalid 2FA code. Please try again.")
                     self.logger.warning("2FA authentication failed - invalid code")
                 return result
             else:
@@ -1177,7 +1178,6 @@ class TwoFAWebServer:
                 self.logger.info("2FA authentication successful (no callback)")
                 return True
 
-            return True
         except Exception as e:
             # Log error without exposing sensitive data
             self.logger.error(f"Error handling 2FA code submission: {e}")
@@ -1193,10 +1193,12 @@ class TwoFAWebServer:
         try:
             self.logger.info("New 2FA code requested via web interface")
 
-            # Change state to waiting for code when new 2FA is requested
+            # Always reset state and clear previous code/event
             self.set_state(
                 "waiting_for_code", "New 2FA code requested. Please check your trusted device."
             )
+            self.submitted_code = None
+            self.code_submitted_event.clear()
 
             if self.request_2fa_callback:
                 return self.request_2fa_callback()

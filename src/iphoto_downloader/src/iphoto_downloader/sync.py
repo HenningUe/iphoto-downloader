@@ -26,6 +26,8 @@ class PhotoSyncer:
         Args:
             config: Application configuration
         """
+        # Track if this is the first 2FA attempt in this process
+        self._first_2fa_attempt = True
         self.config = config
         self.icloud_client = ICloudClient(config)
 
@@ -63,8 +65,8 @@ class PhotoSyncer:
             self.logger.info("🚀 Starting iphoto-downloader")
             # Ensure sync directory exists
             self.config.ensure_sync_directory()
-            # Adaptive sync delay: sleep if delay is set
-            if self._sync_delay_seconds > 0:
+            # Adaptive sync delay: sleep if delay is set, but skip for first 2FA attempt
+            if not self._first_2fa_attempt and self._sync_delay_seconds > 0:
                 self.logger.info(
                     f"⏳ Waiting {self._sync_delay_seconds} seconds before sync (adaptive delay)"
                 )
@@ -77,9 +79,11 @@ class PhotoSyncer:
             if self.icloud_client.requires_2fa():
                 if not self._handle_2fa():
                     self._increase_sync_delay()
+                    self._first_2fa_attempt = False
                     return False
                 else:
                     self._reset_sync_delay()
+            self._first_2fa_attempt = False
             # Validate that specified albums exist (if any are specified)
             self.logger.info("🔍 Validating specified album names...")
             try:
@@ -104,6 +108,7 @@ class PhotoSyncer:
             self.logger.error(f"❌ Error during sync: {e}")
             self.stats["errors"] += 1
             self._increase_sync_delay()
+            self._first_2fa_attempt = False
             return False
 
     def _load_sync_delay(self) -> int:
