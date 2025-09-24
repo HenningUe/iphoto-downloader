@@ -114,18 +114,6 @@ class TwoFAHandler(BaseHTTPRequestHandler):
                 return;
             }
 
-            // Show immediate feedback that code is being processed
-            const messageEl = document.getElementById('message');
-            messageEl.textContent = 'Validating 2FA code...';
-            messageEl.style.display = 'block';
-            messageEl.style.color = '#007bff';
-
-            // Disable the submit button to prevent double submission
-            const submitBtn = document.querySelector('.submit-button');
-            const originalText = submitBtn.textContent;
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Validating...';
-
             // Send as URL-encoded form data instead of FormData
             const params = new URLSearchParams();
             params.append('code', code);
@@ -139,50 +127,16 @@ class TwoFAHandler(BaseHTTPRequestHandler):
             })
             .then(response => response.json())
             .then(data => {
-                // Re-enable submit button
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-
                 if (data.success) {
                     document.getElementById('2fa-code').value = '';
-
-                    // Check if immediate redirect is requested
-                    if (data.authenticated && data.redirect) {
-                        // Show immediate success feedback
-                        const messageEl = document.getElementById('message');
-                        messageEl.textContent = data.message || 'Authentication successful!';
-                        messageEl.style.display = 'block';
-                        messageEl.style.color = '#28a745';
-
-                        // Hide the form
-                        document.getElementById('2fa-form').style.display = 'none';
-
-                        // Update status display
-                        const statusEl = document.getElementById('status');
-                        statusEl.textContent = '✅ Authentication successful!';
-                        statusEl.className = 'status-authenticated';
-
-                        // Redirect after a short delay to let user see success message
-                        setTimeout(() => {
-                            window.location.href = data.redirect;
-                        }, 1500);
-                    } else {
-                        // Fallback to status polling for compatibility
-                        updateStatus();
-                    }
+                    updateStatus();
                 } else {
-                    messageEl.textContent = data.message || 'Failed to submit code';
-                    messageEl.style.color = '#dc3545';
+                    alert(data.message || 'Failed to submit code');
                 }
             })
             .catch(error => {
-                // Re-enable submit button on error
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-
                 console.error('Code submission failed:', error);
-                messageEl.textContent = 'Failed to submit code';
-                messageEl.style.color = '#dc3545';
+                alert('Failed to submit code');
             });
         }
 

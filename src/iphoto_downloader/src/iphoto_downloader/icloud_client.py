@@ -3,12 +3,13 @@
 import os
 import time
 import typing as t
-from pathlib import Path  # noqa
+from pathlib import Path
 
-from auth2fa import Auth2FAConfig, PushoverConfig, handle_2fa_authentication
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import PyiCloudAPIResponseException, PyiCloudFailedLoginException
 from pyicloud.services.photos import AlbumContainer, BasePhotoAlbum
+
+from auth2fa import Auth2FAConfig, PushoverConfig, handle_2fa_authentication
 
 from .config import BaseConfig
 from .logger import get_logger
@@ -308,12 +309,16 @@ class ICloudClient:
         albums_list = [album for album in all_albums if getattr(album, "name", "") != "Library"]
 
         self.logger.info(f"📊 Found {len(albums_list)} personal albums in iCloud")
+        for album in albums_list:
+            self.logger.info(f"   > Personal Album: {album.name}")
 
         # shared albums
         album_library = self._api.photos.albums["Library"]
         albums_shared: AlbumContainer = album_library.service.shared_streams
         albums_shared_list = list(albums_shared.values())
         self.logger.info(f"📊 Found {len(albums_shared_list)} shared albums in iCloud")
+        for album in albums_shared_list:
+            self.logger.info(f"   > Shared Album: {album.name}")
 
         for album in albums_list + albums_shared_list:
             is_shared = getattr(album, "list_type", "") == "sharedstream"
@@ -655,11 +660,4 @@ def cleanup_sessions(max_age_days: int = 30, session_dir: Path | None = None) ->
             f"({total_size / 1024:.1f} KB freed)"
         )
     else:
-        logger.debug("No expired session files found to clean up")
-        logger.debug("No expired session files found to clean up")
-        logger.debug("No expired session files found to clean up")
-        logger.debug("No expired session files found to clean up")
-        logger.debug("No expired session files found to clean up")
-        logger.debug("No expired session files found to clean up")
-        logger.debug("No expired session files found to clean up")
         logger.debug("No expired session files found to clean up")

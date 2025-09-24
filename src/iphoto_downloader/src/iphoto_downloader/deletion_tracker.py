@@ -205,7 +205,8 @@ class DeletionTracker:
                     # Migrate old data with 'Unknown' album
                     for row in old_data:
                         try:
-                            # Old format: (photo_id, filename, local_path, file_size, modified_date, checksum, sync_status)
+                            # Old format: (photo_id, filename, local_path, file_size, modified_date,
+                            # checksum, sync_status)
                             photo_id = row[0]
                             filename = row[1] if len(row) > 1 else "unknown.jpg"
                             local_path = row[2] if len(row) > 2 else None  # noqa
@@ -1045,14 +1046,15 @@ class DeletionTracker:
             album_name: Album name
             status: New sync status
         """
+        sql_str = """
+        UPDATE photo_tracking
+        SET sync_status = ?, last_sync_attempt = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+        WHERE photo_id = ? AND album_name = ?
+        """
         try:
             with sqlite3.connect(self.db_path) as conn:
                 conn.execute(
-                    """
-                    UPDATE photo_tracking
-                    SET sync_status = ?, last_sync_attempt = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-                    WHERE photo_id = ? AND album_name = ?
-                """,
+                    sql_str,
                     (status, photo_id, album_name),
                 )
                 conn.commit()

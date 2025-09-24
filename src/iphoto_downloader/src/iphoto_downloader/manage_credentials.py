@@ -102,8 +102,10 @@ def icloud_check_credentials():
     if isinstance(config, KeyringConfig) and config.icloud_has_stored_credentials():
         print("✅ iCloud Credentials are stored in keyring")
         if config.icloud_username and config.icloud_password:
+            pw = config.icloud_password
+            pw = pw[0:1] + "*" * (len(pw) - 2) + pw[-1:] if len(pw) > 2 else "*" * len(pw)
             print(f"📧 Username: {config.icloud_username}")
-            print(f"📧 Password: {config.icloud_password}")
+            print(f"📧 Password: {pw}")
         else:
             print("⚠️ Credentials found in keyring but couldn't retrieve them")
     else:

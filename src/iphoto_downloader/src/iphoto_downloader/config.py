@@ -1,14 +1,15 @@
 """Configuration management for iPhoto Downloader Tool."""
 
-import logging  # noqa
+import logging
 import os
 import sys
 from abc import ABC
 from pathlib import Path
 
 import keyring
-from auth2fa.pushover_service import PushoverConfig
 from dotenv import load_dotenv
+
+from auth2fa.pushover_service import PushoverConfig
 
 # Check if keyring is available and functional
 try:
