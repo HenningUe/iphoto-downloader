@@ -70,27 +70,18 @@ def test_increase_and_persist_delay(syncer):
 
 def test_delay_capped(syncer):
     """Test that delay is capped at maximum value."""
-    syncer._sync_delay_hdl.sync_delay_seconds = (
-        syncer._sync_delay_hdl.SYNC_DELAY_MAX // 2
-    )
+    syncer._sync_delay_hdl.sync_delay_seconds = syncer._sync_delay_hdl.SYNC_DELAY_MAX // 2
     syncer._sync_delay_hdl._increase_sync_delay()
-    assert syncer._sync_delay_hdl.sync_delay_seconds == (
-        syncer._sync_delay_hdl.SYNC_DELAY_MAX
-    )
+    assert syncer._sync_delay_hdl.sync_delay_seconds == (syncer._sync_delay_hdl.SYNC_DELAY_MAX)
     syncer._sync_delay_hdl._increase_sync_delay()
-    assert syncer._sync_delay_hdl.sync_delay_seconds == (
-        syncer._sync_delay_hdl.SYNC_DELAY_MAX
-    )
+    assert syncer._sync_delay_hdl.sync_delay_seconds == (syncer._sync_delay_hdl.SYNC_DELAY_MAX)
 
 
 def test_reset_delay(syncer):
     """Test delay reset."""
     syncer._sync_delay_hdl._increase_sync_delay()
     syncer._sync_delay_hdl.reset_sync_delay()
-    assert (
-        syncer._sync_delay_hdl.sync_delay_seconds ==
-        syncer._sync_delay_hdl.SYNC_DELAY_INITIAL
-    )
+    assert syncer._sync_delay_hdl.sync_delay_seconds == syncer._sync_delay_hdl.SYNC_DELAY_INITIAL
     assert not syncer._sync_delay_hdl._sync_delay_file.exists()
 
 
@@ -101,13 +92,8 @@ def test_load_corrupt_file(syncer):
     # Should fallback to initial
     s2 = PhotoSyncer(syncer.config)
     # Set the same delay file path for consistent testing
-    s2._sync_delay_hdl._sync_delay_file = (
-        syncer._sync_delay_hdl._sync_delay_file
-    )
+    s2._sync_delay_hdl._sync_delay_file = syncer._sync_delay_hdl._sync_delay_file
     # Reload from the corrupted file
     s2._sync_delay_hdl.sync_delay_seconds = s2._sync_delay_hdl._load_sync_delay()
-    assert (
-        s2._sync_delay_hdl.sync_delay_seconds ==
-        syncer._sync_delay_hdl.SYNC_DELAY_INITIAL
-    )
+    assert s2._sync_delay_hdl.sync_delay_seconds == syncer._sync_delay_hdl.SYNC_DELAY_INITIAL
     s2._sync_delay_hdl.reset_sync_delay()
