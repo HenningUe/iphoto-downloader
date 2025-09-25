@@ -3,7 +3,6 @@
 import os
 import tempfile
 from pathlib import Path
-from unittest import mock
 
 import pytest
 
@@ -38,57 +37,77 @@ def syncer(tmp_path):
     # Create syncer instance
     s = PhotoSyncer(config)
     # Set delay file to a temp location after instance creation
-    s._sync_delay_file = Path(tempfile.gettempdir()) / f"test_sync_delay_{os.getpid()}.json"
+    delay_file_name = f"test_sync_delay_{os.getpid()}.json"
+    s._sync_delay_hdl._sync_delay_file = Path(tempfile.gettempdir()) / delay_file_name
     # Reset to initial state for consistent testing
-    s._sync_delay_seconds = s._SYNC_DELAY_INITIAL
+    s._sync_delay_hdl.sync_delay_seconds = s._sync_delay_hdl.SYNC_DELAY_INITIAL
     # Clean up any existing delay file
-    if s._sync_delay_file.exists():
-        s._sync_delay_file.unlink()
+    if s._sync_delay_hdl._sync_delay_file.exists():
+        s._sync_delay_hdl._sync_delay_file.unlink()
     yield s
     # Cleanup
-    if s._sync_delay_file.exists():
-        s._sync_delay_file.unlink()
+    if s._sync_delay_hdl._sync_delay_file.exists():
+        s._sync_delay_hdl._sync_delay_file.unlink()
 
 
 def test_initial_delay(syncer):
     """Test initial delay and file absence."""
-    assert syncer._sync_delay_seconds == syncer._SYNC_DELAY_INITIAL
-    assert not syncer._sync_delay_file.exists()
+    assert syncer._sync_delay_hdl.sync_delay_seconds == syncer._sync_delay_hdl.SYNC_DELAY_INITIAL
+    assert not syncer._sync_delay_hdl._sync_delay_file.exists()
 
 
 def test_increase_and_persist_delay(syncer):
     """Test delay doubling and persistence across restarts."""
-    syncer._increase_sync_delay()
-    assert syncer._sync_delay_seconds == syncer._SYNC_DELAY_INITIAL * 2
+    syncer._sync_delay_hdl._increase_sync_delay()
+    expected_delay = syncer._sync_delay_hdl.SYNC_DELAY_INITIAL * 2
+    assert syncer._sync_delay_hdl.sync_delay_seconds == expected_delay
     # Simulate process restart
     s2 = PhotoSyncer(syncer.config)
-    assert s2._sync_delay_seconds == syncer._SYNC_DELAY_INITIAL * 2
+    s2._sync_delay_hdl._sync_delay_file = syncer._sync_delay_hdl._sync_delay_file
+    s2._sync_delay_hdl.sync_delay_seconds = s2._sync_delay_hdl._load_sync_delay()
+    assert s2._sync_delay_hdl.sync_delay_seconds == expected_delay
 
 
 def test_delay_capped(syncer):
-    syncer._sync_delay_seconds = syncer._SYNC_DELAY_MAX // 2
-    """Test handling of corrupt delay file."""
-    syncer._increase_sync_delay()
-    assert syncer._sync_delay_seconds == syncer._SYNC_DELAY_MAX
-    syncer._increase_sync_delay()
-    assert syncer._sync_delay_seconds == syncer._SYNC_DELAY_MAX
+    """Test that delay is capped at maximum value."""
+    syncer._sync_delay_hdl.sync_delay_seconds = (
+        syncer._sync_delay_hdl.SYNC_DELAY_MAX // 2
+    )
+    syncer._sync_delay_hdl._increase_sync_delay()
+    assert syncer._sync_delay_hdl.sync_delay_seconds == (
+        syncer._sync_delay_hdl.SYNC_DELAY_MAX
+    )
+    syncer._sync_delay_hdl._increase_sync_delay()
+    assert syncer._sync_delay_hdl.sync_delay_seconds == (
+        syncer._sync_delay_hdl.SYNC_DELAY_MAX
+    )
 
 
 def test_reset_delay(syncer):
-    syncer._increase_sync_delay()
-    syncer._reset_sync_delay()
-    assert syncer._sync_delay_seconds == syncer._SYNC_DELAY_INITIAL
-    assert not syncer._sync_delay_file.exists()
+    """Test delay reset."""
+    syncer._sync_delay_hdl._increase_sync_delay()
+    syncer._sync_delay_hdl.reset_sync_delay()
+    assert (
+        syncer._sync_delay_hdl.sync_delay_seconds ==
+        syncer._sync_delay_hdl.SYNC_DELAY_INITIAL
+    )
+    assert not syncer._sync_delay_hdl._sync_delay_file.exists()
 
 
 def test_load_corrupt_file(syncer):
+    """Test handling of corrupt delay file."""
     # Write invalid JSON
-    syncer._sync_delay_file.write_text("not a json")
+    syncer._sync_delay_hdl._sync_delay_file.write_text("not a json")
     # Should fallback to initial
     s2 = PhotoSyncer(syncer.config)
     # Set the same delay file path for consistent testing
-    s2._sync_delay_file = syncer._sync_delay_file
+    s2._sync_delay_hdl._sync_delay_file = (
+        syncer._sync_delay_hdl._sync_delay_file
+    )
     # Reload from the corrupted file
-    s2._sync_delay_seconds = s2._load_sync_delay()
-    assert s2._sync_delay_seconds == syncer._SYNC_DELAY_INITIAL
-    s2._reset_sync_delay()
+    s2._sync_delay_hdl.sync_delay_seconds = s2._sync_delay_hdl._load_sync_delay()
+    assert (
+        s2._sync_delay_hdl.sync_delay_seconds ==
+        syncer._sync_delay_hdl.SYNC_DELAY_INITIAL
+    )
+    s2._sync_delay_hdl.reset_sync_delay()
