@@ -11,8 +11,9 @@ A uv monorepo workspace for iCloud photo download tools and utilities.
 - **🎯 Idempotent**: Safe to run multiple times without duplicates
 - **🖥️ Cross-Platform**: Works on Windows and Linux
 - **📊 Logging**: Detailed console and file logging
-- **🔧 Configurable**: Customizable sync directory and settings
-- **🔐 2FA Support**: Integrated two-factor authentication for iCloud
+- **🔧 Configurable**: Customizable sync directory and settings. Allow- and blocklists for albums.
+- **🏗️ Shared Albums**: Support of shared and personal albums.
+- **🔐 2FA Support**: Integrated two-factor authentication for iCloud. Comfortable Web-UI to enter 2FA code (for server operation)
 
 ## 🏗️ Why another tool?
 - Apple's notorious icloud windows app downloads fotos only with weird names
