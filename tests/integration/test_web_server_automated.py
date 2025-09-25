@@ -6,11 +6,9 @@ functionality including the web interface, 2FA workflow, and server management
 without requiring manual interaction.
 """
 
-import logging
 import os
 import sys
 import time
-import threading
 from pathlib import Path
 
 import pytest
@@ -18,15 +16,15 @@ import pytest
 # Import test automation utilities
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
-from test_automation_utils import AutomatedTestContext, is_automated_test_environment
+from test_automation_utils import AutomatedTestContext, is_automated_test_environment  # noqa: E402
 
 try:
-    from selenium import webdriver
+    from selenium import webdriver  # noqa
     from selenium.webdriver.common.by import By
     from selenium.webdriver.chrome.options import Options
     from selenium.webdriver.chrome.service import Service
     from selenium.webdriver.support.ui import WebDriverWait
-    from selenium.webdriver.support import expected_conditions as EC
+    from selenium.webdriver.support import expected_conditions as exp_conds
     from webdriver_manager.chrome import ChromeDriverManager
 
     SELENIUM_AVAILABLE = True
@@ -34,9 +32,7 @@ except ImportError:
     SELENIUM_AVAILABLE = False
     print("⚠️ Selenium not available, web automation tests will be skipped")
 
-from auth2fa.web_server import TwoFAWebServer
-from iphoto_downloader.config import get_config
-from iphoto_downloader.logger import setup_logging
+from auth2fa.web_server import TwoFAWebServer  # noqa
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
@@ -47,6 +43,7 @@ def test_web_interface_automated():
     """Automated test of the web interface using Selenium WebDriver."""
     print("\\n🤖 Starting automated web interface test...")
     import shutil
+
     if not shutil.which("chrome") and not shutil.which("google-chrome"):
         pytest.skip("Chrome browser is not installed; skipping automated web interface test.")
 
@@ -107,16 +104,18 @@ def test_web_interface_automated():
 
         # Look for key elements (adjust selectors based on actual HTML structure)
         try:
-            request_button = wait.until(EC.element_to_be_clickable((By.ID, "request-2fa-btn")))
+            request_button = wait.until(
+                exp_conds.element_to_be_clickable((By.ID, "request-2fa-btn"))
+            )
             print("✅ Found 'Request 2FA' button")
-        except:
+        except Exception:
             # Try alternative selectors
             try:
                 request_button = driver.find_element(
                     By.XPATH, "//button[contains(text(), 'Request')]"
                 )
                 print("✅ Found request button with alternative selector")
-            except:
+            except Exception:
                 print("⚠️ Request button not found, checking page source...")
                 print("Page source preview:", driver.page_source[:500])
                 # Still try to continue test

@@ -1,8 +1,8 @@
 """Core sync logic for iPhoto Downloader Tool."""
 
 import contextlib
+import dataclasses as dc
 import json
-import os
 import re
 import tempfile
 import time
@@ -27,7 +27,6 @@ class PhotoSyncer:
             config: Application configuration
         """
         # Track if this is the first 2FA attempt in this process
-        self._first_2fa_attempt = True
         self.config = config
         self.icloud_client = ICloudClient(config)
 
@@ -45,10 +44,7 @@ class PhotoSyncer:
         }
 
         # Adaptive sync delay state
-        self._SYNC_DELAY_INITIAL = 60  # 1 minute
-        self._SYNC_DELAY_MAX = 2 * 24 * 60 * 60  # 2 days in seconds
-        self._sync_delay_file = Path(tempfile.gettempdir()) / "iphoto_downloader_sync_delay.json"
-        self._sync_delay_seconds = self._load_sync_delay()
+        self._sync_delay_hdl = SyncDelayHandler(self.logger)
 
     @property
     def logger(self):
@@ -56,6 +52,9 @@ class PhotoSyncer:
         return get_logger()
 
     def sync(self):
+        return self._sync_delay_hdl.run_with_sync_delay_decorator(self._sync)
+
+    def _sync(self, sync_delay_hdl):
         """Perform photo synchronization.
 
         Returns:
@@ -66,24 +65,15 @@ class PhotoSyncer:
             # Ensure sync directory exists
             self.config.ensure_sync_directory()
             # Adaptive sync delay: sleep if delay is set, but skip for first 2FA attempt
-            if not self._first_2fa_attempt and self._sync_delay_seconds > 0:
-                self.logger.info(
-                    f"⏳ Waiting {self._sync_delay_seconds} seconds before sync (adaptive delay)"
-                )
-                time.sleep(self._sync_delay_seconds)
             # Authenticate with iCloud
             if not self.icloud_client.authenticate():
-                self._increase_sync_delay()
-                return False
+                return SyncDelayContextReturnParams(False)
             # Handle 2FA if required
             if self.icloud_client.requires_2fa():
                 if not self._handle_2fa():
-                    self._increase_sync_delay()
-                    self._first_2fa_attempt = False
-                    return False
+                    return SyncDelayContextReturnParams(False, first_2fa_attempt_value=False)
                 else:
-                    self._reset_sync_delay()
-            self._first_2fa_attempt = False
+                    sync_delay_hdl.reset_sync_delay()
             # Validate that specified albums exist (if any are specified)
             self.logger.info("🔍 Validating specified album names...")
             try:
@@ -91,7 +81,7 @@ class PhotoSyncer:
                 self.logger.info("✅ All specified albums found")
             except ValueError as e:
                 self.logger.error(f"❌ Album validation failed: {e}")
-                return False
+                return SyncDelayContextReturnParams(False, sync_delay_modification="do_nothing")
             # Get local files
             local_files = self._get_local_files()
             self.logger.info(f"📁 Found {len(local_files)} existing local files")
@@ -102,57 +92,11 @@ class PhotoSyncer:
             # Print summary
             self._print_summary()
             self.logger.info("✅ Photo sync completed successfully")
-            self._reset_sync_delay()
-            return True
+            return SyncDelayContextReturnParams(True)
         except Exception as e:
             self.logger.error(f"❌ Error during sync: {e}")
             self.stats["errors"] += 1
-            self._increase_sync_delay()
-            self._first_2fa_attempt = False
-            return False
-
-    def _load_sync_delay(self) -> int:
-        """Load sync delay from JSON file in temp dir."""
-        try:
-            if self._sync_delay_file.exists():
-                with self._sync_delay_file.open("r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    delay = int(data.get("sync_delay_seconds", self._SYNC_DELAY_INITIAL))
-                    return min(delay, self._SYNC_DELAY_MAX)
-        except Exception as e:
-            self.logger.warning(f"⚠️ Could not load sync delay: {e}")
-        return self._SYNC_DELAY_INITIAL
-
-    def _save_sync_delay(self) -> None:
-        """Persist current sync delay to JSON file in temp dir."""
-        try:
-            with self._sync_delay_file.open("w", encoding="utf-8") as f:
-                json.dump({"sync_delay_seconds": self._sync_delay_seconds}, f)
-        except Exception as e:
-            self.logger.warning(f"⚠️ Could not save sync delay: {e}")
-
-    def _increase_sync_delay(self) -> None:
-        """Double the sync delay, cap at max, and persist."""
-        prev = self._sync_delay_seconds
-        self._sync_delay_seconds = min(
-            max(self._sync_delay_seconds * 2, self._SYNC_DELAY_INITIAL),
-            self._SYNC_DELAY_MAX,
-        )
-        self._save_sync_delay()
-        self.logger.info(
-            f"⏫ Increased sync delay from {prev} to {self._sync_delay_seconds} seconds"
-        )
-
-    def _reset_sync_delay(self) -> None:
-        """Reset sync delay to initial and remove persistence file."""
-        if self._sync_delay_seconds != self._SYNC_DELAY_INITIAL:
-            self.logger.info(f"🔄 Resetting sync delay to {self._SYNC_DELAY_INITIAL} seconds")
-        self._sync_delay_seconds = self._SYNC_DELAY_INITIAL
-        try:
-            if self._sync_delay_file.exists():
-                self._sync_delay_file.unlink()
-        except Exception as e:
-            self.logger.warning(f"⚠️ Could not delete sync delay file: {e}")
+            return SyncDelayContextReturnParams(False)
 
     def _handle_2fa(self) -> bool:
         """Handle two-factor authentication using web server interface.
@@ -161,16 +105,6 @@ class PhotoSyncer:
             True if 2FA handled successfully, False otherwise
         """
         self.logger.info("🔐 Two-factor authentication required")
-
-        # Check if we're running in a test environment
-        if os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("_PYTEST_RAISE", None):
-            self.logger.info("🧪 Test environment detected - using automated 2FA")
-            # In test mode, simulate successful 2FA without user interaction
-            if hasattr(self.icloud_client, "_api") and self.icloud_client._api:
-                # Mock the validation process
-                self.logger.info("✅ 2FA verification successful (test mode)")
-                return True
-            return True
 
         try:
             # Use the web-based 2FA handler from the icloud_client
@@ -541,3 +475,100 @@ class PhotoSyncer:
     def __del__(self):
         """Destructor to ensure cleanup happens even if not called explicitly."""
         self.cleanup()
+
+
+@dc.dataclass(frozen=True)
+class SyncDelayContextReturnParams:
+    return_value: bool
+    sync_delay_modification: t.Literal["increase", "reset", "do_nothing"] | None = None
+    first_2fa_attempt_value: bool | None = None
+
+
+class SyncDelayHandler:
+    SYNC_DELAY_INITIAL = 60  # 1 minute
+    SYNC_DELAY_MAX = 2 * 24 * 60 * 60  # 2 days in seconds
+
+    def __init__(self, logger) -> None:
+        self.logger = logger
+        self._first_2fa_attempt: bool = True
+        self._sync_delay_file = Path(tempfile.gettempdir()) / "iphoto_downloader_sync_delay.json"
+        self.sync_delay_seconds = self._load_sync_delay()
+
+    def run_with_sync_delay_decorator(self, func_to_run: t.Callable) -> bool:
+        """Decorator to handle sync delay around a sync operation.
+
+        Yields:
+            SyncDelayContextReturnParams with operation result and flags
+        """
+        try:
+            self._wait_sync_delay()
+            return_value: SyncDelayContextReturnParams = func_to_run(self)
+            if return_value.sync_delay_modification:
+                if return_value.sync_delay_modification == "reset":
+                    self.reset_sync_delay()
+                elif return_value.sync_delay_modification == "increase":
+                    self._increase_sync_delay()
+                elif return_value.sync_delay_modification == "do_nothing":
+                    pass
+            elif return_value.return_value:
+                self.reset_sync_delay()
+            else:
+                self._increase_sync_delay()
+            if return_value.first_2fa_attempt_value is not None:
+                self._first_2fa_attempt = return_value.first_2fa_attempt_value
+            return return_value.return_value
+        except Exception as e:
+            self.logger.error(f"❌ Error during sync operation: {e}")
+            self._increase_sync_delay()
+            return False
+
+    def _wait_sync_delay(self) -> None:
+        """Wait for the current sync delay duration."""
+        if not self._first_2fa_attempt and self.sync_delay_seconds > 0:
+            self.logger.info(f"⏳ Waiting {self.sync_delay_seconds} seconds before sync")
+            time.sleep(self.sync_delay_seconds)
+        self._first_2fa_attempt = False
+
+    def _load_sync_delay(self) -> int:
+        """Load sync delay from JSON file in temp dir."""
+        try:
+            if self._sync_delay_file.exists():
+                with self._sync_delay_file.open("r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    delay = int(data.get("sync_delay_seconds", self.SYNC_DELAY_INITIAL))
+                    return min(delay, self.SYNC_DELAY_MAX)
+        except Exception as e:
+            self.logger.warning(f"⚠️ Could not load sync delay: {e}")
+        return self.SYNC_DELAY_INITIAL
+
+    def _save_sync_delay(self) -> None:
+        """Persist current sync delay to JSON file in temp dir."""
+        try:
+            with self._sync_delay_file.open("w", encoding="utf-8") as f:
+                json.dump({"sync_delay_seconds": self.sync_delay_seconds}, f)
+        except Exception as e:
+            self.logger.warning(f"⚠️ Could not save sync delay: {e}")
+
+    def _increase_sync_delay(self) -> None:
+        """Double the sync delay, cap at max, and persist."""
+        prev = self.sync_delay_seconds
+        self.sync_delay_seconds = min(
+            max(self.sync_delay_seconds * 2, self.SYNC_DELAY_INITIAL),
+            self.SYNC_DELAY_MAX,
+        )
+        self._save_sync_delay()
+        self.logger.info(
+            f"⏫ Increased sync delay from {prev} to {self.sync_delay_seconds} seconds"
+        )
+
+    def reset_sync_delay(self) -> None:
+        """Reset sync delay to initial and remove persistence file."""
+        if self.sync_delay_seconds != self.SYNC_DELAY_INITIAL:
+            self.logger.info(f"🔄 Resetting sync delay to {self.SYNC_DELAY_INITIAL} seconds")
+        self.sync_delay_seconds = self.SYNC_DELAY_INITIAL
+        self._first_2fa_attempt = True
+        try:
+            if self._sync_delay_file.exists():
+                self._sync_delay_file.unlink()
+        except Exception as e:
+            self.logger.warning(f"⚠️ Could not delete sync delay file: {e}")

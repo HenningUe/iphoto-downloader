@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-import pytest
-
 """Simple authentication test to check if 2FA is required."""
 
+import os
 import sys
 from pathlib import Path
+
+import pytest
 
 from iphoto_downloader.config import KEYRING_AVAILABLE, get_config
 from iphoto_downloader.icloud_client import ICloudClient
@@ -20,9 +21,6 @@ def test_authentication():
     print("🔐 Testing iCloud Authentication")
     print("=" * 40)
 
-
-    import os
-    import pytest
     username = os.getenv("ICLOUD_USERNAME")
     password = os.getenv("ICLOUD_PASSWORD")
     if not username or not password:
